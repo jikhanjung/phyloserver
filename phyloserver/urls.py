@@ -18,5 +18,5 @@ from django.urls import include, path
 
 urlpatterns = [
     path('phylomanager/', include('phylomanager.urls')),
-    #path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
 ]
