@@ -1,0 +1,9 @@
+{% if latest_run_list %}
+    <ul>
+    {% for run in latest_run_list %}
+        <li><a href="/phylomanager/{{ run.id }}/">{{ run.run_title }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No runs are available.</p>
+{% endif %}

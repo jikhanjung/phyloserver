@@ -34,15 +34,15 @@ class PhyloLeg(models.Model):
         ('NB','Normal Bootstrap'),
         ('UF','Ultra Fast Bootstrap(IQTree)'),
     ]
-    run = models.ForeignKey(PhyloRun, on_delete=models.CASCADE)
+    run = models.ForeignKey(PhyloRun, on_delete=models.CASCADE,related_name='leg_set' )
     leg_title = models.CharField(max_length=200,blank=True,null=True)
     leg_status = models.CharField(max_length=10,blank=True,null=True)
     leg_package = models.ForeignKey(PhyloPackage, on_delete=models.CASCADE)
     start_datetime = models.DateTimeField(blank=True,null=True)
     finish_datetime = models.DateTimeField(blank=True,null=True)
-    ml_bootstrap = models.IntegerField(default=0)
+    ml_bootstrap = models.IntegerField(default=0,blank=True,null=True)
     ml_bootstrap_type = models.CharField(max_length=10,choices=BOOTSTRAP_TYPE_CHOICES,blank=True,null=True)
-    substitution_model = models.CharField(max_length=100)
+    substitution_model = models.CharField(max_length=100,blank=True,null=True)
     mcmc_burnin = models.IntegerField(blank=True,null=True)
     mcmc_relburnin = models.BooleanField(default=False)
     mcmc_burninfrac = models.FloatField(blank=True,null=True)

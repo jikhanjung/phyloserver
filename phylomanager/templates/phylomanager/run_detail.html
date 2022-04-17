@@ -1,0 +1,6 @@
+<h1>{{ run.run_title }}</h1>
+<ul>
+{% for leg in run.leg_set.all %}
+    <li>{{ leg.leg_title }}</li>
+{% endfor %}
+</ul>
