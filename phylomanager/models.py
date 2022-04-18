@@ -14,7 +14,7 @@ class PhyloPackage(models.Model):
         return self.package_name
 
 class PhyloRun(models.Model):
-    start_datetime = models.DateTimeField()
+    start_datetime = models.DateTimeField(blank=True,null=True)
     finish_datetime = models.DateTimeField(blank=True,null=True)
     run_title = models.CharField(max_length=200,blank=True,null=True)
     run_status = models.CharField(max_length=10,blank=True,null=True)
@@ -34,10 +34,17 @@ class PhyloLeg(models.Model):
         ('NB','Normal Bootstrap'),
         ('UF','Ultra Fast Bootstrap(IQTree)'),
     ]
+    PACKAGE_TYPE_CHOICES = [
+        ('BY', 'Bayesian'),
+        ('MP', 'Maximum Parsimony'),
+        ('ML', 'Maximum Likelihood'),
+    ]
     run = models.ForeignKey(PhyloRun, on_delete=models.CASCADE,related_name='leg_set' )
+    leg_sequence = models.IntegerField(blank=True,null=True)
     leg_title = models.CharField(max_length=200,blank=True,null=True)
     leg_status = models.CharField(max_length=10,blank=True,null=True)
     leg_package = models.ForeignKey(PhyloPackage, on_delete=models.CASCADE)
+    leg_type = models.CharField(max_length=10, choices=PACKAGE_TYPE_CHOICES,default='MP',blank=True,null=True )
     start_datetime = models.DateTimeField(blank=True,null=True)
     finish_datetime = models.DateTimeField(blank=True,null=True)
     ml_bootstrap = models.IntegerField(default=0,blank=True,null=True)

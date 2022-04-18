@@ -20,7 +20,8 @@ class PhyloRunForm(ModelForm):
 class PhyloLegForm(ModelForm):
     class Meta:
         model = PhyloLeg
-        fields = ['leg_title', 'leg_status', 'leg_package','start_datetime','finish_datetime','ml_bootstrap','ml_bootstrap_type','substitution_model',
+        fields = ['leg_title', 'leg_status', 'leg_package','leg_type','start_datetime','finish_datetime',
+                  'ml_bootstrap','ml_bootstrap_type','substitution_model',
                   'mcmc_burnin','mcmc_relburnin','mcmc_burninfrac','mcmc_ngen','mcmc_printfreq','mcmc_samplefreq','mcmc_nruns','mcmc_nchains']
 
 class PhyloPackageForm(ModelForm):

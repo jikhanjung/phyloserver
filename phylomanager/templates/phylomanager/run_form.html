@@ -1,0 +1,133 @@
+<h1>edit run</h1>
+<form action="" method="post">
+    {% csrf_token %}
+<table>
+    {{ form }}
+</table>
+<div id="leg-form-container">
+{{ leg_formset.management_form }}
+<div id="empty-form" style="display:none; border: 1px solid grey;">
+    <table width="600">
+            <tr><th>{{leg_formset.empty_form.leg_title.label}}</th><td>{{leg_formset.empty_form.leg_title}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.leg_status.label}}</th><td>{{leg_formset.empty_form.leg_status}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.leg_package.label}}</th><td>{{leg_formset.empty_form.leg_package}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.leg_type.label}}</th><td>{{leg_formset.empty_form.leg_type}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.start_datetime.label}}</th><td>{{leg_formset.empty_form.start_datetime}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.finish_datetime.label}}</th><td>{{leg_formset.empty_form.finish_datetime}}</td></tr>
+    </table>
+    <table width="600" id="mp_options___prefix__">
+    </table>
+    <table width="600" id="ml_options___prefix__">
+            <tr><th>{{leg_formset.empty_form.ml_bootstrap.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.ml_bootstrap_type.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap_type}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.substitution_model.label}}</th><td>{{leg_formset.empty_form.substitution_model}}</td></tr>
+    </table>
+    <table width="600" id="bayesian_options___prefix__">
+            <tr><th>{{leg_formset.empty_form.mcmc_burnin.label}}</th><td>{{leg_formset.empty_form.mcmc_burnin}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.mcmc_relburnin.label}}</th><td>{{leg_formset.empty_form.mcmc_relburnin}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.mcmc_burninfrac.label}}</th><td>{{leg_formset.empty_form.mcmc_burninfrac}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.mcmc_ngen.label}}</th><td>{{leg_formset.empty_form.mcmc_ngen}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.mcmc_printfreq.label}}</th><td>{{leg_formset.empty_form.mcmc_printfreq}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.mcmc_samplefreq.label}}</th><td>{{leg_formset.empty_form.mcmc_samplefreq}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.mcmc_nruns.label}}</th><td>{{leg_formset.empty_form.mcmc_nruns}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.mcmc_nchains.label}}</th><td>{{leg_formset.empty_form.mcmc_nchains}}</td></tr>
+    </table>
+</div>
+{% for leg in leg_formset %}
+<div class="leg-form" style="border: 1px solid grey;">
+    <table width="600">
+            <tr><th>{{leg.leg_title.label}}</th><td>{{leg.leg_title}}</td></tr>
+            <tr><th>{{leg.leg_status.label}}</th><td>{{leg.leg_status}}</td></tr>
+            <tr><th>{{leg.leg_package.label}}</th><td>{{leg.leg_package}}</td></tr>
+            <tr><th>{{leg.leg_type.label}}</th><td>{{leg.leg_type}}</td></tr>
+            <tr><th>{{leg.start_datetime.label}}</th><td>{{leg.start_datetime}}</td></tr>
+            <tr><th>{{leg.finish_datetime.label}}</th><td>{{leg.finish_datetime}}</td></tr>
+    </table>
+    <table width="600" id="mp_options_{{forloop.counter0}}">
+    </table>
+    <table width="600" id="ml_options_{{forloop.counter0}}">
+            <tr><th>{{leg.ml_bootstrap.label}}</th><td>{{leg.ml_bootstrap}}</td></tr>
+            <tr><th>{{leg.ml_bootstrap_type.label}}</th><td>{{leg.ml_bootstrap_type}}</td></tr>
+            <tr><th>{{leg.substitution_model.label}}</th><td>{{leg.substitution_model}}</td></tr>
+    </table>
+    <table width="600" id="bayesian_options_{{forloop.counter0}}">
+            <tr><th>{{leg.mcmc_burnin.label}}</th><td>{{leg.mcmc_burnin}}</td></tr>
+            <tr><th>{{leg.mcmc_relburnin.label}}</th><td>{{leg.mcmc_relburnin}}</td></tr>
+            <tr><th>{{leg.mcmc_burninfrac.label}}</th><td>{{leg.mcmc_burninfrac}}</td></tr>
+            <tr><th>{{leg.mcmc_ngen.label}}</th><td>{{leg.mcmc_ngen}}</td></tr>
+            <tr><th>{{leg.mcmc_printfreq.label}}</th><td>{{leg.mcmc_printfreq}}</td></tr>
+            <tr><th>{{leg.mcmc_samplefreq.label}}</th><td>{{leg.mcmc_samplefreq}}</td></tr>
+            <tr><th>{{leg.mcmc_nruns.label}}</th><td>{{leg.mcmc_nruns}}</td></tr>
+            <tr><th>{{leg.mcmc_nchains.label}}</th><td>{{leg.mcmc_nchains}}</td></tr>
+    </table>
+</div>
+{% endfor %}
+<input type="button" id="add-form" value="Add Leg">
+<input type="submit" value="Save">
+</div>
+</form>
+
+<script>
+    var leg_type=[];
+    function set_leg_type(a_leg_form_index){
+        console.log("set leg type called", a_leg_form_index);
+        console.log(leg_type[a_leg_form_index]);
+        console.log(leg_type[a_leg_form_index].selectedIndex);
+        console.log(leg_type[a_leg_form_index].options[leg_type[a_leg_form_index].selectedIndex]);
+        selected_text = leg_type[a_leg_form_index].options[leg_type[a_leg_form_index].selectedIndex].value;
+        console.log(selected_text);
+        if( selected_text == 'BY') {
+            bayesian_display = "block";
+            ml_display = "none";
+            mp_display = "none";
+        } else if ( selected_text == 'ML'){
+            bayesian_display = "none";
+            ml_display = "block";
+            mp_display = "none";
+        } else if ( selected_text == 'MP'){
+            bayesian_display = "none";
+            ml_display = "none";
+            mp_display = "block";
+        }
+        document.getElementById('bayesian_options_'+String(a_leg_form_index)).style.display=bayesian_display;
+        document.getElementById('ml_options_'+String(a_leg_form_index)).style.display=ml_display;
+        document.getElementById('mp_options_'+String(a_leg_form_index)).style.display=mp_display;
+    }    
+
+
+    let legForm = document.querySelectorAll(".leg-form")
+    let emptyForm = document.querySelector("#empty-form")
+    let container = document.querySelector("#leg-form-container")
+    let addButton = document.querySelector("#add-form")
+    let totalForms = document.querySelector("#id_leg_set-TOTAL_FORMS")
+    console.log(emptyForm);
+    console.log(totalForms);
+
+    let formNum = legForm.length-1
+    addButton.addEventListener('click', addForm)
+    console.log("legform length index", formNum);
+
+    function addForm(e){
+        e.preventDefault();
+        let formNum = legForm.length-1
+        let newForm = emptyForm.cloneNode(true);
+        newForm.style.display="block";
+        formNum++;
+        newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formNum);
+        console.log(newForm);
+        container.insertBefore(newForm, addButton)
+        totalForms.setAttribute('value', `${formNum+1}`)
+        leg_type[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_type');
+        leg_type[formNum].addEventListener('change', function(){set_leg_type(formNum);} );
+        set_leg_type(formNum);
+    }    
+
+    for( idx=0;idx<legForm.length;idx++){
+        leg_type[idx] = document.getElementById('id_leg_set-'+String(idx)+'-leg_type');
+        leg_type[idx].addEventListener('change', function(){set_leg_type(idx);} );
+        console.log("added", idx, "to leg type");
+        set_leg_type(idx);
+    }
+    
+
+</script>
