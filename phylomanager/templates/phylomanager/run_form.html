@@ -1,5 +1,5 @@
 <h1>edit run</h1>
-<form action="" method="post">
+<form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
 <table>
     {{ form }}
@@ -34,6 +34,9 @@
     </table>
 </div>
 {% for leg in leg_formset %}
+{% for hidden in leg.hidden_fields %}
+    {{ hidden }}
+{% endfor %}
 <div class="leg-form" style="border: 1px solid grey;">
     <table width="600">
             <tr><th>{{leg.leg_title.label}}</th><td>{{leg.leg_title}}</td></tr>
@@ -69,12 +72,19 @@
 
 <script>
     var leg_type=[];
-    function set_leg_type(a_leg_form_index){
-        console.log("set leg type called", a_leg_form_index);
-        console.log(leg_type[a_leg_form_index]);
-        console.log(leg_type[a_leg_form_index].selectedIndex);
-        console.log(leg_type[a_leg_form_index].options[leg_type[a_leg_form_index].selectedIndex]);
-        selected_text = leg_type[a_leg_form_index].options[leg_type[a_leg_form_index].selectedIndex].value;
+    function set_leg_type(event){
+        console.log("set leg type called", this);
+        var form_index = this.getAttribute('form_index');
+        console.log("form index:", form_index);
+        event.preventDefault();
+
+        var curr_leg_type = this;
+        console.log("curr_leg_type", curr_leg_type);
+        //console.log("onChange", curr_leg_type.onChange());
+
+        var selected_index = curr_leg_type.selectedIndex;
+        console.log("selected_index", selected_index);
+        selected_text = curr_leg_type.options[selected_index].value;
         console.log(selected_text);
         if( selected_text == 'BY') {
             bayesian_display = "block";
@@ -89,9 +99,9 @@
             ml_display = "none";
             mp_display = "block";
         }
-        document.getElementById('bayesian_options_'+String(a_leg_form_index)).style.display=bayesian_display;
-        document.getElementById('ml_options_'+String(a_leg_form_index)).style.display=ml_display;
-        document.getElementById('mp_options_'+String(a_leg_form_index)).style.display=mp_display;
+        document.getElementById('bayesian_options_'+String(form_index)).style.display=bayesian_display;
+        document.getElementById('ml_options_'+String(form_index)).style.display=ml_display;
+        document.getElementById('mp_options_'+String(form_index)).style.display=mp_display;
     }    
 
 
@@ -100,16 +110,36 @@
     let container = document.querySelector("#leg-form-container")
     let addButton = document.querySelector("#add-form")
     let totalForms = document.querySelector("#id_leg_set-TOTAL_FORMS")
+
     console.log(emptyForm);
     console.log(totalForms);
 
-    let formNum = legForm.length-1
     addButton.addEventListener('click', addForm)
-    console.log("legform length index", formNum);
+
+    function set_event_listener(  a_leg,  a_idx ) {
+        a_leg.addEventListener('change', set_leg_type, false);
+        a_leg.setAttribute('form_index', a_idx);
+        console.log("added", a_idx, "to leg type");
+        //leg_type[idx].onchange();
+        //leg_type[idx].fireEvent("onchange");
+        //set_leg_type();
+
+        if ("createEvent" in document) {
+            console.log('create event');
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("change", false, true);
+            a_leg.dispatchEvent(evt);
+        } else {
+            a_leg.fireEvent("onchange");
+        }
+
+    }
+
 
     function addForm(e){
         e.preventDefault();
         let formNum = legForm.length-1
+        console.log("fornNum:", formNum);
         let newForm = emptyForm.cloneNode(true);
         newForm.style.display="block";
         formNum++;
@@ -117,16 +147,16 @@
         console.log(newForm);
         container.insertBefore(newForm, addButton)
         totalForms.setAttribute('value', `${formNum+1}`)
-        leg_type[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_type');
-        leg_type[formNum].addEventListener('change', function(){set_leg_type(formNum);} );
-        set_leg_type(formNum);
-    }    
+        console.log('formNum:', formNum);
 
-    for( idx=0;idx<legForm.length;idx++){
+        leg_type[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_type');
+
+        set_event_listener( leg_type[formNum], formNum );
+    }   
+
+    for( var idx=0;idx<legForm.length;idx++){
         leg_type[idx] = document.getElementById('id_leg_set-'+String(idx)+'-leg_type');
-        leg_type[idx].addEventListener('change', function(){set_leg_type(idx);} );
-        console.log("added", idx, "to leg type");
-        set_leg_type(idx);
+        set_event_listener( leg_type[idx], idx );
     }
     
 

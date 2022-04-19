@@ -26,11 +26,12 @@ def run_detail(request, run_id):
 def add_run(request):
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
-        form = PhyloRunForm(request.POST)
+        form = PhyloRunForm(request.POST,request.FILES)
         PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm)
         # check whether it's valid:
         if form.is_valid():
             phylorun = form.save(commit=False)
+            print(phylorun.datafile)
             phylorun.save()
             pk=phylorun.id
             phyloleg_formset = PhyloLegFormSet(request.POST, request.FILES, instance=phylorun )
@@ -70,16 +71,18 @@ def edit_run(request,pk):
             if leg_formset.is_valid():
                 leg_instances = leg_formset.save(commit=False)
                 for leg in leg_instances:
-                    if leg.id and leg.data == '':
-                        leg.delete()
-                    else:
+                    #if leg.id and leg.datafile == '':
+                    #    leg.delete()
+                    #else:
                         leg.save()
+            else:
+                print(leg_formset)
             return HttpResponseRedirect('/phylomanager/run_detail/'+str(pk))
 
     # if a GET (or any other method) we'll create a blank form
     else:
         form = PhyloRunForm(instance=run)
-        PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm)
+        PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm, extra=0)
         leg_formset = PhyloLegFormSet(instance=run)
 
     return render(request, 'phylomanager/run_form.html', {'form': form,'leg_formset':leg_formset})

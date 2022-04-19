@@ -1,7 +1,21 @@
 <h1>{{ run.run_title }}</h1>
+
+
+<ul>
+    <li>Run Title: {{ run.run_title }}</li>
+    <li>Data file: {{ run.datafile }}</li>
+    <li>Status: {{ run.run_status }}</li>
+    <li>Run by: {{ run.run_by }}</li>
+    <li>Started at: {{ run.start_datetime }}</li>
+    <li>Finished at: {{ run.finish_datetime }}</li>
+    <li>Created at: {{ run.created_datetime }}</li>
+    <li>Modified at: {{ run.modified_datetime }}</li>
+</ul>
 <ul>
 {% for leg in run.leg_set.all %}
     <li>{{ leg.leg_title }}</li>
+    <li>{{ leg.leg_status }}</li>
 {% endfor %}
 </ul>
 <a href="{% url 'run_list' %}">[Run List]</a>
+<a href="{% url 'edit_run' run.pk %}">[Edit]</a>

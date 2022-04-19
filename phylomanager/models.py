@@ -16,9 +16,12 @@ class PhyloPackage(models.Model):
 class PhyloRun(models.Model):
     start_datetime = models.DateTimeField(blank=True,null=True)
     finish_datetime = models.DateTimeField(blank=True,null=True)
+    created_datetime = models.DateTimeField(auto_now_add=True)
+    modified_datetime = models.DateTimeField(auto_now=True)
     run_title = models.CharField(max_length=200,blank=True,null=True)
     run_status = models.CharField(max_length=10,blank=True,null=True)
     run_by = models.CharField(max_length=200,blank=True,null=True)
+    datafile = models.FileField(upload_to='phylorun_datafile',blank=True)
     run_directory = models.CharField(max_length=200,blank=True,null=True)
     def __str__(self):
         return self.run_title
