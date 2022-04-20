@@ -1,3 +1,4 @@
 db.sqlite3
 *.pyc
 phylomanager/migrations/*
+phylorun_datafile/*

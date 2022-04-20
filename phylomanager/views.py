@@ -7,10 +7,10 @@ from django.shortcuts import get_object_or_404, render
 
 from .forms import PhyloRunForm, PhyloPackageForm, PhyloModelForm, PhyloLegForm
 from django.forms import modelformset_factory, inlineformset_factory
-
+from json import dumps
 
 def index(request):
-    return HttpResponse("Index page")
+    return HttpResponseRedirect('run_list')
 
 def run_list(request):
     latest_run_list = PhyloRun.objects.order_by('-start_datetime')[:20]
@@ -24,14 +24,16 @@ def run_detail(request, run_id):
     return render(request, 'phylomanager/run_detail.html', {'run': run})
 
 def add_run(request):
+    data_json = []
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
-        form = PhyloRunForm(request.POST,request.FILES)
+        run_form = PhyloRunForm(request.POST,request.FILES)
         PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm)
         # check whether it's valid:
-        if form.is_valid():
-            phylorun = form.save(commit=False)
+        if run_form.is_valid():
+            phylorun = run_form.save(commit=False)
             print(phylorun.datafile)
+            #phylorun.run_status='Registered'
             phylorun.save()
             pk=phylorun.id
             phyloleg_formset = PhyloLegFormSet(request.POST, request.FILES, instance=phylorun )
@@ -48,19 +50,23 @@ def add_run(request):
             return HttpResponseRedirect('/phylomanager/run_detail/'+str(pk))
     # if a GET (or any other method) we'll create a blank form
     else:
-        form = PhyloRunForm()
+        run_form = PhyloRunForm()
         PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm, extra=1)
         leg_formset = PhyloLegFormSet(queryset=PhyloLeg.objects.none())
+        package_list = PhyloPackage.objects.all()
+        for p in package_list:
+            data_json.append( [p.package_name, p.package_type] )
 
-    return render(request, 'phylomanager/run_form.html', {'form': form,'leg_formset':leg_formset})
+    return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json)})
 
 def edit_run(request,pk):
+    data_json = []
     run = get_object_or_404(PhyloRun, pk=pk)
     legs = run.leg_set.all().order_by('leg_sequence')
 
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
-        form = PhyloRunForm(request.POST,instance=run)
+        run_form = PhyloRunForm(request.POST,instance=run)
         PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm)
 
         # check whether it's valid:
@@ -81,11 +87,14 @@ def edit_run(request,pk):
 
     # if a GET (or any other method) we'll create a blank form
     else:
-        form = PhyloRunForm(instance=run)
+        run_form = PhyloRunForm(instance=run)
         PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm, extra=0)
         leg_formset = PhyloLegFormSet(instance=run)
+        package_list = PhyloPackage.objects.all()
+        for p in package_list:
+            data_json.append( [p.package_name, p.package_type] )
 
-    return render(request, 'phylomanager/run_form.html', {'form': form,'leg_formset':leg_formset})
+    return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json)})
 
 def delete_run(request):    
     return
@@ -106,3 +115,9 @@ def phylomodel_list(request):
 def phylomodel_detail(request, model_id):
     return HttpResponse("You're looking at model %s." % model_id)
 
+def server_status(request):
+    current_run_list = PhyloRun.objects.filter(run_status__exact='IP').order_by('-start_datetime')[:20]
+    context = {
+        'current_run_list': current_run_list,
+    }
+    return render(request, 'phylomanager/server_status.html', context)

@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('server_status/', views.server_status, name='server_status'),
     path('package_list/', views.package_list, name='package_list'),    
     path('package_detail/<int:package_id>', views.package_detail, name='package_detail'),    
 

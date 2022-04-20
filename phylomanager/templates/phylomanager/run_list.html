@@ -1,10 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Run list</h1>
 {% if latest_run_list %}
     <ul>
     {% for run in latest_run_list %}
-        <li><a href="/phylomanager/run_detail/{{ run.id }}/">{{ run.run_title }}</a></li>
+        <li><a href="{% url 'run_detail' run.id %}">{{ run.run_title }}</a></li>
     {% endfor %}
     </ul>
 {% else %}
     <p>No runs are available.</p>
 {% endif %}
 <a href="{% url 'add_run' %}">[Add Run]</a>
+{% endblock %}

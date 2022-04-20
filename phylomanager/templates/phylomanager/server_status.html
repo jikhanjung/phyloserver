@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Server Status</h1>
+{% if current_run_list %}
+    <ul>
+    {% for run in current_run_list %}
+        <li><a href="/phylomanager/run_detail/{{ run.id }}/">{{ run.run_title }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No analysis is currently running.</p>
+{% endif %}
+{% endblock %}

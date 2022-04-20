@@ -1,0 +1,48 @@
+.sidebar {
+    height: 100%;
+    width: 150px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding-top: 40px;
+    background-color: lightblue;
+}
+    
+.sidebar div {
+    padding: 8px;
+    display: block;
+}
+
+.menu_home {
+    font-size: 20px;
+}
+
+.menu_items {
+    font-size: 16px;
+}
+
+.bodytext {
+    margin-left: 150px;
+    font-size: 16px;
+}
+
+a {
+    text-decoration: none;
+}
+
+table {
+    border-collapse: collapse;
+  }
+td, th {
+    padding: 3px;
+}
+
+
+.list_table td {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.detail_table td {
+    white-space: normal;
+}

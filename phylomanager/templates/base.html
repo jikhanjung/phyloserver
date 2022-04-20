@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+    {% load static %}
+    <title>{% block title %}Phylogenetic Analysis{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'phylomanager/style.css' %}">
+</head>
+
+<body>
+    <div id="sidebar" class="sidebar">
+        {% block sidebar %}
+        <div class="menu_home"><a href="/phylomanager/">Home</a></div>
+        <div class="menu_items">
+            <!--a href="/nkfadmin/chrono_chart/">ChronoChart</a>
+            <a href="/nkfadmin/ref_list/">References</a-->
+            <a href="{% url 'server_status' %}">Server status</a><br/>
+            <a href="/phylomanager/run_list/">Run list</a><br/>
+        </div>
+        {% if user_obj %} 
+        <div>
+            {{ user_obj.username }}<br/>
+            <a href="/phylomanager/user_info/">[내 정보]</a><br/>
+        </div>
+        {% else %}
+        <div>
+            <form method="POST" action="/phylomanager/login/">
+                {% csrf_token %}
+                <input type="text" size="10" name="username" required><br/>
+                <input type="password" size="10" name="password" required><br/>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+        {% endif %}
+        {% endblock %}
+    </div>
+
+    <div id="content" class="bodytext">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
