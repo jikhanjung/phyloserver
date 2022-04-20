@@ -70,8 +70,8 @@ def edit_run(request,pk):
         PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm)
 
         # check whether it's valid:
-        if form.is_valid():
-            run = form.save(commit=False)
+        if run_form.is_valid():
+            run = run_form.save(commit=False)
             run.save()
             leg_formset = PhyloLegFormSet(request.POST, instance=run)
             if leg_formset.is_valid():
