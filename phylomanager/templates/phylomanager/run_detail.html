@@ -16,9 +16,11 @@
 <ul>
 {% for leg in run.leg_set.all %}
     <li>{{ leg.leg_title }}</li>
+    <ul>
     <li>{{ leg.get_leg_status_display }}</li>
     <li>{{ leg.leg_package }}</li>
     <li>{{ leg.get_leg_type_display }}</li>
+    </ul>
 {% endfor %}
 </ul>
 <a href="{% url 'run_list' %}">[Run List]</a>
