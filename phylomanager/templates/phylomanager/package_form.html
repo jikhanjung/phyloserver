@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Edit Package</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+<div>
+    <table width="800">
+        <tr><th>{{package_form.package_name.label}}</th><td>{{package_form.package_name}}</td></tr>
+        <tr><th>{{package_form.package_type.label}}</th><td>{{package_form.package_type}}</td></tr>
+    </table>
+</div>
+
+<input type="submit" value="Save">
+</div>
+</form>
+<script>
+    var leg_type=[];
+    var leg_package=[];
+    var package_type_list = JSON.parse("{{data_json|escapejs}}");
+    console.log(package_type_list)
+    function set_leg_type(event){
+        console.log("set leg type called", this);
+        var form_index = this.getAttribute('form_index');
+        console.log("form index:", form_index);
+        event.preventDefault();
+
+        var curr_leg_type = this;
+        console.log("curr_leg_type", curr_leg_type);
+        //console.log("onChange", curr_leg_type.onChange());
+
+        var selected_index = curr_leg_type.selectedIndex;
+        console.log("selected_index", selected_index);
+        selected_text = curr_leg_type.options[selected_index].value;
+        console.log(selected_text);
+        if( selected_text == 'BY') {
+            bayesian_display = "block";
+            ml_display = "none";
+            mp_display = "none";
+        } else if ( selected_text == 'ML'){
+            bayesian_display = "none";
+            ml_display = "block";
+            mp_display = "none";
+        } else if ( selected_text == 'MP'){
+            bayesian_display = "none";
+            ml_display = "none";
+            mp_display = "block";
+        }
+        document.getElementById('bayesian_options_'+String(form_index)).style.display=bayesian_display;
+        document.getElementById('ml_options_'+String(form_index)).style.display=ml_display;
+        document.getElementById('mp_options_'+String(form_index)).style.display=mp_display;
+    }
+
+    function set_leg_package(event){
+        console.log("set leg package called", this);
+        var form_index = this.getAttribute('form_index');
+        console.log("form index:", form_index);
+        event.preventDefault();
+
+        var curr_leg_package = this;
+        console.log("curr_leg_package", curr_leg_package);
+        //console.log("onChange", curr_leg_type.onChange());
+
+        var selected_index = curr_leg_package.selectedIndex;
+        console.log("selected_index", selected_index);
+        selected_package = curr_leg_package.options[selected_index].value;
+        if( selected_package == 0 ) {
+            leg_type[form_index].selectedIndex = 0;
+            return;
+        }
+        console.log(selected_package);
+        console.log(package_type_list[selected_package-1]);
+        console.log("selected package index:", selected_package-1);
+        var p_type_value = package_type_list[selected_package-1][1];
+        console.log("selected package type:", p_type_value);
+        console.log(leg_type[form_index].options[selected_package-1].value);
+        leg_type[form_index].value = p_type_value;
+        if ("createEvent" in document) {
+            console.log('create event');
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("change", false, true);
+            leg_type[form_index].dispatchEvent(evt);
+        } else {
+            leg_type[form_index].fireEvent("onchange");
+        }
+    }
+
+    let legForm = document.querySelectorAll(".leg-form")
+    let emptyForm = document.querySelector("#empty-form")
+    let container = document.querySelector("#leg-form-container")
+    let addButton = document.querySelector("#add-form")
+    let totalForms = document.querySelector("#id_leg_set-TOTAL_FORMS")
+
+    console.log(emptyForm);
+    console.log(totalForms);
+
+    addButton.addEventListener('click', addForm)
+
+    function set_leg_type_event_listener(  a_leg,  a_idx ) {
+        a_leg.addEventListener('change', set_leg_type, false);
+        a_leg.setAttribute('form_index', a_idx);
+        console.log("added", a_idx, "to leg type");
+        //leg_type[idx].onchange();
+        //leg_type[idx].fireEvent("onchange");
+        //set_leg_type();
+
+        if ("createEvent" in document) {
+            console.log('create event');
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("change", false, true);
+            a_leg.dispatchEvent(evt);
+        } else {
+            a_leg.fireEvent("onchange");
+        }
+    }
+
+    function set_leg_package_event_listener(  a_leg,  a_idx ) {
+        a_leg.addEventListener('change', set_leg_package, false);
+        a_leg.setAttribute('form_index', a_idx);
+        console.log("added", a_idx, "to leg package");
+        //leg_type[idx].onchange();
+        //leg_type[idx].fireEvent("onchange");
+        //set_leg_type();
+
+        if ("createEvent" in document) {
+            console.log('create event');
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("change", false, true);
+            a_leg.dispatchEvent(evt);
+        } else {
+            a_leg.fireEvent("onchange");
+        }
+
+    }
+
+    function addForm(e){
+        e.preventDefault();
+        let formNum = legForm.length-1
+        console.log("fornNum:", formNum);
+        let newForm = emptyForm.cloneNode(true);
+        newForm.style.display="block";
+        formNum++;
+        newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formNum);
+        console.log(newForm);
+        container.insertBefore(newForm, addButton)
+        totalForms.setAttribute('value', `${formNum+1}`)
+        console.log('formNum:', formNum);
+
+        leg_type[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_type');
+
+        set_event_listener( leg_type[formNum], formNum );
+    }   
+
+    for( var idx=0;idx<legForm.length;idx++){
+        leg_type[idx] = document.getElementById('id_leg_set-'+String(idx)+'-leg_type');
+        set_leg_type_event_listener( leg_type[idx], idx );
+        leg_package[idx] = document.getElementById('id_leg_set-'+String(idx)+'-leg_package');
+        set_leg_package_event_listener( leg_package[idx], idx );
+    }
+    
+
+</script>
+{% endblock %}

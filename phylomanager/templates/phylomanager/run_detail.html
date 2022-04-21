@@ -6,7 +6,7 @@
 <ul>
     <li>Run Title: {{ run.run_title }}</li>
     <li>Data file: {{ run.datafile }}</li>
-    <li>Status: {{ run.run_status }}</li>
+    <li>Status: {{ run.get_run_status_display }}</li>
     <li>Run by: {{ run.run_by }}</li>
     <li>Started at: {{ run.start_datetime }}</li>
     <li>Finished at: {{ run.finish_datetime }}</li>
@@ -16,7 +16,7 @@
 <ul>
 {% for leg in run.leg_set.all %}
     <li>{{ leg.leg_title }}</li>
-    <li>{{ leg.leg_status }}</li>
+    <li>{{ leg.get_leg_status_display }}</li>
 {% endfor %}
 </ul>
 <a href="{% url 'run_list' %}">[Run List]</a>

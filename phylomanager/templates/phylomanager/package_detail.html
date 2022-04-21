@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ package.package_name }}</h1>
+
+
+<ul>
+    <li>Package Name: {{ package.package_name }}</li>
+    <li>Package type: {{ package.get_package_type_display }}</li>
+</ul>
+<a href="{% url 'package_list' %}">[Package List]</a>
+<a href="{% url 'edit_package' package.id %}">[Edit]</a>
+<a href="{% url 'delete_package' package.id %}" onclick="javascript:return confirm('Are you sure?')">[Delete]</a>
+{% endblock %}

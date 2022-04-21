@@ -101,11 +101,53 @@ def delete_run(request):
 
 def package_list(request):
     package_list = PhyloPackage.objects.all()
-    output = '<br/> '.join([p.package_name for p in package_list])
-    return HttpResponse(output)
+    context = {
+        'package_list': package_list,
+    }
+    return render(request, 'phylomanager/package_list.html', context)
 
 def package_detail(request, package_id):
-    return HttpResponse("You're looking at package %s." % package_id)
+    package = get_object_or_404(PhyloPackage, pk=package_id)
+    return render(request, 'phylomanager/package_detail.html', {'package': package})
+
+def add_package(request):
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        package_form = PhyloPackageForm(request.POST)
+        # check whether it's valid:
+        if package_form.is_valid():
+            package = package_form.save()
+            return HttpResponseRedirect('/phylomanager/package_detail/'+str(package.id))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        package_form = PhyloPackageForm()
+
+    return render(request, 'phylomanager/package_form.html', {'package_form': package_form})
+
+def edit_package(request, pk):
+    package = get_object_or_404(PhyloPackage, pk=pk)
+
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        package_form = PhyloPackageForm(request.POST,instance=package)
+
+        # check whether it's valid:
+        if package_form.is_valid():
+            package = package_form.save()
+            return HttpResponseRedirect('/phylomanager/package_detail/'+str(pk))
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        package_form = PhyloPackageForm(instance=package)
+
+    return render(request, 'phylomanager/package_form.html', {'package_form': package_form})
+
+def delete_package(request, pk):
+    package = get_object_or_404(PhyloPackage, pk=pk)
+    package.delete()
+    return HttpResponseRedirect('/phylomanager/package_list')
+
+
 
 def phylomodel_list(request):
     model_list = PhyloModel.objects.all()
