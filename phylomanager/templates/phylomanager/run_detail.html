@@ -17,8 +17,11 @@
 {% for leg in run.leg_set.all %}
     <li>{{ leg.leg_title }}</li>
     <li>{{ leg.get_leg_status_display }}</li>
+    <li>{{ leg.leg_package }}</li>
+    <li>{{ leg.get_leg_type_display }}</li>
 {% endfor %}
 </ul>
 <a href="{% url 'run_list' %}">[Run List]</a>
 <a href="{% url 'edit_run' run.pk %}">[Edit]</a>
+<a href="{% url 'delete_run' run.id %}" onclick="javascript:return confirm('Are you sure?')">[Delete]</a>
 {% endblock %}

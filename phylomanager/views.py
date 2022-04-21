@@ -60,30 +60,36 @@ def add_run(request):
     return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json)})
 
 def edit_run(request,pk):
+    print("edit run")
     data_json = []
     run = get_object_or_404(PhyloRun, pk=pk)
-    legs = run.leg_set.all().order_by('leg_sequence')
+    leg_formset = run.leg_set.all().order_by('leg_sequence')
 
     if request.method == 'POST':
+        print("method POST")
         # create a form instance and populate it with data from the request:
-        run_form = PhyloRunForm(request.POST,instance=run)
+        run_form = PhyloRunForm(request.POST,request.FILES,instance=run)
         PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm)
 
         # check whether it's valid:
         if run_form.is_valid():
+            print("run form valid")
             run = run_form.save(commit=False)
             run.save()
-            leg_formset = PhyloLegFormSet(request.POST, instance=run)
+            leg_formset = PhyloLegFormSet(request.POST,request.FILES, instance=run)
             if leg_formset.is_valid():
+                print("leg formset valid")
                 leg_instances = leg_formset.save(commit=False)
                 for leg in leg_instances:
                     #if leg.id and leg.datafile == '':
                     #    leg.delete()
                     #else:
-                        leg.save()
+                    leg.save()
             else:
                 print(leg_formset)
             return HttpResponseRedirect('/phylomanager/run_detail/'+str(pk))
+        else:
+            print(run_form)
 
     # if a GET (or any other method) we'll create a blank form
     else:
@@ -96,8 +102,10 @@ def edit_run(request,pk):
 
     return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json)})
 
-def delete_run(request):    
-    return
+def delete_run(request, pk):
+    run = get_object_or_404(PhyloRun, pk=pk)
+    run.delete()
+    return HttpResponseRedirect('/phylomanager/run_list')
 
 def package_list(request):
     package_list = PhyloPackage.objects.all()

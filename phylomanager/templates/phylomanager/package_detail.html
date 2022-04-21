@@ -5,7 +5,9 @@
 
 <ul>
     <li>Package Name: {{ package.package_name }}</li>
+    <li>Package Version: {{ package.package_version }}</li>
     <li>Package type: {{ package.get_package_type_display }}</li>
+    <li>Run path: {{ package.run_path }}</li>
 </ul>
 <a href="{% url 'package_list' %}">[Package List]</a>
 <a href="{% url 'edit_package' package.id %}">[Edit]</a>

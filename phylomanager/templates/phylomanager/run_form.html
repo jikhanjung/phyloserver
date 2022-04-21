@@ -128,18 +128,23 @@
 
         var selected_index = curr_leg_package.selectedIndex;
         console.log("selected_index", selected_index);
-        selected_package = curr_leg_package.options[selected_index].value;
-        if( selected_package == 0 ) {
+        selected_package_name = curr_leg_package.options[selected_index].text;
+        if( selected_index == 0 ) {
             leg_type[form_index].selectedIndex = 0;
             return;
+        } else {
+            console.log("selected package=",selected_package_name);
+            console.log("selected package index:", selected_index);
+            var p_type_value = "";
+            for( i=0;i<package_type_list.length;i++){
+                if( package_type_list[i][0] == selected_package_name ) {
+                    p_type_value = package_type_list[i][1];
+                }
+            }
+            console.log("selected package type:", p_type_value);
+            //console.log(leg_type[form_index].options[selected_package-1].value);
+            leg_type[form_index].value = p_type_value;
         }
-        console.log(selected_package);
-        console.log(package_type_list[selected_package-1]);
-        console.log("selected package index:", selected_package-1);
-        var p_type_value = package_type_list[selected_package-1][1];
-        console.log("selected package type:", p_type_value);
-        console.log(leg_type[form_index].options[selected_package-1].value);
-        leg_type[form_index].value = p_type_value;
         if ("createEvent" in document) {
             console.log('create event');
             var evt = document.createEvent("HTMLEvents");
@@ -179,10 +184,10 @@
         }
     }
 
-    function set_leg_package_event_listener(  a_leg,  a_idx ) {
-        a_leg.addEventListener('change', set_leg_package, false);
-        a_leg.setAttribute('form_index', a_idx);
-        console.log("added", a_idx, "to leg package");
+    function set_leg_package_event_listener(  a_package,  a_idx ) {
+        a_package.addEventListener('change', set_leg_package, false);
+        a_package.setAttribute('form_index', a_idx);
+        console.log("added", a_idx, "to package package");
         //leg_type[idx].onchange();
         //leg_type[idx].fireEvent("onchange");
         //set_leg_type();
@@ -191,9 +196,9 @@
             console.log('create event');
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent("change", false, true);
-            a_leg.dispatchEvent(evt);
+            a_package.dispatchEvent(evt);
         } else {
-            a_leg.fireEvent("onchange");
+            a_package.fireEvent("onchange");
         }
 
     }
@@ -213,7 +218,9 @@
 
         leg_type[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_type');
 
-        set_event_listener( leg_type[formNum], formNum );
+        set_leg_type_event_listener( leg_type[formNum], formNum );
+        leg_package[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_package');
+        set_leg_package_event_listener( leg_package[formNum], formNum );
     }   
 
     for( var idx=0;idx<legForm.length;idx++){
