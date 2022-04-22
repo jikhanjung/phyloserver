@@ -8,12 +8,13 @@ from django.shortcuts import get_object_or_404, render
 from .forms import PhyloRunForm, PhyloPackageForm, PhyloModelForm, PhyloLegForm
 from django.forms import modelformset_factory, inlineformset_factory
 from json import dumps
+import platform, psutil
 
 def index(request):
     return HttpResponseRedirect('run_list')
 
 def run_list(request):
-    latest_run_list = PhyloRun.objects.order_by('-start_datetime')[:20]
+    latest_run_list = PhyloRun.objects.order_by('created_datetime')
     context = {
         'latest_run_list': latest_run_list,
     }
@@ -166,8 +167,28 @@ def phylomodel_detail(request, model_id):
     return HttpResponse("You're looking at model %s." % model_id)
 
 def server_status(request):
+    my_system = {}
+    my_system['machine'] = platform.machine()
+    my_system['version'] = platform.version()
+    my_system['OS'] = platform.platform()
+    my_system['system'] = platform.system()
+    my_system['processor'] = platform.processor()
+
+    # CPU frequencies
+    my_cpu = {}
+    my_cpu['physical_cores'] = psutil.cpu_count(logical=False)
+    my_cpu['total_cores'] = psutil.cpu_count(logical=True)
+    cpufreq = psutil.cpu_freq()
+    my_cpu['max_freq'] = f"{cpufreq.max:.2f}Mhz"
+    my_cpu['min_freq'] = f"{cpufreq.min:.2f}Mhz"
+    my_cpu['curr_freq'] = f"{cpufreq.current:.2f}Mhz"
+
+    my_cpu['total_cpu_usage'] = f"{psutil.cpu_percent()}%"
+
     current_run_list = PhyloRun.objects.filter(run_status__exact='IP').order_by('-start_datetime')[:20]
     context = {
         'current_run_list': current_run_list,
+        'my_machine': my_system,
+        'my_cpu': my_cpu
     }
     return render(request, 'phylomanager/server_status.html', context)

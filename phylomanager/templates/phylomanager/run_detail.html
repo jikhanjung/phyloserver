@@ -20,6 +20,8 @@
     <li>{{ leg.get_leg_status_display }}</li>
     <li>{{ leg.leg_package }}</li>
     <li>{{ leg.get_leg_type_display }}</li>
+    <li>Started at: {{ leg.start_datetime }}</li>
+    <li>Finished at: {{ leg.finish_datetime }}</li>
     </ul>
 {% endfor %}
 </ul>

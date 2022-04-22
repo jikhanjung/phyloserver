@@ -1,10 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Server Status</h1>
+<ul>
+    <li>OS: {{my_machine.OS}}</li>
+    <li>Processor: {{my_machine.processor}}</li>
+    <li>Total cores: {{my_cpu.total_cores}}</li>
+    <li>Max freq.: {{my_cpu.max_freq}}</li>
+    <li>CPU Usage: {{my_cpu.total_cpu_usage}}</li>
+</ul>
 {% if current_run_list %}
     <ul>
     {% for run in current_run_list %}
-        <li><a href="/phylomanager/run_detail/{{ run.id }}/">{{ run.run_title }}</a></li>
+        <li><a href="/phylomanager/run_detail/{{ run.id }}/">{{ run.run_title }}</a> started at {{run.start_datetime}}</li>
     {% endfor %}
     </ul>
 {% else %}
