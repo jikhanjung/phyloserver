@@ -86,8 +86,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'phyloserver',
-        'USER': 'phyloserver',
-        'PASSWORD': 'Ker!gmach2la',
+        'USER': config('DB_USERID'),
+        'PASSWORD': config('DB_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '3306',
     }
