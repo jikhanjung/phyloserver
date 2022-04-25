@@ -4,27 +4,55 @@ from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonRe
 from .models import PhyloRun, PhyloPackage, PhyloModel, PhyloLeg
 from django.template import loader
 from django.shortcuts import get_object_or_404, render
+from django.conf import settings
 
-from .forms import PhyloRunForm, PhyloPackageForm, PhyloModelForm, PhyloLegForm
+from .forms import PhyloRunForm, PhyloPackageForm, PhyloModelForm, PhyloLegForm, PhyloUserChangeForm
 from django.forms import modelformset_factory, inlineformset_factory
 from json import dumps
 import platform, psutil
+import io, os, zipfile
+import tempfile
 
 def index(request):
     return HttpResponseRedirect('run_list')
 
 def run_list(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
     latest_run_list = PhyloRun.objects.order_by('created_datetime')
     context = {
         'latest_run_list': latest_run_list,
+        'user_obj': user_obj,
     }
     return render(request, 'phylomanager/run_list.html', context)
 
 def run_detail(request, run_id):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
     run = get_object_or_404(PhyloRun, pk=run_id)
-    return render(request, 'phylomanager/run_detail.html', {'run': run})
+    return render(request, 'phylomanager/run_detail.html', {'run': run, 'user_obj':user_obj})
 
 def add_run(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
     data_json = []
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -34,6 +62,7 @@ def add_run(request):
         if run_form.is_valid():
             phylorun = run_form.save(commit=False)
             print(phylorun.datafile)
+            phylorun.run_by_user = user_obj
             #phylorun.run_status='Registered'
             phylorun.save()
             pk=phylorun.id
@@ -58,9 +87,17 @@ def add_run(request):
         for p in package_list:
             data_json.append( [p.package_name, p.package_type] )
 
-    return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json)})
+    return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json),'user_obj':user_obj})
 
 def edit_run(request,pk):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
     print("edit run")
     data_json = []
     run = get_object_or_404(PhyloRun, pk=pk)
@@ -101,9 +138,17 @@ def edit_run(request,pk):
         for p in package_list:
             data_json.append( [p.package_name, p.package_type] )
 
-    return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json)})
+    return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json),'user_obj':user_obj})
 
 def delete_run(request, pk):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
     run = get_object_or_404(PhyloRun, pk=pk)
     run.delete()
     return HttpResponseRedirect('/phylomanager/run_list')
@@ -166,6 +211,71 @@ def phylomodel_list(request):
 def phylomodel_detail(request, model_id):
     return HttpResponse("You're looking at model %s." % model_id)
 
+def download_run_result(request,pk):
+    run = get_object_or_404(PhyloRun, pk=pk)
+    #return HttpResponse("You're downloading run id %s." % pk)
+
+    buffer = io.BytesIO()
+
+    run_dirname = os.path.split( run.run_directory )[1]
+
+    run_abspath = os.path.join( settings.MEDIA_ROOT, run.run_directory )
+
+    #new_file = os.path.join( run_abspath, "leg_"+str(leg.id) + '.zip' )
+    # creating zip file with write mode
+    zip = zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED)
+    # Walk through the files in a directory
+    for dir_path, dir_names, files in os.walk(run_abspath):
+        
+        f_path = dir_path.replace(dir_path, '')
+        f_path = f_path and f_path + os.sep
+        print( dir_path, dir_names, files, f_path )
+        # Writing each file into the zip
+        leg_dirname = os.path.split(dir_path)[1]
+        for file in files:
+            print( dir_path, dir_names, file, f_path )
+            zip.write(os.path.join(dir_path, file), os.path.join(leg_dirname,file))
+    zip.close()
+    buffer.seek(0)
+    
+    print("File Created successfully..")
+    #return FileResponse(open(new_file,"rb"), as_attachment=True)
+    return FileResponse(buffer, as_attachment=True, filename=run_dirname+".zip")
+
+
+def download_leg_result(request,pk):
+    leg = get_object_or_404(PhyloLeg, pk=pk)
+    #return HttpResponse("You're downloading run id %s." % pk)
+
+    buffer = io.BytesIO()
+    run = leg.run
+
+    run_abspath = os.path.join( settings.MEDIA_ROOT, run.run_directory )
+    leg_dirname = "leg_"+str(leg.id)
+    leg_directory = os.path.join( run_abspath, leg_dirname )
+
+    #new_file = os.path.join( run_abspath, "leg_"+str(leg.id) + '.zip' )
+    # creating zip file with write mode
+    zip = zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED)
+    # Walk through the files in a directory
+    for dir_path, dir_names, files in os.walk(leg_directory):
+        
+        f_path = dir_path.replace(dir_path, '')
+        f_path = f_path and f_path + os.sep
+        #print( dir_path, dir_names, files, f_path )
+        # Writing each file into the zip
+        for file in files:
+            print( dir_path, dir_names, f_path, file )
+            zip.write(os.path.join(dir_path, file), file)
+    zip.close()
+    buffer.seek(0)
+    
+    print("File Created successfully..")
+    #return FileResponse(open(new_file,"rb"), as_attachment=True)
+    return FileResponse(buffer, as_attachment=True, filename=leg_dirname+".zip")
+    
+
+
 def server_status(request):
     my_system = {}
     my_system['machine'] = platform.machine()
@@ -192,3 +302,78 @@ def server_status(request):
         'my_cpu': my_cpu
     }
     return render(request, 'phylomanager/server_status.html', context)
+
+
+from django.shortcuts import redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+
+def user_login(request):
+    username = request.POST['username']
+    password = request.POST['password']
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)
+
+    return redirect(request.META.get('HTTP_REFERER'))
+
+
+def user_logout(request):
+    logout(request)
+    return redirect(request.META.get('HTTP_REFERER'))
+
+def password(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('/phylomanager/')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'phylomanager/change_password.html', {
+        'user_obj':user_obj,'form': form
+    })    
+
+def user_info(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        return redirect('/phylomanager/')
+    #print(user_obj.username)
+    return render(request, 'phylomanager/user_info.html', {'user_obj': user_obj} )
+
+def user_form(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        return redirect('/phylomanager/')
+    if request.method == 'POST':
+        form = PhyloUserChangeForm(data=request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/phylomanager/user_info')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = PhyloUserChangeForm(instance=user_obj)
+
+    return render(request, 'phylomanager/user_changeform.html', {'form': form,'user_obj':user_obj})

@@ -16,5 +16,13 @@ urlpatterns = [
     path('add_run/', views.add_run, name='add_run'),
     path('edit_run/<int:pk>/', views.edit_run, name='edit_run'),
     path('delete_run/<int:pk>/', views.delete_run, name='delete_run'),
+    path('download_run_result/<int:pk>/', views.download_run_result, name='download_run_result'),
+    path('download_leg_result/<int:pk>/', views.download_leg_result, name='download_leg_result'),
 
+    # user
+    path('user_info/', views.user_info, name='user_info'),
+    path('user_form/', views.user_form, name='user_form'),
+    path('login/', views.user_login, name='user_login'),
+    path('logout/', views.user_logout, name='user_logout'),
+    path('password/', views.password, name='password')
 ]

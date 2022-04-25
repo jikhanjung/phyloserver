@@ -1,10 +1,10 @@
 from django import forms
 from django.db import models
-from .models import PhyloLeg, PhyloModel, PhyloPackage, PhyloRun
+from .models import PhyloLeg, PhyloModel, PhyloPackage, PhyloRun, PhyloUser
 from django.forms import ModelForm, inlineformset_factory, modelformset_factory
 
 from django.contrib.auth.models import User
-
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.conf import settings
 
 class PhyloModelForm(ModelForm):
@@ -28,3 +28,14 @@ class PhyloPackageForm(ModelForm):
     class Meta:
         model = PhyloPackage
         fields = ['package_name', 'package_version', 'package_type', 'run_path']
+
+class PhyloUserCreationForm(UserCreationForm):
+    class Meta:
+        model = PhyloUser
+        fields = ("username", "lastname", "firstname", "email")
+
+class PhyloUserChangeForm(UserChangeForm):
+
+    class Meta:
+        model = PhyloUser
+        fields = ("username", "lastname", "firstname", "email")

@@ -21,7 +21,10 @@ class Command(BaseCommand):
                 run.start_datetime = now
                 run.save()
             now_string = now.strftime("%Y%m%d_%H%M%S")
-            run_directory = os.path.join( settings.MEDIA_ROOT, "phylo_run", "run_"+str(run.id) + "_" + now_string )
+            #run_directory = 
+            run.run_directory = os.path.join( "phylo_run", run.get_run_by, run.get_dirname() + "_" + now_string )
+            run.save()
+            run_abspath = os.path.join( settings.MEDIA_ROOT, run.run_directory )
             for leg in leg_list:
                 package = leg.leg_package
                 #print( "  ",leg, leg.get_leg_status_display() )
@@ -36,7 +39,7 @@ class Command(BaseCommand):
                     #print( settings.MEDIA_ROOT, str(run.datafile) )
                     data_filename = os.path.split( str(run.datafile) )[-1]
                     original_file_location = os.path.join( settings.MEDIA_ROOT, str(run.datafile) )
-                    leg_directory = os.path.join( run_directory, "leg_"+str(leg.id) + "/")
+                    leg_directory = os.path.join( run_abspath, leg.get_dirname())
                     if not os.path.isdir( leg_directory ):
                         os.makedirs( leg_directory )
                     
@@ -45,8 +48,8 @@ class Command(BaseCommand):
                     shutil.copy( original_file_location, leg_directory )
                     target_file_location = os.path.join( leg_directory, data_filename )
 
-                    # run analysis - IQTree
                     if package.package_name == 'IQTree':
+                        #run analysis - IQTree
                         #run argument setting
                         run_argument_list = [ package.run_path, "-s", target_file_location, "-nt", "AUTO", "-st", "MORPH" ]
 
@@ -63,10 +66,17 @@ class Command(BaseCommand):
                         run_argument_list = [package.run_path, command_filename]
                         print( run_argument_list )
 
+                    stdout_filename = os.path.join( leg_directory, "output.log" )
+                    stdout_fd = open(stdout_filename, "w")
+                    stderr_filename = os.path.join( leg_directory, "error.log" )
+                    stderr_fd = open(stderr_filename, "w")
+
                     #print( run_argument_list )
-                    subprocess.run( run_argument_list, cwd=leg_directory)
+                    subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stdout_fd)
                     #print( "Sleeping 30seconds" )
-                    #time.sleep(30)
+
+                    stdout_fd.close()
+                    stderr_fd.close()
 
                     # update leg status
                     leg.leg_status = 'FN'
@@ -98,7 +108,7 @@ class Command(BaseCommand):
    lset nst={nst} rates={nrates};
    mcmc nruns={nruns} ngen={ngen} samplefreq={samplefreq} file={dfname}1;
 end;""".format( dfname=data_filename, nst=leg.mcmc_nst, nrates=leg.mcmc_nrates, nruns=leg.mcmc_nruns, ngen=leg.mcmc_ngen, samplefreq=leg.mcmc_samplefreq)
-        print(command_text)
+        #print(command_text)
 
         command_filepath = os.path.join(leg_directory,command_filename)
         f = open(command_filepath, "w")

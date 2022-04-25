@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>사용자 정보</h3>
+<table border=1>
+    <tr><th width="100">ID</th><td width="300">{{user_obj.username}}</td></tr>
+    <tr><th>이름</th><td>{{ user_obj.lastname }}{{ user_obj.firstname }}</tr>    
+    <tr><th>이메일</th><td>{{ user_obj.email }}</td></tr>
+    <tr><th>그룹</th><td>{% for gn in user_obj.groupname_list %}{{gn}} {%endfor%}</td></tr>
+    </table>
+</ul>
+<a href="{% url 'user_form'%}">[사용자정보 변경]</a>
+<a href="{% url 'password'%}">[패스워드 변경]</a>
+<a href="{% url 'user_logout'%}">[로그아웃]</a>
+{% endblock %}

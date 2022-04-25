@@ -7,11 +7,13 @@
     <li>Run Title: {{ run.run_title }}</li>
     <li>Data file: {{ run.datafile }}</li>
     <li>Status: {{ run.get_run_status_display }}</li>
-    <li>Run by: {{ run.run_by }}</li>
-    <li>Started at: {{ run.start_datetime }}</li>
-    <li>Finished at: {{ run.finish_datetime }}</li>
-    <li>Created at: {{ run.created_datetime }}</li>
-    <li>Modified at: {{ run.modified_datetime }}</li>
+    <li>Run directory: {{ run.run_directory }}</li>
+    <li>Run by: {{ run.get_run_by }}</li>
+    <li>Started at: {{ run.start_datetime|default_if_none:"-" }}</li>
+    <li>Finished at: {{ run.finish_datetime|default_if_none:"-" }}</li>
+    <!--li>Created at: {{ run.created_datetime }}</li>
+    <li>Modified at: {{ run.modified_datetime }}</li-->
+    {% if run.run_status == 'FN' %}<li><a href="{% url 'download_run_result' run.id %}">Download Result(s)</a></li>{% endif %}
 </ul>
 <ul>
 {% for leg in run.leg_set.all %}
@@ -20,12 +22,12 @@
     <li>{{ leg.get_leg_status_display }}</li>
     <li>{{ leg.leg_package }}</li>
     <li>{{ leg.get_leg_type_display }}</li>
-    <li>Started at: {{ leg.start_datetime }}</li>
-    <li>Finished at: {{ leg.finish_datetime }}</li>
+    <li>Started at: {{ leg.start_datetime|default_if_none:"-" }}</li>
+    <li>Finished at: {{ leg.finish_datetime|default_if_none:"-" }}</li>
     </ul>
 {% endfor %}
 </ul>
 <a href="{% url 'run_list' %}">[Run List]</a>
-<a href="{% url 'edit_run' run.pk %}">[Edit]</a>
+<a href="{% url 'edit_run' run.id %}">[Edit]</a>
 <a href="{% url 'delete_run' run.id %}" onclick="javascript:return confirm('Are you sure?')">[Delete]</a>
 {% endblock %}

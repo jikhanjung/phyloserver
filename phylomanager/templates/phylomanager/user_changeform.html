@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>사용자 정보</h3>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <table border="1">
+    {{ form }}
+    </table>
+    <input type="submit" value="입력">
+</form>
+{% endblock %}

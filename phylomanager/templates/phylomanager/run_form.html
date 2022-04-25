@@ -7,10 +7,14 @@
     <table width="800">
         <tr><th>{{run_form.run_title.label}}</th><td>{{run_form.run_title}}</td></tr>
         <tr><th>{{run_form.run_status.label}}</th><td>{{run_form.instance.get_run_status_display}}</td></tr>
+        {% if user_obj %}
+        <tr><th>{{run_form.run_by.label}}</th><td>{{user_obj.username}}</td></tr>
+        {% else %}
         <tr><th>{{run_form.run_by.label}}</th><td>{{run_form.run_by}}</td></tr>
+        {% endif %}
         <tr><th>{{run_form.datafile.label}}</th><td>{{run_form.datafile}}</td></tr>
-        <tr><th>{{run_form.start_datetime.label}}</th><td>{{run_form.start_datetime.value}}</td></tr>
-        <tr><th>{{run_form.finish_datetime.label}}</th><td>{{run_form.finish_datetime.value}}</td></tr>
+        <!--tr><th>{{run_form.start_datetime.label}}</th><td>{{run_form.start_datetime.value}}</td></tr>
+        <tr><th>{{run_form.finish_datetime.label}}</th><td>{{run_form.finish_datetime.value}}</td></tr-->
     </table>
 </div>
 <div id="leg-form-container">
@@ -21,8 +25,8 @@
             <tr><th>{{leg_formset.empty_form.leg_status.label}}</th><td>{{leg_formset.empty_form.instance.get_leg_status_display}}</td></tr>
             <tr><th>{{leg_formset.empty_form.leg_package.label}}</th><td>{{leg_formset.empty_form.leg_package}}</td></tr>
             <tr><th>{{leg_formset.empty_form.leg_type.label}}</th><td>{{leg_formset.empty_form.leg_type}}</td></tr>
-            <tr><th>{{leg_formset.empty_form.start_datetime.label}}</th><td>{{leg_formset.empty_form.start_datetime.value}}</td></tr>
-            <tr><th>{{leg_formset.empty_form.finish_datetime.label}}</th><td>{{leg_formset.empty_form.finish_datetime.value}}</td></tr>
+            <!--tr><th>{{leg_formset.empty_form.start_datetime.label}}</th><td>{{leg_formset.empty_form.start_datetime.value}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.finish_datetime.label}}</th><td>{{leg_formset.empty_form.finish_datetime.value}}</td></tr-->
     </table>
     <table width="800" id="mp_options___prefix__">
     </table>
@@ -55,8 +59,8 @@
             <tr><th>{{leg.leg_status.label}}</th><td>{{leg.instance.get_leg_status_display}}</td></tr>
             <tr><th>{{leg.leg_package.label}}</th><td>{{leg.leg_package}}</td></tr>
             <tr><th>{{leg.leg_type.label}}</th><td>{{leg.leg_type}}</td></tr>
-            <tr><th>{{leg.start_datetime.label}}</th><td>{{leg.start_datetime.value}}</td></tr>
-            <tr><th>{{leg.finish_datetime.label}}</th><td>{{leg.finish_datetime.value}}</td></tr>
+            <!--tr><th>{{leg.start_datetime.label}}</th><td>{{leg.start_datetime.value}}</td></tr>
+            <tr><th>{{leg.finish_datetime.label}}</th><td>{{leg.finish_datetime.value}}</td></tr-->
     </table>
     <table width="800" id="mp_options_{{forloop.counter0}}">
     </table>

@@ -1,4 +1,7 @@
+from django.conf import settings
 from django.db import models
+from django.contrib.auth.models import AbstractUser
+import os
 
 class PhyloPackage(models.Model):
     PACKAGE_TYPE_CHOICES = [
@@ -13,6 +16,17 @@ class PhyloPackage(models.Model):
     def __str__(self):
         return self.package_name
 
+class PhyloUser(AbstractUser):
+    firstname = models.CharField( max_length=50, blank=True, null=True)
+    lastname = models.CharField( max_length=50, blank=True, null=True)
+    
+    @property
+    def korean_fullname(self):
+        return self.lastname + self.firstname
+
+    def __str__(self):
+        return self.username
+
 class PhyloRun(models.Model):
     RUN_STATUS_CHOICES = [
         ('QD','Queued'),
@@ -20,6 +34,13 @@ class PhyloRun(models.Model):
         ('FN','Finished'),
         ('ER','Error occurred'),
     ]
+    DATATYPE_CHOICES = [
+        ('MO','Morphology'),
+        ('DN','DNA'),
+        ('RN','RNA'),
+        ('AA','Amino acid'),
+    ]
+
     start_datetime = models.DateTimeField(blank=True,null=True)
     finish_datetime = models.DateTimeField(blank=True,null=True)
     created_datetime = models.DateTimeField(auto_now_add=True)
@@ -27,10 +48,26 @@ class PhyloRun(models.Model):
     run_title = models.CharField(max_length=200,blank=True,null=True)
     run_status = models.CharField(max_length=10,choices=RUN_STATUS_CHOICES,default='QD',blank=True,null=True)
     run_by = models.CharField(max_length=200,blank=True,null=True)
+    run_by_user = models.ForeignKey(PhyloUser,blank=True,null=True,on_delete=models.SET_NULL)
     datafile = models.FileField(upload_to='phylorun_datafile',blank=True)
+    datatype = models.CharField(max_length=10,blank=True,null=True,choices=DATATYPE_CHOICES,default='MO')
     run_directory = models.CharField(max_length=200,blank=True,null=True)
+
+    @property
+    def get_run_by(self):
+        if self.run_by_user is None:
+            return self.run_by
+        else:
+            return self.run_by_user.username
     def __str__(self):
         return self.run_title
+
+    def get_dirname(self):
+        if self.run_title:
+            return self.run_title.replace(" ","_")
+        else:
+            return "run_" + str(self.id)
+
 
 class PhyloModel(models.Model):
     model_name = models.CharField(max_length=200,blank=True,null=True)
@@ -80,3 +117,9 @@ class PhyloLeg(models.Model):
     mcmc_nchains = models.IntegerField(blank=True,null=True,default=1)
     def __str__(self):
         return self.leg_title
+
+    def get_dirname(self):
+        if self.leg_title:
+            return self.leg_title.replace(" ","_")
+        else:
+            return "leg_" + str(self.id)
