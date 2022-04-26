@@ -4,8 +4,11 @@
 <ul>
     <li>OS: {{my_machine.OS}}</li>
     <li>Processor: {{my_machine.processor}}</li>
+    <li>Physical cores: {{my_cpu.physical_cores}}</li>
     <li>Total cores: {{my_cpu.total_cores}}</li>
     <li>Max freq.: {{my_cpu.max_freq}}</li>
+    <li>Min freq.: {{my_cpu.min_freq}}</li>
+    <li>Current freq.: {{my_cpu.curr_freq}}</li>
     <li>CPU Usage: {{my_cpu.total_cpu_usage}}</li>
 </ul>
 {% if current_run_list %}

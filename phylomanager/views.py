@@ -277,6 +277,13 @@ def download_leg_result(request,pk):
 
 
 def server_status(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
     my_system = {}
     my_system['machine'] = platform.machine()
     my_system['version'] = platform.version()
@@ -299,7 +306,8 @@ def server_status(request):
     context = {
         'current_run_list': current_run_list,
         'my_machine': my_system,
-        'my_cpu': my_cpu
+        'my_cpu': my_cpu,
+        'user_obj': user_obj,
     }
     return render(request, 'phylomanager/server_status.html', context)
 

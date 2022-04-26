@@ -123,3 +123,29 @@ class PhyloLeg(models.Model):
             return self.leg_title.replace(" ","_")
         else:
             return "leg_" + str(self.id)
+
+class PhyloRunner(models.Model):
+    RUNNER_STATUS_CHOICES = [
+        ('ST','Starting'),
+        ('SL','Sleeping'),
+        ('WK','Working'),
+        ('FN','Finished'),
+    ]
+    procid = models.CharField(max_length=20,blank=True,null=True)
+    runner_status = models.CharField(max_length=20,choices=RUNNER_STATUS_CHOICES,blank=True,null=True)
+    command = models.CharField(max_length=20,blank=True,null=True)
+    created_datetime = models.DateTimeField(auto_now_add=True)
+    modified_datetime = models.DateTimeField(auto_now=True)
+
+class PhyloAnalog(models.Model):
+    LOG_STATUS_CHOICES = [
+        ('IP','In progress'),
+        ('FN','Finished'),
+        ('ER','Error occurred'),
+    ]
+    runner = models.ForeignKey(PhyloRunner,on_delete=models.CASCADE,related_name='log_set')
+    leg = models.ForeignKey(PhyloLeg,on_delete=models.DO_NOTHING,related_name='log_set')
+    log_status = models.CharField(max_length=20,choices=LOG_STATUS_CHOICES,blank=True,null=True)
+    log_text = models.TextField(blank=True,null=True)
+    created_datetime = models.DateTimeField(auto_now_add=True)
+    modified_datetime = models.DateTimeField(auto_now=True)
