@@ -17,8 +17,8 @@ class PhyloPackage(models.Model):
         return self.package_name
 
 class PhyloUser(AbstractUser):
-    firstname = models.CharField( max_length=50, blank=True, null=True)
-    lastname = models.CharField( max_length=50, blank=True, null=True)
+    firstname = models.CharField( max_length=50, blank=True, null=True,verbose_name=u'이름')
+    lastname = models.CharField( max_length=50, blank=True, null=True,verbose_name=u'성')
     
     @property
     def korean_fullname(self):

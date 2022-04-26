@@ -22,6 +22,7 @@ urlpatterns = [
     # user
     path('user_info/', views.user_info, name='user_info'),
     path('user_form/', views.user_form, name='user_form'),
+    path('user_register/', views.user_register, name='user_register'),
     path('login/', views.user_login, name='user_login'),
     path('logout/', views.user_logout, name='user_logout'),
     path('password/', views.password, name='password')

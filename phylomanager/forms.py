@@ -29,7 +29,7 @@ class PhyloPackageForm(ModelForm):
         model = PhyloPackage
         fields = ['package_name', 'package_version', 'package_type', 'run_path']
 
-class PhyloUserCreationForm(UserCreationForm):
+class PhyloUserRegisterForm(UserCreationForm):
     class Meta:
         model = PhyloUser
         fields = ("username", "lastname", "firstname", "email")

@@ -6,7 +6,7 @@ from django.template import loader
 from django.shortcuts import get_object_or_404, render
 from django.conf import settings
 
-from .forms import PhyloRunForm, PhyloPackageForm, PhyloModelForm, PhyloLegForm, PhyloUserChangeForm
+from .forms import PhyloRunForm, PhyloPackageForm, PhyloModelForm, PhyloLegForm, PhyloUserChangeForm, PhyloUserRegisterForm
 from django.forms import modelformset_factory, inlineformset_factory
 from json import dumps
 import platform, psutil
@@ -417,3 +417,16 @@ def user_form(request):
         form = PhyloUserChangeForm(instance=user_obj)
 
     return render(request, 'phylomanager/user_changeform.html', {'form': form,'user_obj':user_obj})
+
+def user_register(request):
+    if request.method == 'POST':
+        form = PhyloUserRegisterForm(data=request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/phylomanager/user_info')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = PhyloUserRegisterForm()
+
+    return render(request, 'phylomanager/user_changeform.html', {'form': form})

@@ -8,10 +8,10 @@ admin.site.register(PhyloRun)
 admin.site.register(PhyloModel)
 admin.site.register(PhyloLeg)
 
-from .forms import PhyloUserCreationForm, PhyloUserChangeForm
+from .forms import PhyloUserRegisterForm, PhyloUserChangeForm
 
 class PhyloUserAdmin(UserAdmin):
-    add_form = PhyloUserCreationForm
+    add_form = PhyloUserRegisterForm
     form = PhyloUserChangeForm
     model = PhyloUser
     list_display = ["email", "username",]
