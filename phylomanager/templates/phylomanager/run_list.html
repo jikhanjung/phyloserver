@@ -2,11 +2,17 @@
 {% block content %}
 <h1>Run list</h1>
 {% if latest_run_list %}
-    <ul>
+    <table border="1" width="800" class="list_table">
+        <tr><th width="200">Title</th><th width="200">Status</th><th width="200">Run by</th><th width="200">No. of legs</th></tr>
     {% for run in latest_run_list %}
-        <li><a href="{% url 'run_detail' run.id %}">{{ run.run_title }}</a></li>
+        <tr class="tr_link" onclick="javascript:window.location='{% url 'run_detail' run.id %}';">
+            <td align="center"><a href="{% url 'run_detail' run.id %}">{{ run.run_title }}</a></td>
+            <td align="center">{{ run.get_run_status_display }}</td>
+            <td align="center">{{run.get_run_by}}</td>
+            <td align="center">{{run.get_number_of_legs}}</td>
+        </tr>
     {% endfor %}
-    </ul>
+    </table>
 {% else %}
     <p>No runs are available.</p>
 {% endif %}

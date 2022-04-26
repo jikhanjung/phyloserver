@@ -59,6 +59,12 @@ class PhyloRun(models.Model):
             return self.run_by
         else:
             return self.run_by_user.username
+
+    @property
+    def get_number_of_legs(self):
+        return len(self.leg_set.all())
+        
+
     def __str__(self):
         return self.run_title
 

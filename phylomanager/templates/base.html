@@ -15,9 +15,10 @@
         <div class="menu_items">
             <!--a href="/nkfadmin/chrono_chart/">ChronoChart</a>
             <a href="/nkfadmin/ref_list/">References</a-->
-            <a href="{% url 'server_status' %}">Server status</a><br/>
             <a href="/phylomanager/run_list/">Run list</a><br/>
+            <br/>
             <a href="/phylomanager/package_list/">Package list</a><br/>
+            <a href="{% url 'server_status' %}">Server status</a><br/>
         </div>
         {% if user_obj %} 
         <div>

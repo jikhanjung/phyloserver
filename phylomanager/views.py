@@ -13,6 +13,13 @@ import platform, psutil
 import io, os, zipfile
 import tempfile
 
+from django.shortcuts import redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+
+
 def index(request):
     return HttpResponseRedirect('run_list')
 
@@ -154,17 +161,42 @@ def delete_run(request, pk):
     return HttpResponseRedirect('/phylomanager/run_list')
 
 def package_list(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
     package_list = PhyloPackage.objects.all()
     context = {
         'package_list': package_list,
+        'user_obj': user_obj
     }
     return render(request, 'phylomanager/package_list.html', context)
 
 def package_detail(request, package_id):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+    
     package = get_object_or_404(PhyloPackage, pk=package_id)
-    return render(request, 'phylomanager/package_detail.html', {'package': package})
+    return render(request, 'phylomanager/package_detail.html', {'package': package, 'user_obj':user_obj})
 
 def add_package(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
         package_form = PhyloPackageForm(request.POST)
@@ -176,9 +208,17 @@ def add_package(request):
     else:
         package_form = PhyloPackageForm()
 
-    return render(request, 'phylomanager/package_form.html', {'package_form': package_form})
+    return render(request, 'phylomanager/package_form.html', {'package_form': package_form, 'user_obj':user_obj})
 
 def edit_package(request, pk):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
     package = get_object_or_404(PhyloPackage, pk=pk)
 
     if request.method == 'POST':
@@ -194,14 +234,12 @@ def edit_package(request, pk):
     else:
         package_form = PhyloPackageForm(instance=package)
 
-    return render(request, 'phylomanager/package_form.html', {'package_form': package_form})
+    return render(request, 'phylomanager/package_form.html', {'package_form': package_form, 'user_obj':user_obj})
 
 def delete_package(request, pk):
     package = get_object_or_404(PhyloPackage, pk=pk)
     package.delete()
     return HttpResponseRedirect('/phylomanager/package_list')
-
-
 
 def phylomodel_list(request):
     model_list = PhyloModel.objects.all()
@@ -284,6 +322,7 @@ def server_status(request):
             user_obj.groupname_list.append(g.name)
     else:
         user_obj = None
+
     my_system = {}
     my_system['machine'] = platform.machine()
     my_system['version'] = platform.version()
@@ -310,13 +349,6 @@ def server_status(request):
         'user_obj': user_obj,
     }
     return render(request, 'phylomanager/server_status.html', context)
-
-
-from django.shortcuts import redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
 
 def user_login(request):
     username = request.POST['username']

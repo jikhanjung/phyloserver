@@ -37,6 +37,10 @@ td, th {
     padding: 3px;
 }
 
+.tr_link:hover {
+    background-color: skyblue;
+    cursor: pointer;
+}
 
 .list_table td {
     white-space: nowrap;
@@ -45,4 +49,10 @@ td, th {
 
 .detail_table td {
     white-space: normal;
+}
+
+.leg_form {
+    border: 1px solid black; 
+    width:798px; 
+    margin-top:10px;
 }

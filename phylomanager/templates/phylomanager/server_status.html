@@ -1,16 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Server Status</h1>
-<ul>
-    <li>OS: {{my_machine.OS}}</li>
-    <li>Processor: {{my_machine.processor}}</li>
-    <li>Physical cores: {{my_cpu.physical_cores}}</li>
-    <li>Total cores: {{my_cpu.total_cores}}</li>
-    <li>Max freq.: {{my_cpu.max_freq}}</li>
-    <li>Min freq.: {{my_cpu.min_freq}}</li>
-    <li>Current freq.: {{my_cpu.curr_freq}}</li>
-    <li>CPU Usage: {{my_cpu.total_cpu_usage}}</li>
-</ul>
+<h4>Hardware</h4>
+<table border="1" width="600" >
+    <tr><th>OS</th><td>{{my_machine.OS}}</td></tr>
+    <tr><th>Processor</th><td>{{my_machine.processor}}</td></tr>
+    <tr><th>Physical cores</th><td>{{my_cpu.physical_cores}}</td></tr>
+    <tr><th>Total cores</th><td>{{my_cpu.total_cores}}</td></tr>
+    <tr><th>Max freq.</th><td>{{my_cpu.max_freq}}</td></tr>
+    <tr><th>Min freq.</th><td>{{my_cpu.min_freq}}</td></tr>
+    <tr><th>Current freq.</th><td>{{my_cpu.curr_freq}}</td></tr>
+    <tr><th>CPU Usage</th><td>{{my_cpu.total_cpu_usage}}</td></tr>
+</table>
+<h4>Analysis status</h4>
 {% if current_run_list %}
     <ul>
     {% for run in current_run_list %}

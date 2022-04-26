@@ -4,8 +4,8 @@
 <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
 <div>
-    <table width="800">
-        <tr><th>{{run_form.run_title.label}}</th><td>{{run_form.run_title}}</td></tr>
+    <table width="800" border="1">
+        <tr><th width="200">{{run_form.run_title.label}}</th><td>{{run_form.run_title}}</td></tr>
         <tr><th>{{run_form.run_status.label}}</th><td>{{run_form.instance.get_run_status_display}}</td></tr>
         {% if user_obj %}
         <tr><th>{{run_form.run_by.label}}</th><td>{{user_obj.username}}</td></tr>
@@ -19,24 +19,24 @@
 </div>
 <div id="leg-form-container">
 {{ leg_formset.management_form }}
-<div id="empty-form" style="display:none; border: 1px solid grey;">
-    <table width="800">
-            <tr><th>{{leg_formset.empty_form.leg_title.label}}</th><td>{{leg_formset.empty_form.leg_title}}</td></tr>
+<div id="empty-form" style="display:none; border: 1px solid black; width:798px; margin-top:10px;">
+    <table width="800" border="0">
+            <tr><th width="200">{{leg_formset.empty_form.leg_title.label}}</th><td>{{leg_formset.empty_form.leg_title}}</td></tr>
             <tr><th>{{leg_formset.empty_form.leg_status.label}}</th><td>{{leg_formset.empty_form.instance.get_leg_status_display}}</td></tr>
             <tr><th>{{leg_formset.empty_form.leg_package.label}}</th><td>{{leg_formset.empty_form.leg_package}}</td></tr>
             <tr><th>{{leg_formset.empty_form.leg_type.label}}</th><td>{{leg_formset.empty_form.leg_type}}</td></tr>
             <!--tr><th>{{leg_formset.empty_form.start_datetime.label}}</th><td>{{leg_formset.empty_form.start_datetime.value}}</td></tr>
             <tr><th>{{leg_formset.empty_form.finish_datetime.label}}</th><td>{{leg_formset.empty_form.finish_datetime.value}}</td></tr-->
     </table>
-    <table width="800" id="mp_options___prefix__">
+    <table width="800" id="mp_options___prefix__" border="0">
     </table>
-    <table width="800" id="ml_options___prefix__">
-            <tr><th>{{leg_formset.empty_form.ml_bootstrap.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap}}</td></tr>
+    <table width="800" id="ml_options___prefix__" border="0">
+            <tr><th width="200">{{leg_formset.empty_form.ml_bootstrap.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap}}</td></tr>
             <tr><th>{{leg_formset.empty_form.ml_bootstrap_type.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap_type}}</td></tr>
             <tr><th>{{leg_formset.empty_form.substitution_model.label}}</th><td>{{leg_formset.empty_form.substitution_model}}</td></tr>
     </table>
-    <table width="800" id="bayesian_options___prefix__">
-            <tr><th>{{leg_formset.empty_form.mcmc_burnin.label}}</th><td>{{leg_formset.empty_form.mcmc_burnin}}</td></tr>
+    <table width="800" id="bayesian_options___prefix__" border="0">
+            <tr><th width="200">{{leg_formset.empty_form.mcmc_burnin.label}}</th><td width="600">{{leg_formset.empty_form.mcmc_burnin}}</td></tr>
             <tr><th>{{leg_formset.empty_form.mcmc_relburnin.label}}</th><td>{{leg_formset.empty_form.mcmc_relburnin}}</td></tr>
             <tr><th>{{leg_formset.empty_form.mcmc_burninfrac.label}}</th><td>{{leg_formset.empty_form.mcmc_burninfrac}}</td></tr>
             <tr><th>{{leg_formset.empty_form.mcmc_ngen.label}}</th><td>{{leg_formset.empty_form.mcmc_ngen}}</td></tr>
@@ -53,24 +53,24 @@
 {% for hidden in leg.hidden_fields %}
     {{ hidden }}
 {% endfor %}
-<div class="leg-form" style="border: 1px solid grey;">
-    <table width="800">
-            <tr><th>{{leg.leg_title.label}}</th><td>{{leg.leg_title}}</td></tr>
+<div class="leg-form" style="border: 1px solid black; width:798px; margin-top:10px;">
+    <table width="800" border="0">
+            <tr><th width="200">{{leg.leg_title.label}}</th><td>{{leg.leg_title}}</td></tr>
             <tr><th>{{leg.leg_status.label}}</th><td>{{leg.instance.get_leg_status_display}}</td></tr>
             <tr><th>{{leg.leg_package.label}}</th><td>{{leg.leg_package}}</td></tr>
             <tr><th>{{leg.leg_type.label}}</th><td>{{leg.leg_type}}</td></tr>
             <!--tr><th>{{leg.start_datetime.label}}</th><td>{{leg.start_datetime.value}}</td></tr>
             <tr><th>{{leg.finish_datetime.label}}</th><td>{{leg.finish_datetime.value}}</td></tr-->
     </table>
-    <table width="800" id="mp_options_{{forloop.counter0}}">
+    <table width="800" id="mp_options_{{forloop.counter0}}" border="0">
     </table>
-    <table width="800" id="ml_options_{{forloop.counter0}}">
-            <tr><th>{{leg.ml_bootstrap.label}}</th><td>{{leg.ml_bootstrap}}</td></tr>
+    <table width="800" id="ml_options_{{forloop.counter0}}" border="0">
+            <tr><th width="200">{{leg.ml_bootstrap.label}}</th><td>{{leg.ml_bootstrap}}</td></tr>
             <tr><th>{{leg.ml_bootstrap_type.label}}</th><td>{{leg.ml_bootstrap_type}}</td></tr>
             <tr><th>{{leg.substitution_model.label}}</th><td>{{leg.substitution_model}}</td></tr>
     </table>
-    <table width="800" id="bayesian_options_{{forloop.counter0}}">
-            <tr><th>{{leg.mcmc_burnin.label}}</th><td>{{leg.mcmc_burnin}}</td></tr>
+    <table width="800" id="bayesian_options_{{forloop.counter0}}" border="0">
+            <tr><th width="200">{{leg.mcmc_burnin.label}}</th><td width="600">{{leg.mcmc_burnin}}</td></tr>
             <tr><th>{{leg.mcmc_relburnin.label}}</th><td>{{leg.mcmc_relburnin}}</td></tr>
             <tr><th>{{leg.mcmc_burninfrac.label}}</th><td>{{leg.mcmc_burninfrac}}</td></tr>
             <tr><th>{{leg.mcmc_ngen.label}}</th><td>{{leg.mcmc_ngen}}</td></tr>

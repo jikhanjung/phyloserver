@@ -1,33 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>{{ run.run_title }}</h1>
+<h1>Run info</h1>
 
 
-<ul>
-    <li>Run Title: {{ run.run_title }}</li>
-    <li>Data file: {{ run.datafile }}</li>
-    <li>Status: {{ run.get_run_status_display }}</li>
-    <li>Run directory: {{ run.run_directory }}</li>
-    <li>Run by: {{ run.get_run_by }}</li>
-    <li>Started at: {{ run.start_datetime|default_if_none:"-" }}</li>
-    <li>Finished at: {{ run.finish_datetime|default_if_none:"-" }}</li>
+<table border="1" width="800">
+    <tr><th width="150">Run title</th><td>{{ run.run_title }}</td></tr>
+    <tr><th>Data file</th><td> {{ run.datafile }}</td></tr>
+    <tr><th>Status</th><td> {{ run.get_run_status_display }}</td></tr>
+    <!--tr><th>Run directory</th><td> {{ run.run_directory }}</td></tr-->
+    <tr><th>Run by</th><td>{{ run.get_run_by }}</td></tr>
+    <tr><th>Started at</th><td>{{ run.start_datetime|default_if_none:"-" }}</td></tr>
+    <tr><th>Finished at</th><td>{{ run.finish_datetime|default_if_none:"-" }}</td></tr>
     <!--li>Created at: {{ run.created_datetime }}</li>
     <li>Modified at: {{ run.modified_datetime }}</li-->
-    {% if run.run_status == 'FN' %}<li><a href="{% url 'download_run_result' run.id %}">Download Result(s)</a></li>{% endif %}
-</ul>
-<ul>
+    {% if run.run_status == 'FN' %}<tr><th>Results</th><td><a href="{% url 'download_run_result' run.id %}">Download Result(s)</a></td></tr>{% endif %}
+</table>
+<br/>
 {% for leg in run.leg_set.all %}
-    <li>{{ leg.leg_title }}</li>
-    <ul>
-    <li>{{ leg.get_leg_status_display }}</li>
-    <li>{{ leg.leg_package }}</li>
-    <li>{{ leg.get_leg_type_display }}</li>
-    <li>Started at: {{ leg.start_datetime|default_if_none:"-" }}</li>
-    <li>Finished at: {{ leg.finish_datetime|default_if_none:"-" }}</li>
-    </ul>
+<table border="1" width="800">
+    <tr><th width="150">Leg title</th><td>{{ leg.leg_title }}</td></tr>
+    <tr><th>Status</th><td>{{ leg.get_leg_status_display }}</td></tr>
+    <tr><th>Package</th><td>{{ leg.leg_package }}</td></tr>
+    <tr><th>Package type</th><td>{{ leg.get_leg_type_display }}</td></tr>
+    <tr><th>Started at</th><td>{{ leg.start_datetime|default_if_none:"-" }}</td></tr>
+    <tr><th>Finished at</th><td>{{ leg.finish_datetime|default_if_none:"-" }}</td></tr>
+</table>
+<br/>
 {% endfor %}
-</ul>
+
 <a href="{% url 'run_list' %}">[Run List]</a>
-<a href="{% url 'edit_run' run.id %}">[Edit]</a>
+{% if run.run_status != 'FN' %}<a href="{% url 'edit_run' run.id %}">[Edit]</a>{%endif%}
 <a href="{% url 'delete_run' run.id %}" onclick="javascript:return confirm('Are you sure?')">[Delete]</a>
 {% endblock %}
