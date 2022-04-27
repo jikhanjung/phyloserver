@@ -15,7 +15,7 @@ class PhyloModelForm(ModelForm):
 class PhyloRunForm(ModelForm):
     class Meta:
         model = PhyloRun
-        fields = ['run_title', 'run_status', 'run_by', 'datafile', 'run_directory', 'start_datetime','finish_datetime']
+        fields = ['run_title', 'run_status', 'run_by', 'datafile', 'datatype', 'run_directory', 'start_datetime','finish_datetime']
 
 class PhyloLegForm(ModelForm):
     class Meta:

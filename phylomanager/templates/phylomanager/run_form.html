@@ -13,6 +13,7 @@
         <tr><th>{{run_form.run_by.label}}</th><td>{{run_form.run_by}}</td></tr>
         {% endif %}
         <tr><th>{{run_form.datafile.label}}</th><td>{{run_form.datafile}}</td></tr>
+        <tr><th>{{run_form.datatype.label}}</th><td>{{run_form.datatype}}</td></tr>
         <!--tr><th>{{run_form.start_datetime.label}}</th><td>{{run_form.start_datetime.value}}</td></tr>
         <tr><th>{{run_form.finish_datetime.label}}</th><td>{{run_form.finish_datetime.value}}</td></tr-->
     </table>
@@ -31,9 +32,9 @@
     <table width="800" id="mp_options___prefix__" border="0">
     </table>
     <table width="800" id="ml_options___prefix__" border="0">
-            <tr><th width="200">{{leg_formset.empty_form.ml_bootstrap.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap}}</td></tr>
-            <tr><th>{{leg_formset.empty_form.ml_bootstrap_type.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap_type}}</td></tr>
-            <tr><th>{{leg_formset.empty_form.substitution_model.label}}</th><td>{{leg_formset.empty_form.substitution_model}}</td></tr>
+            <tr><th width="200">{{leg_formset.empty_form.ml_bootstrap_type.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap_type}}</td></tr>
+            <tr><th>{{leg_formset.empty_form.ml_bootstrap.label}}</th><td>{{leg_formset.empty_form.ml_bootstrap}}</td></tr>
+            <!--tr><th>{{leg_formset.empty_form.substitution_model.label}}</th><td>{{leg_formset.empty_form.substitution_model}}</td></tr-->
     </table>
     <table width="800" id="bayesian_options___prefix__" border="0">
             <tr><th width="200">{{leg_formset.empty_form.mcmc_burnin.label}}</th><td width="600">{{leg_formset.empty_form.mcmc_burnin}}</td></tr>
@@ -65,9 +66,9 @@
     <table width="800" id="mp_options_{{forloop.counter0}}" border="0">
     </table>
     <table width="800" id="ml_options_{{forloop.counter0}}" border="0">
-            <tr><th width="200">{{leg.ml_bootstrap.label}}</th><td>{{leg.ml_bootstrap}}</td></tr>
-            <tr><th>{{leg.ml_bootstrap_type.label}}</th><td>{{leg.ml_bootstrap_type}}</td></tr>
-            <tr><th>{{leg.substitution_model.label}}</th><td>{{leg.substitution_model}}</td></tr>
+            <tr><th width="200">{{leg.ml_bootstrap_type.label}}</th><td>{{leg.ml_bootstrap_type}}</td></tr>
+            <tr><th>{{leg.ml_bootstrap.label}}</th><td>{{leg.ml_bootstrap}}</td></tr>
+            <!--tr><th>{{leg.substitution_model.label}}</th><td>{{leg.substitution_model}}</td></tr-->
     </table>
     <table width="800" id="bayesian_options_{{forloop.counter0}}" border="0">
             <tr><th width="200">{{leg.mcmc_burnin.label}}</th><td width="600">{{leg.mcmc_burnin}}</td></tr>

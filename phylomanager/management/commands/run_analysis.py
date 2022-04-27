@@ -89,7 +89,14 @@ class Command(BaseCommand):
                         if package.package_name == 'IQTree':
                             #run analysis - IQTree
                             #run argument setting
-                            run_argument_list = [ package.run_path, "-s", target_file_location, "-nt", "AUTO", "-st", "MORPH" ]
+                            run_argument_list = [ package.run_path, "-s", target_file_location, "-nt", "AUTO"]
+                            if run.datatype == 'MO':
+                                run_argument_list.extend( ["-st", "MORPH"] )
+                            if leg.ml_bootstrap_type == 'NB':
+                                run_argument_list.extend( ["-b", str(leg.ml_bootstrap)] )
+                            elif leg.ml_bootstrap_type == 'UF':
+                                run_argument_list.extend( ["-bb", str(leg.ml_bootstrap)] )
+                            print( run_argument_list )
 
                         elif package.package_name == 'TNT':
                             # copy TNT script file
