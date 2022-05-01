@@ -14,10 +14,11 @@
     <!--li>Created at: {{ run.created_datetime }}</li>
     <li>Modified at: {{ run.modified_datetime }}</li-->
     {% if run.run_status == 'FN' %}<tr><th>Results</th><td><a href="{% url 'download_run_result' run.id %}">Download Result(s)</a></td></tr>{% endif %}
+    {% if phylodata %}<tr><td colspan="2"><div style="text-align:center"><a href="javascript:toggle_datamatrix();"><div id="toggle_button">[Show Data]</div></a></div></td></tr>{%endif%}
 </table>
 <br/>
 {% if phylodata %}
-<div style="width:800px;overflow-x:auto;white-space:nowrap;">
+<div style="width:800px;overflow-x:auto;white-space:nowrap;display:none;" id="datamatrix_div">
 <table border="1">
 {{ phylodata.datamatrix_as_table_rows }}
 </table>
@@ -39,4 +40,21 @@
 <a href="{% url 'run_list' %}">[Run List]</a>
 {% if run.run_status != 'FN' %}<a href="{% url 'edit_run' run.id %}">[Edit]</a>{%endif%}
 <a href="{% url 'delete_run' run.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
+<script>
+var datamatrix_visible=false;
+function toggle_datamatrix(){
+    var datamatrix_div = document.getElementById('datamatrix_div');
+    var toggle_button = document.getElementById('toggle_button');
+    if( datamatrix_visible ) {
+        datamatrix_visible = false;
+        toggle_button.innerHTML = '[Show Data]';
+        datamatrix_div.style.display = 'none';
+    } else {
+        datamatrix_visible = true;
+        datamatrix_div.style.display = 'block';
+        toggle_button.innerHTML = '[Hide Data]';
+    }
+}
+
+</script>
 {% endblock %}

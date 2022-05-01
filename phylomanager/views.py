@@ -55,7 +55,7 @@ def run_detail(request, run_id):
 
     run = get_object_or_404(PhyloRun, pk=run_id)
     phylodata = run.phylodata
-    print("phylodata:", phylodata)
+    #print("phylodata:", phylodata)
     return render(request, 'phylomanager/run_detail.html', {'run': run, 'phylodata': phylodata, 'user_obj':user_obj})
 
 def add_run_upload_file(request):
@@ -151,6 +151,7 @@ def edit_run(request,pk):
     #print("edit run")
     data_json = []
     run = get_object_or_404(PhyloRun, pk=pk)
+    phylodata = run.phylodata
     leg_formset = run.leg_set.all().order_by('leg_sequence')
 
     if request.method == 'POST':
@@ -190,7 +191,7 @@ def edit_run(request,pk):
         for p in package_list:
             data_json.append( [p.package_name, p.package_type] )
 
-    return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json),'user_obj':user_obj})
+    return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'phylodata':phylodata,'leg_formset':leg_formset,'data_json':dumps(data_json),'user_obj':user_obj})
 
 def delete_run(request, pk):
     if request.user.is_authenticated:

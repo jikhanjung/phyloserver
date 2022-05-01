@@ -79,6 +79,8 @@ class PhyloData(models.Model):
     taxa_list = models.TextField(blank=True,null=True)
     char_list = models.TextField(blank=True,null=True)
     datamatrix_json = models.TextField(blank=True,null=True)
+    mrbayes_block = models.TextField(blank=True,null=True)
+    nexus_command_json = models.TextField(blank=True,null=True)
     filetext = models.TextField(blank=True,null=True)
 
     @property
@@ -123,12 +125,20 @@ class PhyloData(models.Model):
         if ret:
             datafile = self.phylo_datafile
             self.dataset_name = datafile.dataset_name
-            self.n_taxa = datafile.phylo_matrix.n_taxa
-            self.n_chars = datafile.phylo_matrix.n_chars
-            self.taxa_list = datafile.phylo_matrix.taxa_list_as_string()
-            self.char_list = datafile.phylo_matrix.char_list_as_string()
-            self.datamatrix_json = datafile.phylo_matrix.matrix_as_json()
             self.filetext = datafile.file_text       
+
+            matrix = datafile.phylo_matrix
+            self.n_taxa = matrix.n_taxa
+            self.n_chars = matrix.n_chars
+            self.taxa_list = matrix.taxa_list_as_string()
+            self.char_list = matrix.char_list_as_string()
+            self.datamatrix_json = matrix.matrix_as_json()
+            
+            if self.file_type == 'Nexus':
+                if datafile.block_hash['MRBAYES']:
+                    self.mrbayes_block = datafile.block_as_json('MRBAYES')
+                if matrix.command_hash:
+                    self.nexus_command_json = matrix.command_hash_as_json()
         else:
             return False
 

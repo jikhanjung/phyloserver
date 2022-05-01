@@ -100,6 +100,9 @@ class PhyloMatrix:
         #print("number of char", nchar)
         self.format_datamatrix()
 
+    def command_hash_as_json(self):
+        return json.dumps(self.command_hash)
+
     def command_as_string(self):
         command_string = ""
         for key1 in self.command_hash.keys():
@@ -251,6 +254,8 @@ class PhyloDatafile():
             if self.block_hash['DATA']:
                 self.phylo_matrix.parse_nexus_data_block(self.block_hash['DATA'])
                 self.command_hash = self.phylo_matrix.command_hash
+            if self.block_hash['MRBAYES']:
+                pass
         elif self.file_type == 'Phylip':
             print("phylip file")
             self.phylo_matrix.parse_phylip_file(self.line_list)
@@ -322,3 +327,7 @@ class PhyloDatafile():
         nexus_string += ";\n"
         nexus_string += "END;\n"
         return nexus_string
+    
+    def block_as_json(self,block_name):
+        if self.block_hash[block_name]:
+            return json.dumps(self.block_hash[block_name],indent=4)

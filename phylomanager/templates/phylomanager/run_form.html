@@ -14,10 +14,20 @@
         {% endif %}
         <tr><th>{{run_form.datafile.label}}</th><td>{{run_form.datafile}}</td></tr>
         <tr><th>{{run_form.datatype.label}}</th><td>{{run_form.datatype}}</td></tr>
+        {% if phylodata %}<tr><td colspan="2"><div style="text-align:center"><a href="javascript:toggle_datamatrix();"><div id="toggle_button">[Show Data]</div></a></div></td></tr>{%endif%}
         <!--tr><th>{{run_form.start_datetime.label}}</th><td>{{run_form.start_datetime.value}}</td></tr>
         <tr><th>{{run_form.finish_datetime.label}}</th><td>{{run_form.finish_datetime.value}}</td></tr-->
     </table>
 </div>
+<br/>
+{% if phylodata %}
+<div style="width:800px;overflow-x:auto;white-space:nowrap;display:none;" id="datamatrix_div">
+<table border="1">
+{{ phylodata.datamatrix_as_table_rows }}
+</table>
+</div>
+{% endif %}
+
 <div id="leg-form-container">
 {{ leg_formset.management_form }}
 <div id="empty-form" style="display:none; border: 1px solid black; width:798px; margin-top:10px;">
@@ -240,7 +250,20 @@
         leg_package[idx] = document.getElementById('id_leg_set-'+String(idx)+'-leg_package');
         set_leg_package_event_listener( leg_package[idx], idx );
     }
-    
+var datamatrix_visible=false;
+function toggle_datamatrix(){
+    var datamatrix_div = document.getElementById('datamatrix_div');
+    var toggle_button = document.getElementById('toggle_button');
+    if( datamatrix_visible ) {
+        datamatrix_visible = false;
+        toggle_button.innerHTML = '[Show Data]';
+        datamatrix_div.style.display = 'none';
+    } else {
+        datamatrix_visible = true;
+        datamatrix_div.style.display = 'block';
+        toggle_button.innerHTML = '[Hide Data]';
+    }
+}
 
 </script>
 {% endblock %}
