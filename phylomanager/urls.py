@@ -13,6 +13,8 @@ urlpatterns = [
 
     path('run_list/', views.run_list, name='run_list'),
     path('run_detail/<int:run_id>/', views.run_detail, name='run_detail'),
+    #path('data_detail/<int:run_id>/', views.run_detail, name='run_detail'),
+    path('add_run_upload_file/', views.add_run_upload_file, name='add_run_upload_file'),
     path('add_run/', views.add_run, name='add_run'),
     path('edit_run/<int:pk>/', views.edit_run, name='edit_run'),
     path('delete_run/<int:pk>/', views.delete_run, name='delete_run'),

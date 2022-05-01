@@ -16,6 +16,14 @@
     {% if run.run_status == 'FN' %}<tr><th>Results</th><td><a href="{% url 'download_run_result' run.id %}">Download Result(s)</a></td></tr>{% endif %}
 </table>
 <br/>
+{% if phylodata %}
+<div style="width:800px;overflow-x:auto;white-space:nowrap;">
+<table border="1">
+{{ phylodata.datamatrix_as_table_rows }}
+</table>
+</div>
+{% endif %}
+<br/>
 {% for leg in run.leg_set.all %}
 <table border="1" width="800">
     <tr><th width="150">Leg title</th><td>{{ leg.leg_title }}</td></tr>
@@ -30,5 +38,5 @@
 
 <a href="{% url 'run_list' %}">[Run List]</a>
 {% if run.run_status != 'FN' %}<a href="{% url 'edit_run' run.id %}">[Edit]</a>{%endif%}
-<a href="{% url 'delete_run' run.id %}" onclick="javascript:return confirm('Are you sure?')">[Delete]</a>
+<a href="{% url 'delete_run' run.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
 {% endblock %}

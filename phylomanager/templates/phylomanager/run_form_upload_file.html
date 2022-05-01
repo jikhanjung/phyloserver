@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Edit Run</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+<div>
+    <table width="800" border="1">
+        <tr><th>{{run_form.datafile.label}}</th><td>{{run_form.datafile}}</td></tr>
+    </table>
+</div>
+<input type="submit" value="Save">
+</div>
+</form>
+{% endblock %}

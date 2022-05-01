@@ -1,0 +1,38 @@
+#NEXUS
+
+begin data;
+dimensions ntax=17 nchar=23;
+format datatype = standard gap = - missing =?;
+matrix
+
+Sinotubulites   10000--?---00--00000011
+Cl.lucianoi   1??010011-?00--1?00111(0 1)
+Cl.hartmanae   101100111-000--00001111
+Cl.riemkae   ??1000010-000--0000111(0 1)
+Cl.carinata   (0 1)?1000110-100--1(0 1)00111(0 1)
+Lipopora.daseia   11?00010-011100(0 1)1000?10
+Lipopora.lissa   01110(0 1)110021110(0 1)1000110
+Trectocylichne   0101001---0111111000010
+Cbc.koori   ?10??(0 1)0101?111111?10010
+Cbc.kyrgyzstanicus   010111---111111111?0010
+Cbc.orientalis   01011(0 1)01012111111110110
+Cbc.coreaensis   010111---221???11??0010
+Zuunia   0??000110-000--00000110
+Rajatubulus   0??000110-000--00001110
+Feiyanella   101000011-000--00000?11
+Saarina   0?0000100-?00--0000110?
+Costatubus   0?0000100-?00--0000000?
+
+;
+end;
+
+BEGIN SETS;
+	CHARPARTITION * matrices = Character_Matrix : 1-23 ;
+	charset Character_Matrix = 1-23;
+END;
+begin mrbayes;
+	lset rates=gamma;
+mcmc ngen = 5000000 append = n;
+sumt burninfrac=0.1;
+sump burninfrac=0.1;
+end;

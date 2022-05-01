@@ -5,8 +5,9 @@ from .models import PhyloRun, PhyloPackage, PhyloModel, PhyloLeg
 from django.template import loader
 from django.shortcuts import get_object_or_404, render
 from django.conf import settings
+from django.core.paginator import Paginator
 
-from .forms import PhyloRunForm, PhyloPackageForm, PhyloModelForm, PhyloLegForm, PhyloUserChangeForm, PhyloUserRegisterForm
+from .forms import PhyloRunForm, PhyloRunUploadFileForm, PhyloPackageForm, PhyloModelForm, PhyloLegForm, PhyloUserChangeForm, PhyloUserRegisterForm
 from django.forms import modelformset_factory, inlineformset_factory
 from json import dumps
 import platform, psutil
@@ -18,7 +19,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
-
+from .utils import PhyloDatafile
 
 def index(request):
     return HttpResponseRedirect('run_list')
@@ -32,10 +33,14 @@ def run_list(request):
     else:
         user_obj = None
 
-    latest_run_list = PhyloRun.objects.order_by('created_datetime')
+    run_list = PhyloRun.objects.order_by('-created_datetime')
+    paginator = Paginator(run_list, 25) # Show 25 contacts per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     context = {
-        'latest_run_list': latest_run_list,
+        'run_list': run_list,
         'user_obj': user_obj,
+        'page_obj': page_obj,
     }
     return render(request, 'phylomanager/run_list.html', context)
 
@@ -49,7 +54,45 @@ def run_detail(request, run_id):
         user_obj = None
 
     run = get_object_or_404(PhyloRun, pk=run_id)
-    return render(request, 'phylomanager/run_detail.html', {'run': run, 'user_obj':user_obj})
+    phylodata = run.phylodata
+    print("phylodata:", phylodata)
+    return render(request, 'phylomanager/run_detail.html', {'run': run, 'phylodata': phylodata, 'user_obj':user_obj})
+
+def add_run_upload_file(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        run_form = PhyloRunUploadFileForm(request.POST,request.FILES)
+        # check whether it's valid:
+        if run_form.is_valid():
+            phylorun = run_form.save(commit=False)
+            #print(phylorun.datafile)
+            phylorun.run_by_user = user_obj
+            #phylorun.run_status='Registered'
+            datafile_name = str(phylorun.datafile)
+            if not phylorun.run_title:
+                fname,fext = os.path.splitext(datafile_name)
+                phylorun.run_title = fname
+            phylorun.save()
+            pk = phylorun.id
+            phylorun.process_datafile()
+            print(phylorun.datafile)
+            phylorun.phylodata.save()
+            #phylorun.phylodata = phylorun.phylodata
+            phylorun.save()
+            return HttpResponseRedirect('/phylomanager/edit_run/'+str(phylorun.id))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        run_form = PhyloRunForm()
+
+    return render(request, 'phylomanager/run_form_upload_file.html', {'run_form': run_form,'user_obj':user_obj})
 
 def add_run(request):
     if request.user.is_authenticated:
@@ -68,7 +111,7 @@ def add_run(request):
         # check whether it's valid:
         if run_form.is_valid():
             phylorun = run_form.save(commit=False)
-            print(phylorun.datafile)
+            #print(phylorun.datafile)
             phylorun.run_by_user = user_obj
             #phylorun.run_status='Registered'
             phylorun.save()
@@ -105,25 +148,25 @@ def edit_run(request,pk):
     else:
         user_obj = None
 
-    print("edit run")
+    #print("edit run")
     data_json = []
     run = get_object_or_404(PhyloRun, pk=pk)
     leg_formset = run.leg_set.all().order_by('leg_sequence')
 
     if request.method == 'POST':
-        print("method POST")
+        #print("method POST")
         # create a form instance and populate it with data from the request:
         run_form = PhyloRunForm(request.POST,request.FILES,instance=run)
         PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm)
 
         # check whether it's valid:
         if run_form.is_valid():
-            print("run form valid")
+            #print("run form valid")
             run = run_form.save(commit=False)
             run.save()
             leg_formset = PhyloLegFormSet(request.POST,request.FILES, instance=run)
             if leg_formset.is_valid():
-                print("leg formset valid")
+                #print("leg formset valid")
                 leg_instances = leg_formset.save(commit=False)
                 for leg in leg_instances:
                     #if leg.id and leg.datafile == '':
@@ -131,15 +174,17 @@ def edit_run(request,pk):
                     #else:
                     leg.save()
             else:
-                print(leg_formset)
+                #print(leg_formset)
+                pass
             return HttpResponseRedirect('/phylomanager/run_detail/'+str(pk))
         else:
-            print(run_form)
+            pass
+            #print(run_form)
 
     # if a GET (or any other method) we'll create a blank form
     else:
         run_form = PhyloRunForm(instance=run)
-        PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm, extra=0)
+        PhyloLegFormSet = inlineformset_factory(PhyloRun, PhyloLeg, form=PhyloLegForm, extra=1)
         leg_formset = PhyloLegFormSet(instance=run)
         package_list = PhyloPackage.objects.all()
         for p in package_list:
