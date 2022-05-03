@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
         #signal.signal(signal.SIGINT, self.quit_gracefully)   
         #signal.signal(signal.SIGTERM, self.quit_gracefully)     
-        signal.signal(signal.SIGBREAK, self.quit_gracefully)     
+        #signal.signal(signal.SIGBREAK, self.quit_gracefully)     
 
         self.runner = PhyloRunner()
         self.runner.procid = os.getpid()
