@@ -19,54 +19,110 @@ class PhyloMatrix:
     def char_list_as_string(self,separator=","):
         return separator.join(self.char_list)
 
-    def matrix_as_string(self,parens=["(",")"],separator=" "):
-        matrix_string = ""
-        #print("separator=["+separator+"]")
-        for taxon in self.taxa_list:
-            #print("taxon:",taxon)
-            taxon_string = taxon + " "
-            #matrix_string += taxon + " "
-            formatted_data = self.formatted_data_hash[taxon]
-            #print(formatted_data)
-            for char_state in formatted_data:
-                #print("char:",char_state)
-                if type(char_state) is list:
-                    taxon_string += parens[0] + separator.join(char_state) + parens[1]
-                    #print("poly:",parens[0] + separator.join(char_state) + parens[1])
-                else:
-                    taxon_string += char_state
-            matrix_string += taxon_string + "\n"
-        return matrix_string
+class PhyloDatafile():
+    def __init__(self):
+        self.dataset_name = ''
+        self.file_text = None
+        self.file_type = None
+        self.line_list = []
+        self.block_list = []
+        self.block_hash = {}
+        self.nexus_command_hash = {}
+        self.phylo_matrix = PhyloMatrix()
+        self.character_definition_hash = {}
 
-    def matrix_as_json(self):
-        return json.dumps(self.formatted_data_list,indent=4)
-        matrix_string = ""
-        #print("separator=["+separator+"]")
-        for taxon in self.taxa_list:
-            #print("taxon:",taxon)
-            taxon_string = taxon + " "
-            #matrix_string += taxon + " "
-            formatted_data = self.formatted_data_hash[taxon]
-            #print(formatted_data)
-            for char_state in formatted_data:
-                #print("char:",char_state)
-                if type(char_state) is list:
-                    taxon_string += parens[0] + separator.join(char_state) + parens[1]
-                    #print("poly:",parens[0] + separator.join(char_state) + parens[1])
-                else:
-                    taxon_string += char_state
-            matrix_string += taxon_string + "\n"
-        return matrix_string
+        self.data_list = []
+        self.data_hash = {}
+        self.formatted_data_hash = {}
+        self.formatted_data_list = []
 
+    def loadfile(self,a_filepath):
+        filepath,filename = os.path.split(a_filepath)
+        filename, fileext = os.path.splitext(filename.upper())
+        self.dataset_name = filename
 
+        # determine by filetype
+        if fileext.upper() in ['.NEX','.NEXUS']:
+            self.file_type='Nexus'
+        elif fileext.upper() in ['.PHY','.PHYLIP']:
+            self.file_type='Phylip'
+        elif fileext.upper() in ['.TNT']:
+            self.file_type='TNT'
+        #print("filetype:", self.file_type, filename, fileext)
+        
+        #read first line
+        file = open(a_filepath,mode='r')
+        self.file_text = file.read()
+        file.close()
+
+        self.line_list = self.file_text.split('\n')
+        if not self.file_type:
+            upper_file_text = self.file_text.upper()
+            #first_line = self.line_list[0].upper()
+            if upper_file_text.find('#NEXUS') > -1:
+                self.file_type = 'Nexus'
+            elif upper_file_text.find('XREAD') > -1:
+                self.file_type = 'TNT'
+        print("File type:", self.file_type)
+        
+        if self.file_type == 'Nexus':
+            print("nexus file")
+            self.parse_nexus_file()
+            if self.block_hash['DATA']:
+                self.parse_nexus_data_block(self.block_hash['DATA'])
+                #self.nexus_command_hash = self.phylo_matrix.command_hash
+            if self.block_hash['MRBAYES']:
+                print("mr bayes block exists")
+                #pass
+        elif self.file_type == 'Phylip':
+            print("phylip file")
+            self.parse_phylip_file(self.line_list)
+        elif self.file_type == 'TNT':
+            print("TNT file")
+            self.parse_tnt_file(self.line_list)
+            #self.parse_tnt_File()
+        
+        if self.phylo_matrix.dataset_name != '':
+            self.dataset_name = self.phylo_matrix.dataset_name
+        print("file parsing done")
+        return True
+
+    def parse_nexus_file(self,line_list=None):
+        if not line_list:
+            line_list = self.line_list
+        curr_block=None
+        in_block = False
+        for line in line_list:
+            #print(line)
+            begin_line = re.match("begin\s+(\S+);",line,flags=re.IGNORECASE)
+            end_line = re.match("end\s*;",line,flags=re.IGNORECASE)
+
+            if begin_line:
+                #print(begin_line)
+                curr_block = {}
+                curr_block['name'] = begin_line.group(1).upper()
+                curr_block['text'] = []
+                in_block = True
+            elif end_line:
+                #print("end block")
+                self.block_list.append(curr_block)
+                #if curr_block['name'] == 'DATA':
+                self.block_hash[curr_block['name']] = curr_block['text']
+                in_block = False
+            elif in_block:
+                curr_block['text'].append(line)
+        return #block_list
+    
     def parse_nexus_data_block(self,line_list):
         in_matrix = False
         for line in line_list:
+            #print(line)
             matrix_begin = re.match("\s*matrix\s*",line,flags=re.IGNORECASE)
             if matrix_begin:
                 self.taxa_list = []
                 self.data_list = []
                 self.data_hash = {}
+                #self.nexus_command_hash = {}
                 in_matrix = True
             elif in_matrix:
                 matrix_match = re.match("(\S+)\s+(.+);*",line)
@@ -80,37 +136,28 @@ class PhyloMatrix:
                 #in data block but not in matrix ==> command/variable
                 command_match = re.match("^\s*(\S+)\s+(.*);",line.upper(),flags=re.IGNORECASE)
                 if command_match:
+                    #print("command:",line)
                     command = command_match.group(1)
                     variable_string = command_match.group(2)
                     variable_list = re.findall("(\w+)\s*=\s*(\S+)",variable_string)
-                    #print(variable_list)
-                    self.command_hash[command] = {}
+                    #print(command,variable_list)
+                    self.nexus_command_hash[command] = {}
                     for variable in variable_list:
-                        self.command_hash[command][variable[0]] = variable[1]
+                        self.nexus_command_hash[command][variable[0]] = variable[1]
+                    #print(self.nexus_command_hash)
                 #pass
 
             matrix_end = re.match(".*;.*",line)
             if matrix_end:
                 in_matrix = False
-        ntax = int(self.command_hash['DIMENSIONS']['NTAX'])
-        nchar = int(self.command_hash['DIMENSIONS']['NCHAR'])
+            #print(self.nexus_command_hash)
+        ntax = int(self.nexus_command_hash['DIMENSIONS']['NTAX'])
+        nchar = int(self.nexus_command_hash['DIMENSIONS']['NCHAR'])
         self.n_taxa = ntax
         self.n_chars = nchar
         #print("number of taxa", ntax, len(self.taxa_list))
         #print("number of char", nchar)
         self.format_datamatrix()
-
-    def command_hash_as_json(self):
-        return json.dumps(self.command_hash)
-
-    def command_as_string(self):
-        command_string = ""
-        for key1 in self.command_hash.keys():
-            variable_list = []
-            for key2 in self.command_hash[key1].keys():
-                variable_list.append( key2 + "=" + self.command_hash[key1][key2] )
-            command_string += key1 + " " + " ".join(variable_list) + ";\n"
-        return command_string
 
     def parse_tnt_file(self,line_list):
         in_header = False
@@ -173,7 +220,6 @@ class PhyloMatrix:
         self.format_datamatrix()
 
     def format_datamatrix(self):
-
         for species in self.taxa_list:
             data = self.data_hash[species]
             array_data = []
@@ -206,128 +252,4 @@ class PhyloMatrix:
             #else:
 
         #print(data_hash)
-        #print(self.command_hash)
-
-class PhyloDatafile():
-    def __init__(self):
-        self.file_text = None
-        self.line_list = []
-        self.block_list = []
-        self.block_hash = {}
-        self.file_type = None
-        self.phylo_matrix = PhyloMatrix()
-        self.dataset_name = ''
-        
-
-    def readfile(self,a_filepath):
-        filepath,filename = os.path.split(a_filepath)
-        filename, fileext = os.path.splitext(filename.upper())
-        self.dataset_name = filename
-
-        # determine by filetype
-        if fileext.upper() in ['.NEX','.NEXUS']:
-            self.file_type='Nexus'
-        elif fileext.upper() in ['.PHY','.PHYLIP']:
-            self.file_type='Phylip'
-        elif fileext.upper() in ['.TNT']:
-            self.file_type='TNT'
-        #print("filetype:", self.file_type, filename, fileext)
-        
-        #read first line
-        file = open(a_filepath,mode='r')
-        self.file_text = file.read()
-        file.close()
-
-        self.line_list = self.file_text.split('\n')
-        if not self.file_type:
-            upper_file_text = self.file_text.upper()
-            #first_line = self.line_list[0].upper()
-            if upper_file_text.find('#NEXUS') > -1:
-                self.file_type = 'Nexus'
-            elif upper_file_text.find('XREAD') > -1:
-                self.file_type = 'TNT'
-        print("File type:", self.file_type)
-        
-        if self.file_type == 'Nexus':
-            print("nexus file")
-            self.parse_nexus_file()
-            if self.block_hash['DATA']:
-                self.phylo_matrix.parse_nexus_data_block(self.block_hash['DATA'])
-                self.command_hash = self.phylo_matrix.command_hash
-            if self.block_hash['MRBAYES']:
-                pass
-        elif self.file_type == 'Phylip':
-            print("phylip file")
-            self.phylo_matrix.parse_phylip_file(self.line_list)
-        elif self.file_type == 'TNT':
-            print("TNT file")
-            self.phylo_matrix.parse_tnt_file(self.line_list)
-            #self.parse_tnt_File()
-        
-        if self.phylo_matrix.dataset_name != '':
-            self.dataset_name = self.phylo_matrix.dataset_name
-
-        return True
-
-    def parse_nexus_file(self,line_list=None):
-        if not line_list:
-            line_list = self.line_list
-        curr_block=None
-        in_block = False
-        for line in line_list:
-            #print(line)
-            begin_line = re.match("begin\s+(\S+);",line,flags=re.IGNORECASE)
-            end_line = re.match("end\s*;",line,flags=re.IGNORECASE)
-
-            if begin_line:
-                #print(begin_line)
-                curr_block = {}
-                curr_block['name'] = begin_line.group(1).upper()
-                curr_block['text'] = []
-                in_block = True
-            elif end_line:
-                #print("end block")
-                self.block_list.append(curr_block)
-                #if curr_block['name'] == 'DATA':
-                self.block_hash[curr_block['name']] = curr_block['text']
-                in_block = False
-            elif in_block:
-                curr_block['text'].append(line)
-        return #block_list
-    
-    def matrix_as_string(self):
-        return self.phylo_matrix.matrix_as_string()
-
-    def command_as_string(self):
-        return self.phylo_matrix.command_as_string()
-
-    def as_phylip_format(self):
-        phylip_string = ""
-        data_string = self.matrix_as_string()
-        phylip_string += str(self.phylo_matrix.n_taxa) + " " + str(self.phylo_matrix.n_chars) + "\n"
-        phylip_string += data_string
-        return phylip_string
-
-    def as_tnt_format(self):
-        tnt_string = ""
-        data_string = self.matrix_as_string()
-        tnt_string += "xread '" + self.dataset_name + "' " + str(self.phylo_matrix.n_chars) + " " + str(self.phylo_matrix.n_taxa) + "\n"
-        tnt_string += data_string
-        tnt_string += ";\n"
-        return tnt_string
-
-    def as_nexus_format(self):
-        nexus_string = ""
-        data_string = self.matrix_as_string()
-        command_string = self.command_as_string()
-        nexus_string += "#NEXUS\n\n"
-        nexus_string += "BEGIN DATA;\n"
-        nexus_string += command_string
-        nexus_string += data_string
-        nexus_string += ";\n"
-        nexus_string += "END;\n"
-        return nexus_string
-    
-    def block_as_json(self,block_name):
-        if self.block_hash[block_name]:
-            return json.dumps(self.block_hash[block_name],indent=4)
+        #print(self.command_hash)            

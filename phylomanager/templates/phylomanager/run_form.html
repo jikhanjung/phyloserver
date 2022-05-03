@@ -14,12 +14,11 @@
         {% endif %}
         <tr><th>{{run_form.datafile.label}}</th><td>{{run_form.datafile}}</td></tr>
         <tr><th>{{run_form.datatype.label}}</th><td>{{run_form.datatype}}</td></tr>
-        {% if phylodata %}<tr><td colspan="2"><div style="text-align:center"><a href="javascript:toggle_datamatrix();"><div id="toggle_button">[Show Data]</div></a></div></td></tr>{%endif%}
         <!--tr><th>{{run_form.start_datetime.label}}</th><td>{{run_form.start_datetime.value}}</td></tr>
         <tr><th>{{run_form.finish_datetime.label}}</th><td>{{run_form.finish_datetime.value}}</td></tr-->
     </table>
 </div>
-<br/>
+{% if phylodata %}<table border="0" width="800"><tr><td colspan="2"><div style="text-align:center"><a href="javascript:toggle_datamatrix();"><div id="toggle_button">[Show Data]</div></a></div></td></tr></table>{%endif%}
 {% if phylodata %}
 <div style="width:800px;overflow-x:auto;white-space:nowrap;display:none;" id="datamatrix_div">
 <table border="1">

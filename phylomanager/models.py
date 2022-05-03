@@ -71,17 +71,30 @@ class PhyloUser(AbstractUser):
         return self.username
 
 class PhyloData(models.Model):
-
+    # dataset properties
     dataset_name = models.CharField(max_length=200,blank=True,null=True)
     datatype = models.CharField(max_length=10,blank=True,null=True,choices=DATATYPE_CHOICES,default='MO')
+    # actual data related
     n_taxa = models.IntegerField(blank=True,null=True)
     n_chars = models.IntegerField(blank=True,null=True)
-    taxa_list = models.TextField(blank=True,null=True)
-    char_list = models.TextField(blank=True,null=True)
+    taxa_list_json = models.TextField(blank=True,null=True)
+    character_definition_hash_json = models.TextField(blank=True,null=True)
+    matrix_settings_json = models.TextField(blank=True,null=True) # default: gap=- missing=?
+    # datamatrix
     datamatrix_json = models.TextField(blank=True,null=True)
+
+    # analysis related
     mrbayes_block = models.TextField(blank=True,null=True)
-    nexus_command_json = models.TextField(blank=True,null=True)
-    filetext = models.TextField(blank=True,null=True)
+    nexus_command_hash_json = models.TextField(blank=True,null=True)
+    # original text from text file such as .phy, .nex, .tnt
+    file_wholetext = models.TextField(blank=True,null=True)
+    file_type = models.CharField(max_length=20,blank=True,null=True)
+
+    taxa_list = []
+    datamatrix = []
+    character_definition_hash = {}
+    matrix_settings_hash = {}
+    nexus_command_hash = {}
 
     @property
     def datamatrix_as_list(self):
@@ -95,6 +108,7 @@ class PhyloData(models.Model):
     def datamatrix_as_table_rows(self):
         if self.datamatrix_json:
             formatted_data_list = json.loads(self.datamatrix_json)
+            print("formatted_data_list:", formatted_data_list)
             table_row_str = "<tr><th></th>"
             for col_idx in range(len(formatted_data_list[0])-1):
                 table_row_str += "<th><div class='char_header'>" + str(col_idx+1) + "</div></th>"
@@ -115,34 +129,129 @@ class PhyloData(models.Model):
         else:
             return ""
 
+    def post_read(self):
+        if self.taxa_list_json and self.taxa_list_json != '':
+            self.taxa_list = json.loads(self.taxa_list_json)
+        if self.character_definition_hash_json and self.character_definition_hash_json != '':
+            self.character_definition_hash = json.loads(self.character_definition_hash_json)
+        if self.datamatrix_json and self.datamatrix_json != '':
+            self.formatted_data_list = json.loads(self.datamatrix_json)
+        if self.nexus_command_hash_json and self.nexus_command_hash_json != '':
+            self.nexus_command_hash = json.loads(self.nexus_command_hash_json)
+        print(self.nexus_command_hash)
+
+    def pre_save(self):
+        if len(self.taxa_list) > 0:
+            self.taxa_list_json = json.dumps(self.taxa_list,indent=4)
+        if len(self.character_definition_hash) > 0:
+            self.character_definition_hash_json = json.dumps(self.character_definition_hash,indent=4)
+        if len(self.formatted_data_list) > 0:
+            self.datamatrix_json = json.dumps(self.formatted_data_list,indent=4)
+        if self.nexus_command_hash:
+            self.nexus_command_hash_json = json.dumps(self.nexus_command_hash,indent=4)
+        if self.block_hash and self.block_hash['MRBAYES']:
+            self.mrbayes_block = self.block_hash['MRBAYES']
 
     def loadfile(self,filepath):
-        self.phylo_datafile = PhyloDatafile()        
+        datafile_obj = PhyloDatafile()        
         original_file_location = os.path.join( settings.MEDIA_ROOT, str(filepath) )
-        ret = self.phylo_datafile.readfile(original_file_location)
+        ret = datafile_obj.loadfile(original_file_location)
         #print("readfile return value:", ret)
         #print(self.phylo_datafile)
         if ret:
-            datafile = self.phylo_datafile
-            self.dataset_name = datafile.dataset_name
-            self.filetext = datafile.file_text       
+            self.dataset_name = datafile_obj.dataset_name
+            self.file_wholetext = datafile_obj.file_text
 
-            matrix = datafile.phylo_matrix
-            self.n_taxa = matrix.n_taxa
-            self.n_chars = matrix.n_chars
-            self.taxa_list = matrix.taxa_list_as_string()
-            self.char_list = matrix.char_list_as_string()
-            self.datamatrix_json = matrix.matrix_as_json()
+            self.n_taxa = datafile_obj.n_taxa
+            self.n_chars = datafile_obj.n_chars
+            self.taxa_list = datafile_obj.taxa_list
+            self.character_definition_hash = datafile_obj.character_definition_hash
+            self.formatted_data_list = datafile_obj.formatted_data_list
+            self.formatted_data_hash = datafile_obj.formatted_data_hash
+            self.block_hash = datafile_obj.block_hash
+            self.nexus_command_hash = datafile_obj.nexus_command_hash
+
+            #print("post load",self.formatted_data_list)
             
-            if self.file_type == 'Nexus':
-                if datafile.block_hash['MRBAYES']:
-                    self.mrbayes_block = datafile.block_as_json('MRBAYES')
-                if matrix.command_hash:
-                    self.nexus_command_json = matrix.command_hash_as_json()
+            #if datafile_obj.file_type == 'Nexus':
+            #    if datafile_obj.block_hash['MRBAYES']:
+            #        self.mrbayes_block = datafile_obj.block_as_json('MRBAYES')
+            #    if datafile_obj.command_hash:
+            #        self.nexus_command_json = datafile_obj.command_hash_as_json()
         else:
             return False
 
         return True
+
+    # when exporting as file
+    def matrix_as_string(self,parens=["(",")"],separator=" "):
+        matrix_string = ""
+        #print("separator=["+separator+"]")
+        for idx, taxon in enumerate(self.taxa_list):
+            #print("taxon:",taxon)
+            taxon_string = taxon + " "
+            #matrix_string += taxon + " "
+            formatted_data = self.formatted_data_list[idx].copy()
+            taxon_name = formatted_data.pop(0)
+            #print(formatted_data)
+            for char_state in formatted_data:
+                #print("char:",char_state)
+                if type(char_state) is list:
+                    taxon_string += parens[0] + separator.join(char_state) + parens[1]
+                    #print("poly:",parens[0] + separator.join(char_state) + parens[1])
+                else:
+                    taxon_string += char_state
+            matrix_string += taxon_string + "\n"
+        return matrix_string
+
+    # to save in database
+    def matrix_as_json(self):
+        return json.dumps(self.formatted_data_list,indent=4)
+
+    def as_phylip_format(self):
+        phylip_string = ""
+        data_string = self.matrix_as_string()
+        phylip_string += str(self.n_taxa) + " " + str(self.n_chars) + "\n"
+        phylip_string += data_string
+        return phylip_string
+
+    def as_tnt_format(self):
+        tnt_string = ""
+        data_string = self.matrix_as_string()
+        tnt_string += "xread '" + self.dataset_name + "' " + str(self.phylo_matrix.n_chars) + " " + str(self.phylo_matrix.n_taxa) + "\n"
+        tnt_string += data_string
+        tnt_string += ";\n"
+        return tnt_string
+
+    def as_nexus_format(self):
+        nexus_string = ""
+        data_string = self.matrix_as_string()
+        command_string = self.command_as_string()
+        nexus_string += "#NEXUS\n\n"
+        nexus_string += "BEGIN DATA;\n"
+        nexus_string += command_string
+        nexus_string += data_string
+        nexus_string += ";\n"
+        nexus_string += "END;\n"
+        return nexus_string
+    
+    def block_as_json(self,block_name):
+        if self.block_hash[block_name]:
+            return json.dumps(self.block_hash[block_name],indent=4)
+
+    def command_hash_as_json(self):
+        return json.dumps(self.command_hash)
+
+    def command_as_string(self):
+        command_string = ""
+        for key1 in self.nexus_command_hash.keys():
+            variable_list = []
+            for key2 in self.nexus_command_hash[key1].keys():
+                variable_list.append( key2 + "=" + self.nexus_command_hash[key1][key2] )
+            command_string += key1 + " " + " ".join(variable_list) + ";\n"
+            print(command_string)
+        return command_string
+
 
 class PhyloRun(models.Model):
 

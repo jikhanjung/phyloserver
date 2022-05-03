@@ -84,6 +84,7 @@ def add_run_upload_file(request):
             pk = phylorun.id
             phylorun.process_datafile()
             print(phylorun.datafile)
+            phylorun.phylodata.pre_save()
             phylorun.phylodata.save()
             #phylorun.phylodata = phylorun.phylodata
             phylorun.save()

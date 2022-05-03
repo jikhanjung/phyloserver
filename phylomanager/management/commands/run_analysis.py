@@ -83,6 +83,7 @@ class Command(BaseCommand):
                         
                         # copy data file
                         #print( original_file_location, run_directory, leg_directory )
+                        
                         shutil.copy( original_file_location, leg_directory )
                         target_file_location = os.path.join( leg_directory, data_filename )
 
