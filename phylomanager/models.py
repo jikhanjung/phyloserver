@@ -95,6 +95,7 @@ class PhyloData(models.Model):
     character_definition_hash = {}
     matrix_settings_hash = {}
     nexus_command_hash = {}
+    DEFAULTS = { 'gap': '-', 'missing': '?', 'datatype': 'standard' }
 
     @property
     def datamatrix_as_list(self):
@@ -108,7 +109,7 @@ class PhyloData(models.Model):
     def datamatrix_as_table_rows(self):
         if self.datamatrix_json:
             formatted_data_list = json.loads(self.datamatrix_json)
-            print("formatted_data_list:", formatted_data_list)
+            #print("formatted_data_list:", formatted_data_list)
             table_row_str = "<tr><th></th>"
             for col_idx in range(len(formatted_data_list[0])-1):
                 table_row_str += "<th><div class='char_header'>" + str(col_idx+1) + "</div></th>"
@@ -228,11 +229,12 @@ class PhyloData(models.Model):
         data_string = self.matrix_as_string()
         command_string = self.command_as_string()
         nexus_string += "#NEXUS\n\n"
-        nexus_string += "BEGIN DATA;\n"
+        nexus_string += "begin data;\n"
         nexus_string += command_string
+        nexus_string += "matrix\n"
         nexus_string += data_string
         nexus_string += ";\n"
-        nexus_string += "END;\n"
+        nexus_string += "end;\n"
         return nexus_string
     
     def block_as_json(self,block_name):
@@ -244,12 +246,17 @@ class PhyloData(models.Model):
 
     def command_as_string(self):
         command_string = ""
-        for key1 in self.nexus_command_hash.keys():
-            variable_list = []
-            for key2 in self.nexus_command_hash[key1].keys():
-                variable_list.append( key2 + "=" + self.nexus_command_hash[key1][key2] )
-            command_string += key1 + " " + " ".join(variable_list) + ";\n"
-            print(command_string)
+        if self.nexus_command_hash:
+                
+            for key1 in self.nexus_command_hash.keys():
+                variable_list = []
+                for key2 in self.nexus_command_hash[key1].keys():
+                    variable_list.append( key2 + "=" + self.nexus_command_hash[key1][key2] )
+                command_string += key1 + " " + " ".join(variable_list) + ";\n"
+            #print(command_string)
+        else:
+            command_string += "dimensions ntax={ntax} nchar={nchar};\n".format(ntax=self.n_taxa, nchar=self.n_chars)
+            command_string += "format datatype={datatype} gap={gap} missing={missing};\n".format(datatype=self.DEFAULTS['datatype'], gap=self.DEFAULTS['gap'], missing=self.DEFAULTS['missing'])
         return command_string
 
 

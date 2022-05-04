@@ -21,8 +21,10 @@ class Command(BaseCommand):
             now = timezone.now()
             now_string = now.strftime("%Y%m%d_%H%M%S")
 
-            run.run_directory = os.path.join( "phylo_run", run.get_run_by, run.get_dirname() + "_" + now_string )
+            run.run_directory = os.path.join("phylo_run", run.get_run_by, run.get_dirname() + "_" + now_string)
             run_abspath = os.path.join( settings.MEDIA_ROOT, run.run_directory )
+            #run_abspath = os.path.join( "D:/", run.run_directory )
+            print("run_abspath:", run_abspath)
             for leg in leg_list:
                 package = leg.leg_package
                 #print( "  ",leg, leg.get_leg_status_display() )
@@ -49,13 +51,13 @@ class Command(BaseCommand):
                         datamatrix_str = phylo_data.as_phylip_format()
                     elif package.package_name in ['TNT','MrBayes']:
                         fileext = '.nex'
-                        
                         datamatrix_str = phylo_data.as_nexus_format()
 
                     data_filename = filename + fileext
                     data_file_location = os.path.join( leg_directory, data_filename )
                     data_fd = open(data_file_location,mode='w')
                     data_fd.write(datamatrix_str)
+                    data_fd.close()
 
                     if package.package_name == 'IQTree':
                         #run analysis - IQTree
@@ -88,7 +90,8 @@ class Command(BaseCommand):
                     stderr_fd = open(stderr_filename, "w")
 
                     print( run_argument_list )
-                    subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stdout_fd)
+                    ret = subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stdout_fd)
+                    print("run result:", ret)
                     #print( "Sleeping 30seconds" )
 
                     stdout_fd.close()
@@ -97,6 +100,7 @@ class Command(BaseCommand):
                     # update leg status
                     leg.leg_status = 'FN'
                     leg.finish_datetime = timezone.now()
+                    exit()
                     #leg.save()
 
                     

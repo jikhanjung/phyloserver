@@ -31,6 +31,7 @@ class PhyloDatafile():
         self.phylo_matrix = PhyloMatrix()
         self.character_definition_hash = {}
 
+        self.taxa_list = []
         self.data_list = []
         self.data_hash = {}
         self.formatted_data_hash = {}
