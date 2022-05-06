@@ -142,7 +142,7 @@ class Command(BaseCommand):
                         stderr_fd = open(stderr_filename, "w")
 
                         #print( run_argument_list )
-                        subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stdout_fd)
+                        subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stderr_fd)
                         #print( "Sleeping 30seconds" )
 
                         stdout_fd.close()

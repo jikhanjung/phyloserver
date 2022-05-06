@@ -90,8 +90,10 @@ class Command(BaseCommand):
                     stderr_fd = open(stderr_filename, "w")
 
                     print( run_argument_list )
-                    ret = subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stdout_fd)
-                    print("run result:", ret)
+                    p1 = subprocess.Popen( run_argument_list, cwd=leg_directory, stdout=subprocess.PIPE, stderr=stderr_fd)
+                    p2 = subprocess.run(['python', 'manage.py', 'filter_output', package.package_name],cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd)
+
+                    print("run result:", p1)
                     #print( "Sleeping 30seconds" )
 
                     stdout_fd.close()
