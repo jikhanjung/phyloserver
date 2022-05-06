@@ -83,7 +83,7 @@ def add_run_upload_file(request):
             phylorun.save()
             pk = phylorun.id
             phylorun.process_datafile()
-            print(phylorun.datafile)
+            #print(phylorun.datafile)
             phylorun.phylodata.pre_save()
             phylorun.phylodata.save()
             #phylorun.phylodata = phylorun.phylodata
@@ -171,6 +171,9 @@ def edit_run(request,pk):
                 #print("leg formset valid")
                 leg_instances = leg_formset.save(commit=False)
                 for leg in leg_instances:
+                    if leg.leg_status == 'QD':
+                        leg.run.run_status = 'QD'
+                        leg.run.save()
                     #if leg.id and leg.datafile == '':
                     #    leg.delete()
                     #else:

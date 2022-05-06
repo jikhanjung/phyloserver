@@ -100,7 +100,7 @@ class Command(BaseCommand):
                     # update leg status
                     leg.leg_status = 'FN'
                     leg.finish_datetime = timezone.now()
-                    exit()
+                    #exit()
                     #leg.save()
 
                     

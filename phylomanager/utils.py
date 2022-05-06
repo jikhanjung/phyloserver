@@ -64,28 +64,28 @@ class PhyloDatafile():
                 self.file_type = 'Nexus'
             elif upper_file_text.find('XREAD') > -1:
                 self.file_type = 'TNT'
-        print("File type:", self.file_type)
+        #print("File type:", self.file_type)
         
         if self.file_type == 'Nexus':
-            print("nexus file")
+            #print("nexus file")
             self.parse_nexus_file()
             if self.block_hash['DATA']:
                 self.parse_nexus_data_block(self.block_hash['DATA'])
                 #self.nexus_command_hash = self.phylo_matrix.command_hash
             if self.block_hash['MRBAYES']:
-                print("mr bayes block exists")
-                #pass
+                #print("mr bayes block exists")
+                pass
         elif self.file_type == 'Phylip':
-            print("phylip file")
+            #print("phylip file")
             self.parse_phylip_file(self.line_list)
         elif self.file_type == 'TNT':
-            print("TNT file")
+            #print("TNT file")
             self.parse_tnt_file(self.line_list)
             #self.parse_tnt_File()
         
         if self.phylo_matrix.dataset_name != '':
             self.dataset_name = self.phylo_matrix.dataset_name
-        print("file parsing done")
+        #print("file parsing done")
         return True
 
     def parse_nexus_file(self,line_list=None):
@@ -245,7 +245,7 @@ class PhyloDatafile():
             formatted_data = [species]
             formatted_data.extend(array_data)
             self.formatted_data_list.append( formatted_data )
-            print(species, len(array_data),array_data)
+            #print(species, len(array_data),array_data)
 
             #formatted_data = data.split()
             #print(array_data)

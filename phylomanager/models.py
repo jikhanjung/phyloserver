@@ -7,6 +7,7 @@ import json
 from django.utils.safestring import mark_safe
 
 RUN_STATUS_CHOICES = [
+    ('DU','Data uploaded'),
     ('QD','Queued'),
     ('IP','In progress'),
     ('FN','Finished'),
@@ -267,12 +268,12 @@ class PhyloRun(models.Model):
     created_datetime = models.DateTimeField(auto_now_add=True)
     modified_datetime = models.DateTimeField(auto_now=True)
     run_title = models.CharField(max_length=200,blank=True,null=True)
-    run_status = models.CharField(max_length=10,choices=RUN_STATUS_CHOICES,default='QD',blank=True,null=True)
+    run_status = models.CharField(max_length=10,choices=RUN_STATUS_CHOICES,default='DU',blank=True,null=True)
     run_by = models.CharField(max_length=200,blank=True,null=True)
-    run_by_user = models.ForeignKey(PhyloUser,blank=True,null=True,on_delete=models.SET_NULL)
+    run_by_user = models.ForeignKey(PhyloUser,blank=True,null=True,on_delete=models.CASCADE)
     datafile = models.FileField(upload_to='phylorun_datafile',blank=True)
     datatype = models.CharField(max_length=10,blank=True,null=True,choices=DATATYPE_CHOICES,default='MO')
-    phylodata = models.ForeignKey(PhyloData,on_delete=models.DO_NOTHING,blank=True,null=True)
+    phylodata = models.ForeignKey(PhyloData,on_delete=models.CASCADE,blank=True,null=True)
     run_directory = models.CharField(max_length=200,blank=True,null=True)
 
     def process_datafile(self):
@@ -353,7 +354,8 @@ class PhyloRunner(models.Model):
 
 class PhyloAnalog(models.Model):
     runner = models.ForeignKey(PhyloRunner,on_delete=models.CASCADE,related_name='log_set')
-    leg = models.ForeignKey(PhyloLeg,on_delete=models.DO_NOTHING,related_name='log_set')
+    run = models.ForeignKey(PhyloRun,on_delete=models.CASCADE,related_name='log_set',null=True)
+    leg = models.ForeignKey(PhyloLeg,on_delete=models.CASCADE,related_name='log_set',null=True)
     log_status = models.CharField(max_length=20,choices=LOG_STATUS_CHOICES,blank=True,null=True)
     log_text = models.TextField(blank=True,null=True)
     created_datetime = models.DateTimeField(auto_now_add=True)

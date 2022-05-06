@@ -103,21 +103,21 @@
     var leg_type=[];
     var leg_package=[];
     var package_type_list = JSON.parse("{{data_json|escapejs}}");
-    console.log(package_type_list)
+    //console.log(package_type_list)
     function set_leg_type(event){
-        console.log("set leg type called", this);
+        //console.log("set leg type called", this);
         var form_index = this.getAttribute('form_index');
-        console.log("form index:", form_index);
+        //console.log("form index:", form_index);
         event.preventDefault();
 
         var curr_leg_type = this;
-        console.log("curr_leg_type", curr_leg_type);
+        //console.log("curr_leg_type", curr_leg_type);
         //console.log("onChange", curr_leg_type.onChange());
 
         var selected_index = curr_leg_type.selectedIndex;
-        console.log("selected_index", selected_index);
+        //console.log("selected_index", selected_index);
         selected_text = curr_leg_type.options[selected_index].value;
-        console.log(selected_text);
+        //console.log(selected_text);
         if( selected_text == 'BY') {
             bayesian_display = "block";
             ml_display = "none";
@@ -137,36 +137,36 @@
     }
 
     function set_leg_package(event){
-        console.log("set leg package called", this);
+        //console.log("set leg package called", this);
         var form_index = this.getAttribute('form_index');
-        console.log("form index:", form_index);
+        //console.log("form index:", form_index);
         event.preventDefault();
 
         var curr_leg_package = this;
-        console.log("curr_leg_package", curr_leg_package);
+        //console.log("curr_leg_package", curr_leg_package);
         //console.log("onChange", curr_leg_type.onChange());
 
         var selected_index = curr_leg_package.selectedIndex;
-        console.log("selected_index", selected_index);
+        //console.log("selected_index", selected_index);
         selected_package_name = curr_leg_package.options[selected_index].text;
         if( selected_index == 0 ) {
             leg_type[form_index].selectedIndex = 0;
             return;
         } else {
-            console.log("selected package=",selected_package_name);
-            console.log("selected package index:", selected_index);
+            //console.log("selected package=",selected_package_name);
+            //console.log("selected package index:", selected_index);
             var p_type_value = "";
             for( i=0;i<package_type_list.length;i++){
                 if( package_type_list[i][0] == selected_package_name ) {
                     p_type_value = package_type_list[i][1];
                 }
             }
-            console.log("selected package type:", p_type_value);
+            //console.log("selected package type:", p_type_value);
             //console.log(leg_type[form_index].options[selected_package-1].value);
             leg_type[form_index].value = p_type_value;
         }
         if ("createEvent" in document) {
-            console.log('create event');
+            //console.log('create event');
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent("change", false, true);
             leg_type[form_index].dispatchEvent(evt);
@@ -181,21 +181,21 @@
     let addButton = document.querySelector("#add-form")
     let totalForms = document.querySelector("#id_leg_set-TOTAL_FORMS")
 
-    console.log(emptyForm);
-    console.log(totalForms);
+    //console.log(emptyForm);
+    //console.log(totalForms);
 
     addButton.addEventListener('click', addForm)
 
     function set_leg_type_event_listener(  a_leg,  a_idx ) {
         a_leg.addEventListener('change', set_leg_type, false);
         a_leg.setAttribute('form_index', a_idx);
-        console.log("added", a_idx, "to leg type");
+        //console.log("added", a_idx, "to leg type");
         //leg_type[idx].onchange();
         //leg_type[idx].fireEvent("onchange");
         //set_leg_type();
 
         if ("createEvent" in document) {
-            console.log('create event');
+            //console.log('create event');
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent("change", false, true);
             a_leg.dispatchEvent(evt);
@@ -207,13 +207,13 @@
     function set_leg_package_event_listener(  a_package,  a_idx ) {
         a_package.addEventListener('change', set_leg_package, false);
         a_package.setAttribute('form_index', a_idx);
-        console.log("added", a_idx, "to package package");
+        //console.log("added", a_idx, "to package package");
         //leg_type[idx].onchange();
         //leg_type[idx].fireEvent("onchange");
         //set_leg_type();
 
         if ("createEvent" in document) {
-            console.log('create event');
+            //console.log('create event');
             var evt = document.createEvent("HTMLEvents");
             evt.initEvent("change", false, true);
             a_package.dispatchEvent(evt);
@@ -225,24 +225,27 @@
 
     function addForm(e){
         e.preventDefault();
-        let formNum = legForm.length-1
-        console.log("fornNum:", formNum);
+        legForm = document.querySelectorAll(".leg-form");
+        let formNum = legForm.length;
+        //console.log("length of legform", legForm.length);
+        //console.log("fornNum:", formNum);
         let newForm = emptyForm.cloneNode(true);
+        newForm.classList.add('leg-form');
         newForm.style.display="block";
-        formNum++;
         newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formNum);
-        console.log(newForm);
+        //console.log(newForm);
         container.insertBefore(newForm, addButton)
         totalForms.setAttribute('value', `${formNum+1}`)
-        console.log('formNum:', formNum);
+        //console.log('formNum:', formNum);
 
         leg_type[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_type');
-
         set_leg_type_event_listener( leg_type[formNum], formNum );
         leg_package[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_package');
         set_leg_package_event_listener( leg_package[formNum], formNum );
+        //console.log( "current legform length", formNum);
     }   
 
+    console.log( "current legform length", legForm.length);
     for( var idx=0;idx<legForm.length;idx++){
         leg_type[idx] = document.getElementById('id_leg_set-'+String(idx)+'-leg_type');
         set_leg_type_event_listener( leg_type[idx], idx );
