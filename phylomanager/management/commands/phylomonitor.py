@@ -26,8 +26,8 @@ class Command(BaseCommand):
         leg = PhyloLeg.objects.get(id=leg_id)
         print("package_name:", leg.leg_package.package_name)
         leg_directory = leg.leg_directory
-        progress_filename = os.path.join( leg_directory, "progress.log" )
-        progress_filename_fd = open(progress_filename, "w",buffering=1)
+        progress_filename = os.path.join( leg_directory,"progress.log" )
+        progress_filename_fd = open(progress_filename,"w",buffering=1)
 
         total_step = 0
         curr_step = 0
@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 if progress_match:
                     progress_found = True
                     curr_step = progress_match.group(1)
-                    print("progress detected", curr_step, flush=True)
+                    #print("progress detected", curr_step, flush=True)
                     #print("<", line,">", flush=True,end='')
 
             elif package_name in ['MrBayes']:
@@ -53,10 +53,10 @@ class Command(BaseCommand):
                 if progress_match:
                     progress_found = True
                     curr_step = progress_match.group(1)
-                    print("progress detected", curr_step, flush=True)
+                    #print("progress detected", curr_step, flush=True)
                     
             if progress_found:
-                percentage = float(int( ( float(curr_step) / float(total_step) ) * 10000 )) / 100.0
+                percentage = float(round( ( float(curr_step) / float(total_step) ) * 1000 )) / 10.0
                 leg.leg_completion_percentage = percentage
                 leg.save()
                 progress_filename_fd.write(line)
