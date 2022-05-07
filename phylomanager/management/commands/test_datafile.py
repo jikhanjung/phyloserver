@@ -38,6 +38,7 @@ class Command(BaseCommand):
 
                     original_file_location = os.path.join( settings.MEDIA_ROOT, str(run.datafile) )
                     leg_directory = os.path.join( run_abspath, leg.get_dirname())
+                    leg.leg_directory = leg_directory
                     if not os.path.isdir( leg_directory ):
                         os.makedirs( leg_directory )
 
@@ -91,7 +92,9 @@ class Command(BaseCommand):
 
                     print( run_argument_list )
                     p1 = subprocess.Popen( run_argument_list, cwd=leg_directory, stdout=subprocess.PIPE, stderr=stderr_fd)
-                    p2 = subprocess.run(['python', 'manage.py', 'filter_output', package.package_name],cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd)
+                    #p2 = subprocess.run(['python', 'manage.py', 'phylomonitor', package.package_name],cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd)
+                    monitor_argument_list =['python', 'manage.py', 'phylomonitor', '--package_name', package.package_name, '--leg_id', str(leg.id) ]
+                    p2 = subprocess.run(monitor_argument_list,cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd)
 
                     print("run result:", p1)
                     #print( "Sleeping 30seconds" )

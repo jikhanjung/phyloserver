@@ -37,7 +37,7 @@ class Command(BaseCommand):
                 print("sleep")
                 self.runner.runner_status = "SL" #Sleeping
                 self.runner.save()
-                time.sleep(20)
+                time.sleep(5)
                 #print("wake up!")
             else:
                 print("working with", len(runs), "run(s)")
@@ -53,11 +53,12 @@ class Command(BaseCommand):
                 leg_list = leg_list2
                 print(run, run.id, run.get_run_status_display(), leg_list1, leg_list2, leg_list3, leg_list4 )
                 now = timezone.now()
+                local_now = timezone.localtime(now)
                 if run.run_status == 'QD':
                     run.run_status = 'IP'
                     run.start_datetime = now
                     run.save()
-                now_string = now.strftime("%Y%m%d_%H%M%S")
+                now_string = local_now.strftime("%Y%m%d_%H%M%S")
                 #run_directory = 
                 run.run_directory = os.path.join( "phylo_run", run.get_run_by, run.get_dirname() + "_" + now_string )
                 print( "run directory:", run.run_directory )
@@ -68,10 +69,6 @@ class Command(BaseCommand):
                     #print( "  ",leg, leg.get_leg_status_display() )
                     print("gonna execute", package, package.get_package_type_display(), "at", package.run_path)
                     if package.package_name in ['IQTree','TNT', 'MrBayes']:
-                        # update leg status
-                        leg.leg_status = 'IP'
-                        leg.start_datetime = timezone.now()
-                        leg.save()
 
                         log = PhyloAnalog()
                         log.leg = leg
@@ -88,7 +85,14 @@ class Command(BaseCommand):
                         leg_directory = os.path.join( run_abspath, leg.get_dirname())
                         if not os.path.isdir( leg_directory ):
                             os.makedirs( leg_directory )
-                        
+
+                        # update leg status
+                        leg.leg_status = 'IP'
+                        leg.start_datetime = timezone.now()
+                        leg.leg_directory = leg_directory
+                        leg.save()
+
+
                         phylo_data = run.phylodata
                         phylo_data.post_read()
                         # copy data file
@@ -107,7 +111,6 @@ class Command(BaseCommand):
                         data_fd.write(datamatrix_str)
                         data_fd.close()
 
-
                         #shutil.copy( original_file_location, leg_directory )
                         #target_file_location = os.path.join( leg_directory, data_filename )
 
@@ -121,7 +124,7 @@ class Command(BaseCommand):
                                 run_argument_list.extend( ["-b", str(leg.ml_bootstrap)] )
                             elif leg.ml_bootstrap_type == 'UF':
                                 run_argument_list.extend( ["-bb", str(leg.ml_bootstrap)] )
-                            print( run_argument_list )
+                            #print( run_argument_list )
 
                         elif package.package_name == 'TNT':
                             # copy TNT script file
@@ -134,15 +137,21 @@ class Command(BaseCommand):
                         elif package.package_name == 'MrBayes':
                             command_filename = self.create_mrbayes_command_file( data_filename, leg_directory, leg )
                             run_argument_list = [package.run_path, command_filename]
-                            print( run_argument_list )
+                            #print( run_argument_list )
 
                         stdout_filename = os.path.join( leg_directory, "output.log" )
                         stdout_fd = open(stdout_filename, "w")
                         stderr_filename = os.path.join( leg_directory, "error.log" )
                         stderr_fd = open(stderr_filename, "w")
 
+                        print( run_argument_list )
+                        p1 = subprocess.Popen( run_argument_list, cwd=leg_directory, stdout=subprocess.PIPE, stderr=stderr_fd)
+                        #p2 = subprocess.run(['python', 'manage.py', 'phylomonitor', package.package_name],cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd)
+                        monitor_argument_list =['python', 'manage.py', 'phylomonitor', '--package_name', package.package_name, '--leg_id', str(leg.id) ]
+                        p2 = subprocess.run(monitor_argument_list,cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd, stderr=stderr_fd)
+
                         #print( run_argument_list )
-                        subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stderr_fd)
+                        #subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stderr_fd)
                         #print( "Sleeping 30seconds" )
 
                         stdout_fd.close()
@@ -150,6 +159,7 @@ class Command(BaseCommand):
 
                         # update leg status
                         leg.leg_status = 'FN'
+                        leg.leg_completion_percentage = 100
                         leg.finish_datetime = timezone.now()
                         leg.save()
 

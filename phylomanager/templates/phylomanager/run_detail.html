@@ -30,6 +30,7 @@
     <tr><th>Status</th><td>{{ leg.get_leg_status_display }}</td></tr>
     <tr><th>Package</th><td>{{ leg.leg_package }}</td></tr>
     <tr><th>Package type</th><td>{{ leg.get_leg_type_display }}</td></tr>
+    {% if leg.leg_completion_percentage %}<tr><th>Progress</th><td>{{ leg.leg_completion_percentage }}%</td></tr>{%endif%}
     <tr><th>Started at</th><td>{{ leg.start_datetime|default_if_none:"-" }}</td></tr>
     <tr><th>Finished at</th><td>{{ leg.finish_datetime|default_if_none:"-" }}</td></tr>
 </table>
