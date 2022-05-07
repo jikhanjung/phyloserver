@@ -5,6 +5,7 @@ import os
 from .utils import PhyloDatafile
 import json
 from django.utils.safestring import mark_safe
+from Bio import Phylo
 
 RUN_STATUS_CHOICES = [
     ('DU','Data uploaded'),
@@ -347,6 +348,20 @@ class PhyloLeg(models.Model):
             return self.leg_title.replace(" ","_")
         else:
             return "leg_" + str(self.id)
+
+    @property
+    def get_tree(self):
+        run = self.run
+        if self.leg_package.package_name == 'IQTree':
+            data_filename = os.path.split( str(run.datafile) )[-1]
+            filename, fileext = os.path.splitext(data_filename.upper())
+
+            tree_filename = os.path.join( self.leg_directory, filename + ".phy.treefile" )
+            if os.path.exists( tree_filename ):
+                tree = Phylo.read( tree_filename, "newick" )
+                return Phylo.draw_ascii(tree)
+            else:
+                return tree_filename
 
 class PhyloRunner(models.Model):
     procid = models.CharField(max_length=20,blank=True,null=True)

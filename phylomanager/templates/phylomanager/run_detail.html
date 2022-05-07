@@ -33,6 +33,7 @@
     {% if leg.leg_completion_percentage %}<tr><th>Progress</th><td>{{ leg.leg_completion_percentage }}%</td></tr>{%endif%}
     <tr><th>Started at</th><td>{{ leg.start_datetime|default_if_none:"-" }}</td></tr>
     <tr><th>Finished at</th><td>{{ leg.finish_datetime|default_if_none:"-" }}</td></tr>
+    <tr><th>Tree 1</th><td><img src="{% url 'show_tree' leg.id %}" width="600"></td></tr>
 </table>
 <br/>
 {% endfor %}

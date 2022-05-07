@@ -20,6 +20,8 @@ from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
 from .utils import PhyloDatafile
+from Bio import Phylo
+import matplotlib.pyplot as plt
 
 def index(request):
     return HttpResponseRedirect('run_list')
@@ -329,6 +331,29 @@ def download_run_result(request,pk):
     print("File Created successfully..")
     #return FileResponse(open(new_file,"rb"), as_attachment=True)
     return FileResponse(buffer, as_attachment=True, filename=run_dirname+".zip")
+
+def show_tree(request,pk):
+    leg = get_object_or_404(PhyloLeg, pk=pk)
+    run = leg.run
+    if leg.leg_package.package_name == 'IQTree':
+        data_filename = os.path.split( str(run.datafile) )[-1]
+        filename, fileext = os.path.splitext(data_filename.upper())
+
+        tree_filename = os.path.join( leg.leg_directory, filename + ".phy.treefile" )
+        tree = Phylo.read( tree_filename, "newick" )
+        #print
+
+        fig = plt.figure(figsize=(10, 20), dpi=100)
+        axes = fig.add_subplot(1, 1, 1)
+        Phylo.draw(tree, axes=axes,do_show=False)
+        #plt.show()
+        buffer = io.BytesIO()
+        print(tree_filename)
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        return FileResponse(buffer,filename=filename+".png",)
+
+    #return HttpResponse("You're downloading run id %s." % pk)
 
 
 def download_leg_result(request,pk):

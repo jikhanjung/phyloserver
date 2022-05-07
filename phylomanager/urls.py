@@ -20,6 +20,7 @@ urlpatterns = [
     path('delete_run/<int:pk>/', views.delete_run, name='delete_run'),
     path('download_run_result/<int:pk>/', views.download_run_result, name='download_run_result'),
     path('download_leg_result/<int:pk>/', views.download_leg_result, name='download_leg_result'),
+    path('show_tree/<int:pk>/', views.show_tree, name='show_tree'),
 
     # user
     path('user_info/', views.user_info, name='user_info'),
