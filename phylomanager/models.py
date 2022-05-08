@@ -349,6 +349,17 @@ class PhyloLeg(models.Model):
         else:
             return "leg_" + str(self.id)
 
+    def has_tree(self):
+        run = self.run
+        data_filename = os.path.split( str(run.datafile) )[-1]
+        filename, fileext = os.path.splitext(data_filename.upper())
+        if self.leg_package.package_name == 'IQTree':
+            tree_filename = os.path.join( self.leg_directory, filename + ".phy.treefile" )
+        elif self.leg_package.package_name == 'MrBayes':
+            tree_filename = os.path.join( self.leg_directory, filename + ".nex1.con.tre" )
+        elif self.leg_package.package_name == 'TNT':
+            tree_filename = os.path.join( self.leg_directory, "aquickie.tre" )
+        
     @property
     def get_tree(self):
         run = self.run

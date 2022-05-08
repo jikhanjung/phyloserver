@@ -1,5 +1,174 @@
 import re, os, json
 
+class PhyloTreefile:
+    def __init__(self):
+        self.line_list = []
+        self.block_list = []
+        self.block_hash = {}
+        self.taxa_list = []
+        self.taxa_hash = {}
+        self.tree_text_list = []
+        self.tree_text_hash = {}
+        self.tree_object_hash = {}
+        self.file_type = None
+
+    def readtree(self,a_filepath,filetype):
+        filepath,filename = os.path.split(a_filepath)
+        filename, fileext = os.path.splitext(filename.upper())
+        self.dataset_name = filename
+
+        # determine by filetype
+        if fileext.upper() in ['.NEX','.NEXUS']:
+            self.file_type='Nexus'
+        
+        #read first line
+        file = open(a_filepath,mode='r')
+        self.file_text = file.read()
+        file.close()
+
+        self.line_list = self.file_text.split('\n')
+        if not self.file_type:
+            upper_file_text = self.file_text.upper()
+            #first_line = self.line_list[0].upper()
+            if upper_file_text.find('#NEXUS') > -1:
+                self.file_type = 'Nexus'
+        #print("File type:", self.file_type)
+        
+        if self.file_type == 'Nexus':
+            #print("nexus file")
+            self.parse_nexus_file()
+        if self.block_hash['TREES']:
+            tree_lines = self.block_hash['TREES']
+            taxa_begin = False
+            taxa_end = False
+            for line in tree_lines:
+                #print(line)
+                taxa_begin_line = re.search("translate",line,flags=re.IGNORECASE)
+                taxa_end_line = re.search(";",line,flags=re.IGNORECASE)
+                if taxa_begin_line:
+                    #print("taxa begin")
+                    taxa_begin = True
+                    continue
+                if taxa_begin:
+                    taxon_line = re.search("^\s*(\d+)\s+(\S+)\s*$",line,flags=re.IGNORECASE)
+                    #print(taxon_line)
+                    if taxon_line:
+                        taxon_idx = taxon_line.group(1)
+                        taxon_name = taxon_line.group(2)
+                        if taxon_name[-1] == ',':
+                            taxon_name = taxon_name[:-1]
+                        self.taxa_hash[taxon_idx] = taxon_name
+                        self.taxa_list.append(taxon_name)
+                if taxa_end_line:
+                    taxa_end = True
+                if taxa_end:
+                    tree_line = re.search("^\s*tree\s+(\S+)\s*=\s*(.*);\s*$",line,flags=re.IGNORECASE)
+                    #print("tree:",tree_line)
+                    if tree_line:
+                        tree_name = tree_line.group(1)
+                        tree_text = tree_line.group(2)
+                        self.tree_text_hash[tree_name] = tree_text
+                        #self.tree_text_list.append(tree_text)
+
+            if self.tree_text_hash:
+                for tree_key in self.tree_text_hash.keys():
+                    tree_text = self.tree_text_hash[tree_key]
+                    self.tree_text_hash[tree_key] = self.remove_comment(tree_text)
+        else:
+            return False
+
+        return True
+
+    def remove_comment(self,tree_text):
+        #print(tree_text[15],tree_text[20])
+        #print(tree_text)
+        new_tree_text = ''
+        for tree_char in tree_text:
+            if tree_char == '[':
+                in_comment = True
+                continue
+            elif tree_char == ']':
+                in_comment = False
+                continue
+            if not in_comment:
+                new_tree_text += tree_char
+        #print(new_tree_text)
+        return new_tree_text
+    def parse_tree(self,tree_text):
+        tree = []
+        idx = 0
+        subtree, processed_index = self.parse_subtree(tree_text[1:])
+        print(subtree)
+
+        return subtree
+        idx = processed_index
+        tree.append(subtree)
+        #for idx in range(len(tree_text[]))
+        while( processed_index < len(tree_text)):
+            subtree, processed_index = self.parse_subtree(remaining_text)
+            if(subtree):
+                tree.append(subtree)
+
+    def parse_subtree(self,tree_text,depth=0):
+        tree = []
+        taxon=""
+        print("parse:",tree_text)
+        #for idx in range(len(tree_text)):
+        idx=0
+        while( idx < len(tree_text)):
+            char = tree_text[idx]
+            print("depth",depth,"idx", idx,"char",char)
+            if char == ' ':
+                continue
+            if char == '(':
+                subtree, processed_index = self.parse_subtree(tree_text[idx+1:],depth+1)
+                print("returned subtree", subtree, "processed_index", processed_index, "idx", idx, "tree_text[", tree_text,"]","depth",depth)
+                idx += processed_index
+                print("depth",depth,"idx", idx)
+                if(subtree):
+                    tree.append(subtree)
+            elif char == ')':
+                if taxon != "":
+                    print("met ')', and add taxon",taxon, "idx=",idx)
+                    tree.append(taxon)
+                return tree, idx+1
+            elif char == ",":
+                print("met ',', and add taxon",taxon, "idx=",idx)
+                tree.append(taxon)
+                taxon = ""
+            else:
+                taxon += char
+            idx+=1
+        if taxon != "":
+            tree.append(taxon)
+        return tree, idx+1
+
+    def parse_nexus_file(self,line_list=None):
+        if not line_list:
+            line_list = self.line_list
+        curr_block=None
+        in_block = False
+        for line in line_list:
+            #print(line)
+            begin_line = re.match("begin\s+(\S+)\s*;",line,flags=re.IGNORECASE)
+            end_line = re.match("end\s*;",line,flags=re.IGNORECASE)
+
+            if begin_line:
+                #print(begin_line)
+                curr_block = {}
+                curr_block['name'] = begin_line.group(1).upper()
+                curr_block['text'] = []
+                in_block = True
+            elif end_line:
+                #print("end block")
+                self.block_list.append(curr_block)
+                #if curr_block['name'] == 'DATA':
+                self.block_hash[curr_block['name']] = curr_block['text']
+                in_block = False
+            elif in_block:
+                curr_block['text'].append(line)
+        return #block_list
+
 class PhyloMatrix:
     def __init__(self):
         self.taxa_list = []

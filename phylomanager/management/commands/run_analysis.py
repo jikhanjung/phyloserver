@@ -189,8 +189,10 @@ class Command(BaseCommand):
    set autoclose=yes nowarn=yes;
    execute {dfname};
    lset nst={nst} rates={nrates};
-   mcmc nruns={nruns} ngen={ngen} samplefreq={samplefreq} file={dfname}1;
-end;""".format( dfname=data_filename, nst=leg.mcmc_nst, nrates=leg.mcmc_nrates, nruns=leg.mcmc_nruns, ngen=leg.mcmc_ngen, samplefreq=leg.mcmc_samplefreq)
+   mcmc nruns={nruns} ngen={ngen} samplefreq={samplefreq} file={dfname}1 burnin={burnin} Savebrlens=No;
+   sump burnin={burnin};
+   sumt burnin={burnin} Showtreeprobs=No;
+end;""".format( dfname=data_filename, nst=leg.mcmc_nst, nrates=leg.mcmc_nrates, nruns=leg.mcmc_nruns, ngen=leg.mcmc_ngen, samplefreq=leg.mcmc_samplefreq,burnin=leg.mcmc_burnin)
         #print(command_text)
 
         command_filepath = os.path.join(leg_directory,command_filename)
