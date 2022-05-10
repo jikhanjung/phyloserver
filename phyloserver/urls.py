@@ -18,6 +18,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('phylomanager/', include('phylomanager.urls')),
+    path('nkfcluster/', include('nkfcluster.urls')),
     path('admin/', admin.site.urls),
     path("phylomanager/", include("django.contrib.auth.urls")), 
 ]

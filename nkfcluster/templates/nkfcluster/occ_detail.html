@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Occrrence info</h1>
+
+<table border="1" width="800">
+    <tr><th width="150">Stratigraphic unit</th><td>{{ occ.get_strat_unit_display }}</td></tr>
+    <tr><th>Lithology</th><td> {{ occ.get_lithology_display }}</td></tr>
+    <tr><th>Group</th><td> {{ occ.get_group_display }}</td></tr>
+    <tr><th>Species name</th><td> {{ occ.species_name }}</td></tr-->
+    <tr><th>Location</th><td>{{ occ.get_location_display }}</td></tr>
+</table>
+<a href="{% url 'occ_list' %}">[Occurrence List]</a>
+<a href="{% url 'edit_occurrence' occ.id %}">[Edit]</a>
+<a href="{% url 'delete_occurrence' occ.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
+
+{% endblock %}

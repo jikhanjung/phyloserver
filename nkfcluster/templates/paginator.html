@@ -1,0 +1,23 @@
+{% if page_obj.paginator.num_pages > 0 %}
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{%if filter1%}&filter1={{filter1}}{%endif%}{%if filter2%}&filter2={{filter2}}{%endif%}">[First]</a>
+            <a href="?page={{ page_obj.previous_page_number }}{%if filter1%}&filter1={{filter1}}{%endif%}{%if filter2%}&filter2={{filter2}}{%endif%}">[Prev]</a>
+        {%else%}
+        [First] [Prev]
+        {% endif %}
+
+        <span class="current">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{%if filter1%}&filter1={{filter1}}{%endif%}{%if filter2%}&filter2={{filter2}}{%endif%}">[Next]</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{%if filter1%}&filter1={{filter1}}{%endif%}{%if filter2%}&filter2={{filter2}}{%endif%}">[Last]</a>
+        {%else%}
+        [Next] [Last]
+        {% endif %}
+    </span>
+</div>
+{% endif %}

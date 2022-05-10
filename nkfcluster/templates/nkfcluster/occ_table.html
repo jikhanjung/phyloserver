@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Occurrence Table</h1>
+{% if data_list %}   
+    <table border="1" width="800" class="list_table">
+        <tr>
+            {%for col in column_list%}<th>{{col}}</th>{%endfor%}
+        </tr>
+    {% for row in data_list %}
+        <tr>
+            {%for val in row%}<td>{{val}}</td>{%endfor%}
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No occurrences are available.</p>
+{% endif %}
+
+<table border="0" width="800">
+    <tr><td width="400" align="left">
+    </td><td width="400" align="right">
+        <a href="{% url 'occ_list' %}">[Occurrence list]</a>
+    </td></tr></table>
+
+{% endblock %}
