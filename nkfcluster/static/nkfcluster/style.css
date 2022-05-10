@@ -1,0 +1,87 @@
+.sidebar {
+    height: 100%;
+    width: 150px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding-top: 40px;
+    background-color: lightblue;
+}
+    
+.sidebar div {
+    padding: 8px;
+    display: block;
+}
+
+.menu_home {
+    font-size: 20px;
+}
+
+.menu_items {
+    font-size: 16px;
+}
+
+.bodytext {
+    margin-left: 150px;
+    font-size: 16px;
+}
+
+a {
+    text-decoration: none;
+}
+
+table {
+    border-collapse: collapse;
+  }
+td, th {
+    padding: 3px;
+}
+
+.tr_link:hover {
+    background-color: skyblue;
+    cursor: pointer;
+}
+
+.list_table td {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.detail_table td {
+    white-space: normal;
+}
+
+.leg_form {
+    border: 1px solid black; 
+    width:798px; 
+    margin-top:10px;
+}
+
+.char_header {
+    width: 25px;
+}
+
+.char_state {
+    width: 25px;
+    text-align: center;
+}
+
+.run_list_title {
+    width: 200px;
+}
+
+.run_list_status {
+    width: 100px;
+}
+
+.run_list_run_by {
+    width: 100px;
+}
+
+.run_list_nlegs {
+    width: 50px;
+}
+
+.run_list_created {
+    width: 150px;
+}

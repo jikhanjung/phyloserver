@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "nkfbase.html" %}
 {% block content %}
 <h1>Edit Occurrence</h1>
 <form action="" method="post" enctype="multipart/form-data">
@@ -10,6 +10,7 @@
         <tr><th>{{occ_form.group.label}}</th><td>{{occ_form.group}}</td></tr>
         <tr><th>{{occ_form.species_name.label}}</th><td>{{occ_form.species_name}}</td></tr>
         <tr><th>{{occ_form.location.label}}</th><td>{{occ_form.location}}</td></tr>
+        <tr><th>{{occ_form.source.label}}</th><td>{{occ_form.source}}</td></tr>
     </table>
 </div>
 <input type="submit" value="Save">

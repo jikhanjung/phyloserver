@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
     {% load static %}
     <title>{% block title %}NK Fossil cluster{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'nkfcluster/style.css' %}">
+    <link rel="stylesheet" href="{% static 'phylomanager/style.css' %}">
 </head>
 
 <body>
@@ -13,7 +13,8 @@
         {% block sidebar %}
         <div class="menu_home"><a href="/nkfcluster/">Home</a></div>
         <div class="menu_items">
-            <a href="/nkfcluster/occ_list/">Occrrence list</a><br/>
+            <a href="/nkfcluster/occ_list/">Occrrence list 1</a><br/>
+            <a href="/nkfcluster/occ_list2/">Occrrence list 2</a><br/>
             <br/>
         </div>
         {% if user_obj %} 

@@ -4,3 +4,4 @@ phylomanager/migrations/*
 phylorun_datafile/*
 .env
 uploads/*
+nkfcluster/migrations/*

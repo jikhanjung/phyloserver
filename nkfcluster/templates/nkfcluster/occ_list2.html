@@ -1,0 +1,64 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>Occurrence list</h1>
+<table border="0" width="1600">
+    <tr><td width="400" align="left">
+     {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
+    </td><td width="400" align="right"><form method="GET" action="{% url 'occ_list'%}">
+        {% csrf_token %}
+        <select name="filter2" id="filter2">
+            <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
+          </select>
+        <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:""}}"><button type="submit">검색</button>
+    </form></td></tr></table>
+
+{% if occ_list %}   
+    <table border="1" width="1600" class="list_table">
+        <tr>
+            <th><div class="occ_list_type">type</div></th>
+            <th><div class="occ_list_plate">plate</div></th>
+            <th><div class="occ_list_figure">figure</div></th>
+            <th><div class="occ_list_species">species</div></th>
+            <th><div class="occ_list_preservation">preservation</div></th>
+            <th><div class="occ_list_preservation_eng">preservation_eng</div></th>
+            <th><div class="occ_list_location">location</div></th>
+            <th><div class="occ_list_location_code">location_code</div></th>
+            <th><div class="occ_list_unit">unit</div></th>
+            <th><div class="occ_list_unit">unit_code</div></th>
+            <th><div class="occ_list_unit_eng">unit_eng</div></th>
+            <th><div class="occ_list_strat_range">strat_range</div></th>
+            <th><div class="occ_list_latitude">latitude</div></th>
+            <th><div class="occ_list_longitude">longitude</div></th>
+        </tr>
+    {% for occ in page_obj %}
+        <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail2' occ.id %}';">
+            <td align="center">{{ occ.type }}</td>
+            <td align="center">{{ occ.plate }}</td>
+            <td align="center">{{ occ.figure }}</td>
+            <td align="center"><a href="{% url 'occ_detail2' occ.id %}">{{ occ.species }}</a></td>
+            <td align="center">{{ occ.preservation }}</td>
+            <td align="center">{{ occ.preservation_eng }}</td>
+            <td align="center">{{ occ.location }}</td>
+            <td align="center">{{ occ.location_code }}</td>
+            <td align="center">{{ occ.unit }}</td>
+            <td align="center">{{ occ.unit_code }}</td>
+            <td align="center">{{ occ.unit_eng }}</td>
+            <td align="center">{{ occ.strat_range }}</td>
+            <td align="center">{{ occ.latitude }}</td>
+            <td align="center">{{ occ.longitude }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No occurrences are available.</p>
+{% endif %}
+
+<table border="0" width="1600">
+    <tr><td width="400" align="left">
+        {% include "paginator.html" %}
+    </td><td width="400" align="right">
+        <a href="{% url 'add_occurrence' %}">[Add Occurrence]</a>
+        <a href="{% url 'show_table' %}">[Show Table]</a>
+    </td></tr></table>
+
+{% endblock %}

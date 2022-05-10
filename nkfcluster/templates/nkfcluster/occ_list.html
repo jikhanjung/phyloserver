@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "nkfbase.html" %}
 {% block content %}
 <h1>Occurrence list</h1>
 <table border="0" width="800">
@@ -40,6 +40,7 @@
     </td><td width="400" align="right">
         <a href="{% url 'add_occurrence' %}">[Add Occurrence]</a>
         <a href="{% url 'show_table' %}">[Show Table]</a>
+        <a href="{% url 'show_table_by_genus' %}">[Show Table by Genus]</a>
     </td></tr></table>
 
 {% endblock %}

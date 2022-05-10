@@ -82,6 +82,35 @@ class NkfOccurrence(models.Model):
     lithology = models.CharField(max_length=10,choices=LITHOLOGY_CHOICES,blank=True,null=True)
     group = models.CharField(max_length=200,choices=GROUP_CHOICES,blank=True,null=True)
     species_name = models.CharField(max_length=200,blank=True,null=True)
+    genus_name = models.CharField(max_length=200,blank=True,null=True)
     location = models.CharField(max_length=10, choices=LOCATION_CHOICES,blank=True,null=True )
+    source = models.CharField(max_length=200,blank=True,null=True )
     def __str__(self):
         return self.species_name + " @" + self.location
+
+    def process_genus_name(self):
+        name_list = self.species_name.split(" ")
+        if len(name_list) > 0:
+            self.genus_name = name_list[0]
+
+class NkfOccurrence2(models.Model):
+    index = models.IntegerField(blank=True,null=True)
+    type = models.CharField(max_length=200,blank=True,null=True)
+    type_code = models.CharField(max_length=10,blank=True,null=True)
+    plate = models.CharField(max_length=10,blank=True,null=True)
+    figure = models.CharField(max_length=10,blank=True,null=True)
+    species = models.CharField(max_length=100,blank=True,null=True)
+    preservation = models.CharField(max_length=100,blank=True,null=True)
+    preservation_eng = models.CharField(max_length=100,blank=True,null=True)
+    location = models.CharField(max_length=200,blank=True,null=True)
+    location_code = models.CharField(max_length=10,blank=True,null=True)
+    unit = models.CharField(max_length=100,blank=True,null=True)
+    unit_eng = models.CharField(max_length=100,blank=True,null=True)
+    unit_code = models.CharField(max_length=10,blank=True,null=True)
+    strat_range = models.CharField(max_length=100,blank=True,null=True)
+    latitude = models.CharField(max_length=100,blank=True,null=True)
+    longitude = models.CharField(max_length=100,blank=True,null=True)
+    source = models.CharField(max_length=200,blank=True,null=True )
+    def __str__(self):
+        return self.species_name + " @" + self.location
+
