@@ -334,46 +334,8 @@ def download_run_result(request,pk):
 
 def show_tree(request,pk):
     leg = get_object_or_404(PhyloLeg, pk=pk)
-    run = leg.run
-    tree = None
-    data_filename = os.path.split( str(run.datafile) )[-1]
-    filename, fileext = os.path.splitext(data_filename.upper())
-    if leg.leg_package.package_name == 'IQTree':
-
-        tree_filename = os.path.join( leg.leg_directory, filename + ".phy.treefile" )
-        tree = Phylo.read( tree_filename, "newick" )
-        #print
-
-    elif leg.leg_package.package_name == 'TNT':
-        tree_filename = os.path.join( leg.leg_directory, "aquickie.tre" )
-        #tree = Phylo.read( tree_filename, "nexus" )
-        tf = PhyloTreefile()
-        tf.readtree(tree_filename,'Nexus')
-        print(tf.block_hash)
-        tree = Phylo.read(io.StringIO(tf.tree_text_hash['tnt_1']), "newick")
-
-    elif leg.leg_package.package_name == 'MrBayes':
-        tree_filename = os.path.join( leg.leg_directory, filename + ".nex1.con.tre" )
-        tf = PhyloTreefile()
-        tf.readtree(tree_filename,'Nexus')
-        #tree_text = tf.tree_text_hash['con_50_majrule']
-        #handle = 
-        tree = Phylo.read(io.StringIO(tf.tree_text_hash['con_50_majrule']), "newick")
-        for clade in tree.find_clades():
-            if clade.name and tf.taxa_hash[clade.name]:
-                #print(clade.name)
-                clade.name = tf.taxa_hash[clade.name]
-        
-        #tree = Phylo.read( tree_filename, "nexus" )
-
-    fig = plt.figure(figsize=(10, 20), dpi=100)
-    axes = fig.add_subplot(1, 1, 1)
-    Phylo.draw(tree, axes=axes,do_show=False)
-    #plt.show()
-    buffer = io.BytesIO()
-    #print(tree_filename)
-    plt.savefig(buffer, format='svg')
-    buffer.seek(0)
+    tree_filename = os.path.join(leg.leg_directory, "concensus_tree.svg")
+    return FileResponse(open(tree_filename, 'rb'))    
     return FileResponse(buffer,filename=filename+".svg",)
     #return HttpResponse("You're downloading run id %s." % pk)
 

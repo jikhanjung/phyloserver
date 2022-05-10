@@ -1,6 +1,7 @@
 from multiprocessing.spawn import prepare
 from unittest import runner
 from phylomanager.models import PhyloRun, PhyloPackage, PhyloModel, PhyloLeg, PhyloRunner, PhyloAnalog
+from phylomanager.utils import PhyloTreefile
 from django.core.management.base import BaseCommand
 import subprocess
 from django.conf import settings
@@ -8,6 +9,9 @@ import os, shutil, sys
 import time, datetime
 from django.utils import timezone
 import signal
+import matplotlib.pyplot as plt
+from Bio import Phylo
+import io
 
 class Command(BaseCommand):
     help = "Customized load data for DB migration"
@@ -59,6 +63,7 @@ class Command(BaseCommand):
                     run.start_datetime = now
                     run.save()
                 now_string = local_now.strftime("%Y%m%d_%H%M%S")
+                print(now_string)
                 #run_directory = 
                 run.run_directory = os.path.join( "phylo_run", run.get_run_by, run.get_dirname() + "_" + now_string )
                 print( "run directory:", run.run_directory )
@@ -165,6 +170,51 @@ class Command(BaseCommand):
 
                         log.log_status = 'FN'
                         log.save()
+
+                        '''Tree file Processing'''
+                        if package.package_name == 'IQTree':
+                            tree_filename = os.path.join( leg.leg_directory, filename + ".phy.treefile" )
+                            tree = Phylo.read( tree_filename, "newick" )
+                        elif leg.leg_package.package_name == 'TNT':
+                            phylo_data = run.phylodata
+                            phylo_data.post_read()
+                            #phylodata.taxa_list
+                            #phylodata.post_read()
+                            #print(phylodata.taxa_list)
+                            tree_filename = os.path.join( leg.leg_directory, "aquickie.tre" )
+                            #tree = Phylo.read( tree_filename, "nexus" )
+                            tf = PhyloTreefile()
+                            tf.readtree(tree_filename,'Nexus')
+                            #print(tf.block_hash)
+                            tree = Phylo.read(io.StringIO(tf.tree_text_hash['tnt_1']), "newick")
+                            for clade in tree.find_clades():
+                                if clade.name:
+                                    taxon_index = int(clade.name) - 1
+                                    clade.name = phylo_data.taxa_list[taxon_index]
+                                    #print(clade.name)
+                                    #clade.name = tf.taxa_hash[clade.name]
+
+                        elif leg.leg_package.package_name == 'MrBayes':
+                            tree_filename = os.path.join( leg.leg_directory, filename + ".nex1.con.tre" )
+                            tf = PhyloTreefile()
+                            tf.readtree(tree_filename,'Nexus')
+                            #print(tf.tree_text_hash)
+                            #tree_text = tf.tree_text_hash['con_50_majrule']
+                            #handle = 
+                            tree = Phylo.read(io.StringIO(tf.tree_text_hash['con_50_majrule']), "newick")
+                            for clade in tree.find_clades():
+                                if clade.name and tf.taxa_hash[clade.name]:
+                                    #print(clade.name)
+                                    clade.name = tf.taxa_hash[clade.name]
+
+                        fig = plt.figure(figsize=(10, 20), dpi=100)
+                        axes = fig.add_subplot(1, 1, 1)
+                        Phylo.draw(tree, axes=axes,do_show=False)
+                        #plt.show()
+                        #buffer = io.BytesIO()
+                        #print(tree_filename)
+                        tree_imagefile = os.path.join( leg.leg_directory, "concensus_tree.svg" )
+                        plt.savefig(tree_imagefile, format='svg')
                         
                     #print("\n")
                 #print("\n\n")

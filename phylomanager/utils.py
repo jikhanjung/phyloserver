@@ -41,15 +41,61 @@ class PhyloTreefile:
             tree_lines = self.block_hash['TREES']
             taxa_begin = False
             taxa_end = False
+            curr_tree_name = ""
+            prev_tree_name = ""
+            whole_tree = " ".join( tree_lines )
+            tree_sections = whole_tree.split(";")
+            self.tree_section = {}
+            for section in tree_sections:
+                #print(section)
+                section_line = re.search("(\w+)\s+(.+)",section,flags=re.IGNORECASE)
+                if section_line:
+                    section_name = section_line.group(1)
+                    section_contents = section_line.group(2)
+                    if section_name not in self.tree_section.keys():
+                        self.tree_section[section_name] = []
+                    self.tree_section[section_name].append(section_contents)
+                        
+            if 'translate' in self.tree_section.keys():
+                taxa_list = self.tree_section['translate'][0].split(",")
+                #print(taxa_list)
+                for taxon in taxa_list:
+                    taxon = taxon.strip()
+                    #print(taxon)
+                    taxon_line = re.search("(\S+)\s+(\S+)",taxon,flags=re.IGNORECASE)
+                    if taxon_line:
+                        taxon_index = taxon_line.group(1)
+                        taxon_name = taxon_line.group(2)
+                        self.taxa_list.append(taxon_name)
+                        self.taxa_hash[taxon_index] = taxon_name
+            if 'tree' in self.tree_section.keys():
+                #self.tree_hash = {}
+                for tree in self.tree_section['tree']:
+                    #print("tree:[",tree,"]")
+                    tree = tree.strip()
+                    tree_name, tree_text = tree.split("=",1)
+                    #tree_line = re.search("(\w+)\s*=(.+)",tree,flags=re.IGNORECASE)
+                    tree_name = tree_name.strip()
+                    tree_text = tree_text.strip()
+                    self.tree_text_hash[tree_name] = tree_text
+                #print(self.tree_section['tree'])
+            #print(self.taxa_hash)
+            return True
             for line in tree_lines:
-                #print(line)
+                
+                
+                print("[",line,"]")
                 taxa_begin_line = re.search("translate",line,flags=re.IGNORECASE)
                 taxa_end_line = re.search(";",line,flags=re.IGNORECASE)
                 if taxa_begin_line:
-                    #print("taxa begin")
+                    print("taxa begin")
                     taxa_begin = True
                     continue
-                if taxa_begin:
+                if taxa_end_line:
+                    print("taxa end")
+                    taxa_end = True
+                    continue
+                if taxa_begin and not taxa_end:
                     taxon_line = re.search("^\s*(\d+)\s+(\S+)\s*$",line,flags=re.IGNORECASE)
                     #print(taxon_line)
                     if taxon_line:
@@ -59,16 +105,20 @@ class PhyloTreefile:
                             taxon_name = taxon_name[:-1]
                         self.taxa_hash[taxon_idx] = taxon_name
                         self.taxa_list.append(taxon_name)
-                if taxa_end_line:
-                    taxa_end = True
                 if taxa_end:
-                    tree_line = re.search("^\s*tree\s+(\S+)\s*=\s*(.*);\s*$",line,flags=re.IGNORECASE)
-                    #print("tree:",tree_line)
-                    if tree_line:
-                        tree_name = tree_line.group(1)
-                        tree_text = tree_line.group(2)
-                        self.tree_text_hash[tree_name] = tree_text
-                        #self.tree_text_list.append(tree_text)
+                    print("taxa end and now looking for tree")
+                    print(line)
+                    tree_begin_line = re.search("^\s*tree\s+(\S+)\s*=\s*(.*)$",line,flags=re.IGNORECASE)
+                    tree_end_line = re.search("(.*);",line)
+                    print(tree_begin_line, tree_end_line)
+                    if tree_begin_line:
+                        curr_tree_name = tree_begin_line.group(1)
+                        print("tree name:", curr_tree_name)
+                        if tree_end_line:
+                            tree_text = tree_begin_line.group(2)
+                            self.tree_text_hash[curr_tree_name] = tree_text
+                    elif tree_end_line:
+                        self.tree_text_hash[curr_tree_name] += tree_text
 
             if self.tree_text_hash:
                 for tree_key in self.tree_text_hash.keys():
