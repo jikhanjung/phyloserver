@@ -114,3 +114,26 @@ class NkfOccurrence2(models.Model):
     def __str__(self):
         return self.species_name + " @" + self.location
 
+class NkfOccurrence3(models.Model):
+    index = models.IntegerField(blank=True,null=True)
+    author = models.CharField(max_length=200,blank=True,null=True)
+    year = models.CharField(max_length=10,blank=True,null=True)
+    publication = models.CharField(max_length=100,blank=True,null=True)
+    issue = models.CharField(max_length=10,blank=True,null=True)
+    pages = models.CharField(max_length=10,blank=True,null=True)
+    geologic_period = models.CharField(max_length=100,blank=True,null=True)
+    fossil_group = models.CharField(max_length=100,blank=True,null=True)
+    fossil_group_code = models.CharField(max_length=10,blank=True,null=True)
+    locality = models.CharField(max_length=200,blank=True,null=True)
+    locality_code = models.CharField(max_length=10,blank=True,null=True)
+    stratigraphy = models.CharField(max_length=100,blank=True,null=True)
+    stratigraphy_code = models.CharField(max_length=10,blank=True,null=True)
+    lithology = models.CharField(max_length=100,blank=True,null=True)
+    figure = models.CharField(max_length=100,blank=True,null=True)
+    implication = models.CharField(max_length=100,blank=True,null=True)
+    title = models.CharField(max_length=500,blank=True,null=True)
+    listed_name = models.CharField(max_length=500,blank=True,null=True )
+    note = models.CharField(max_length=500,blank=True,null=True )
+    def __str__(self):
+        return self.title
+

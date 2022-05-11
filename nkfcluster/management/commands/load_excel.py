@@ -1,6 +1,6 @@
 from multiprocessing.spawn import prepare
 from unittest import runner
-from nkfcluster.models import NkfOccurrence, NkfOccurrence2, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
+from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
 from django.core.management.base import BaseCommand
 import subprocess
 from django.conf import settings
@@ -90,6 +90,10 @@ class Command(BaseCommand):
         print(options)
 
 
+        NkfOccurrence.objects.all().delete()
+        NkfOccurrence2.objects.all().delete()
+        NkfOccurrence3.objects.all().delete()
+
         excel_filename = r'D:/projects/phyloserver/nkfcluster/data/2022-05-03 화석산출 정리.xls'
         sheet_name = '220426 조선지질총서2'
         df = pd.read_excel (r'nkfcluster/data/2022-05-03 화석산출 정리.xls',sheet_name)
@@ -154,7 +158,6 @@ class Command(BaseCommand):
                 occ = NkfOccurrence2()
                 occ.index = index
                 occ.type = row['type']
-                occ.type = row['type']
                 occ.plate = row['plate']
                 occ.figure = row['figure']
                 occ.species = row['species']
@@ -197,3 +200,30 @@ class Command(BaseCommand):
 
                 occ.save()
 
+
+        sheet_name = r'220503 individual articles'
+        df = pd.read_excel (r'nkfcluster/data/2022-05-03 화석산출 정리.xls',sheet_name)
+        print(df)
+
+        for index, row in df.iterrows():
+            #print(row)
+            if pd.notna(row['Title']):
+                occ = NkfOccurrence3()
+                occ.index = index
+                occ.author = row['Author']
+                occ.year = row['Year']
+                occ.publication = row['Publication']
+                occ.issue = row['Issue']
+                occ.pages = row['Pages']
+                occ.geologic_period = row['Geologic period']
+                occ.fossil_group = row['Fossil group']
+                occ.locality = row['Locality']
+                occ.stratigraphy = row['Stratigraphy']
+                occ.lithology = row['Lithology']
+                occ.figure = row['Figure']
+                occ.implication = row['Implication']
+                occ.title = row['Title']
+                occ.listed_name = row['Listed name (genus)']
+                occ.note = row['Note']
+                occ.source = sheet_name
+                occ.save()

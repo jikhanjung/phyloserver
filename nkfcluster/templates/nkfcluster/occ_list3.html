@@ -1,0 +1,66 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>Occurrence list</h1>
+<table border="0" width="1600">
+    <tr><td width="400" align="left">
+     {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
+    </td><td width="400" align="right"><form method="GET" action="{% url 'occ_list'%}">
+        {% csrf_token %}
+        <select name="filter2" id="filter2">
+            <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
+          </select>
+        <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:""}}"><button type="submit">검색</button>
+    </form></td></tr></table>
+
+{% if occ_list %}   
+    <table border="1" width="1600" class="list_table">
+        <tr>
+            <th><div>Author</div></th>
+            <th><div>Year</div></th>
+            <th><div>Publication</div></th>
+            <th><div>Issue</div></th>
+            <th><div>Pages</div></th>
+            <th><div>Geologic period</div></th>
+            <th><div>Fossil group</div></th>
+            <th><div>Locality</div></th>
+            <th><div>Stratigraphy</div></th>
+            <th><div>Lithology</div></th>
+            <th><div>Figure</div></th>
+            <th><div>Implication</div></th>
+            <th><div>Title</div></th>
+            <th><div>Listed name(genus)</div></th>
+            <th><div>Note</div></th>
+        </tr>
+    {% for occ in page_obj %}
+        <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail3' occ.id %}';">
+            <td align="center">{{ occ.author }}</td>
+            <td align="center">{{ occ.year }}</td>
+            <td align="center">{{ occ.publication }}</td>
+            <td align="center">{{ occ.issue }}</td>
+            <td align="center">{{ occ.pages }}</td>
+            <td align="center">{{ occ.geologic_period }}</td>
+            <td align="center">{{ occ.fossil_group }}</td>
+            <td align="center">{{ occ.locality }}</td>
+            <td align="center">{{ occ.stratigraphy }}</td>
+            <td align="center">{{ occ.lithology }}</td>
+            <td align="center">{{ occ.figure }}</td>
+            <td align="center">{{ occ.implication }}</td>
+            <td align="center">{{ occ.title }}</td>
+            <td align="center">{{ occ.listed_name }}</td>
+            <td align="center">{{ occ.note }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No occurrences are available.</p>
+{% endif %}
+
+<table border="0" width="1600">
+    <tr><td width="400" align="left">
+        {% include "paginator.html" %}
+    </td><td width="400" align="right">
+        <a href="{% url 'add_occurrence' %}">[Add Occurrence]</a>
+        <a href="{% url 'show_table' %}">[Show Table]</a>
+    </td></tr></table>
+
+{% endblock %}

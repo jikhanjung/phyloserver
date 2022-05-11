@@ -1,0 +1,28 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>Edit Occurrence 3</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+<div>
+    <table width="800" border="1">
+        <tr><th>{{occ_form.author.label}}</th><td>{{occ_form.author}}</td></tr>
+        <tr><th>{{occ_form.year.label}}</th><td>{{occ_form.year}}</td></tr>
+        <tr><th>{{occ_form.publication.label}}</th><td>{{occ_form.publication}}</td></tr>
+        <tr><th>{{occ_form.issue.label}}</th><td>{{occ_form.issue}}</td></tr>
+        <tr><th>{{occ_form.pages.label}}</th><td>{{occ_form.pages}}</td></tr>
+        <tr><th>{{occ_form.geologic_period.label}}</th><td>{{occ_form.geologic_period}}</td></tr>
+        <tr><th>{{occ_form.fossil_group.label}}</th><td>{{occ_form.fossil_group}}</td></tr>
+        <tr><th>{{occ_form.locality.label}}</th><td>{{occ_form.locality}}</td></tr>
+        <tr><th>{{occ_form.stratigraphy.label}}</th><td>{{occ_form.stratigraphy}}</td></tr>
+        <tr><th>{{occ_form.lithology.label}}</th><td>{{occ_form.lithology}}</td></tr>
+        <tr><th>{{occ_form.figure.label}}</th><td>{{occ_form.figure}}</td></tr>
+        <tr><th>{{occ_form.implication.label}}</th><td>{{occ_form.implication}}</td></tr>
+        <tr><th>{{occ_form.title.label}}</th><td>{{occ_form.title}}</td></tr>
+        <tr><th>{{occ_form.listed_name.label}}</th><td>{{occ_form.listed_name}}</td></tr>
+        <tr><th>{{occ_form.note.label}}</th><td>{{occ_form.note}}</td></tr>
+    </table>
+</div>
+<input type="submit" value="Save">
+</div>
+</form>
+{% endblock %}

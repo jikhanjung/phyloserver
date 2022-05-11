@@ -1,0 +1,23 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>Occurrence Table</h1>
+{% if cluster_data %}   
+    <table border="1" width="800" class="list_table">
+    {% for row in cluster_data %}
+        <tr>
+            {%for val in row%}<td>{{val}}</td>{%endfor%}
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No occurrences are available.</p>
+{% endif %}
+
+<table border="0" width="800">
+    <tr><td width="400" align="left">
+    </td><td width="400" align="right">
+        <a href="{% url 'occ_list' %}">[Occurrence list]</a>
+        <a href="{% url 'download_cluster' %}">[Download]</a>
+    </td></tr></table>
+
+{% endblock %}
