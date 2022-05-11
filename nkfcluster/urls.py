@@ -23,7 +23,7 @@ urlpatterns = [
     path('delete_occurrence3/<int:pk>/', views.delete_occurrence3, name='delete_occurrence3'),
 
     path('show_table/', views.show_table, name='show_table'),
-    path('show_table_by_genus/', views.show_table_by_genus, name='show_table_by_genus'),
-    path('show_cluster/', views.show_cluster, name='show_cluster'),
+    #path('show_table_by_genus/', views.show_table_by_genus, name='show_table_by_genus'),
+    #path('show_cluster/', views.show_cluster, name='show_cluster'),
     path('download_cluster/', views.download_cluster, name='download_cluster'),
 ] 

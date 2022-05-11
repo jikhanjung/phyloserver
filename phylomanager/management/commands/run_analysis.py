@@ -97,6 +97,8 @@ class Command(BaseCommand):
                         temp_directory = None
                         temp_directory_name = ""
                         if package.package_name == 'MrBayes' and my_os == 'Linux':
+                            ''' MrBayes doesn't run if datafile path is longer than 100chars. 
+                                So we use tempdir and copy all files after the analysis '''
                             original_leg_directory = leg_directory
                             temp_directory = tempfile.TemporaryDirectory()
                             temp_directory_name = temp_directory.name
