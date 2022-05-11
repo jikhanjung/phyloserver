@@ -286,10 +286,13 @@ class PhyloRun(models.Model):
 
     @property
     def get_run_by(self):
-        if self.run_by_user is None:
+        if self.run_by_user is not None:
+            return self.run_by_user.username
+        elif self.run_by is not None:
             return self.run_by
         else:
-            return self.run_by_user.username
+            return "Nobody"
+
 
     @property
     def get_number_of_legs(self):
