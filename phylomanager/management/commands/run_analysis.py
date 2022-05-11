@@ -93,8 +93,6 @@ class Command(BaseCommand):
                         leg_directory = os.path.join( run_abspath, leg.get_dirname())
                         original_leg_directory = ""
                         
-                        if not os.path.isdir( leg_directory ):
-                            os.makedirs( leg_directory )
                         
                         temp_directory = None
                         temp_directory_name = ""
@@ -105,6 +103,10 @@ class Command(BaseCommand):
                             leg_directory = os.path.join( temp_directory_name, leg.get_dirname() )
                             if not os.path.isdir( leg_directory ):
                                 os.makedirs( leg_directory )
+                        else:
+                            if not os.path.isdir( leg_directory ):
+                                os.makedirs( leg_directory )
+
 
                         # update leg status
                         leg.leg_status = 'IP'
