@@ -21,8 +21,10 @@ class Command(BaseCommand):
         print(options)
 
         occ3_list = NkfOccurrence3.objects.all()
+        #print(len(occ3_list))
         for occ3 in occ3_list:
-            if occ3.listed_name.find(";"):
+            #print(occ3.listed_name)
+            if occ3.listed_name.find(";") > 0:
                 continue
             genus_list = [ x.strip() for x in occ3.listed_name.split(",") ]
             strat_list = [ x.strip() for x in occ3.stratigraphy.split(",") ]
@@ -35,15 +37,16 @@ class Command(BaseCommand):
                         occ1.strat_unit = self.find_strat(strat)
                         occ1.location = self.find_loc(loc)
                         occ1.group = self.find_group(genus)
+                        occ1.species_name = genus
                         occ1.genus_name = genus
                         occ1.source = occ3.author + "(" + occ3.year + ":" + occ3.issue + ")"
-                        #occ1.save()
+                        occ1.save()
 
     def find_strat(self,strat):
-        return strat
+        return strat[:10]
 
     def find_loc(self,loc):
-        return loc
+        return loc[:10]
 
     def find_group(self,genus):
-        return genus
+        return genus[:10]
