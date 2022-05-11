@@ -12,6 +12,7 @@ import signal
 import matplotlib.pyplot as plt
 from Bio import Phylo
 import io
+import platform, tempfile
 
 class Command(BaseCommand):
     help = "Customized load data for DB migration"
@@ -35,6 +36,8 @@ class Command(BaseCommand):
         self.do_loop()
 
     def do_loop(self):
+        my_os = platform.system()
+
         while( True ):
             runs = self.get_candidate_runs()
             if len(runs) == 0:
@@ -88,15 +91,26 @@ class Command(BaseCommand):
 
                         original_file_location = os.path.join( settings.MEDIA_ROOT, str(run.datafile) )
                         leg_directory = os.path.join( run_abspath, leg.get_dirname())
+                        original_leg_directory = ""
+                        
                         if not os.path.isdir( leg_directory ):
                             os.makedirs( leg_directory )
+                        
+                        temp_directory = None
+                        temp_directory_name = ""
+                        if package.package_name == 'MrBayes' and my_os == 'Linux':
+                            original_leg_directory = leg_directory
+                            temp_directory = tempfile.TemporaryDirectory()
+                            temp_directory_name = temp_directory.name
+                            leg_directory = os.path.join( temp_directory_name, leg.get_dirname() )
+                            if not os.path.isdir( leg_directory ):
+                                os.makedirs( leg_directory )
 
                         # update leg status
                         leg.leg_status = 'IP'
                         leg.start_datetime = timezone.now()
                         leg.leg_directory = leg_directory
                         leg.save()
-
 
                         phylo_data = run.phylodata
                         phylo_data.post_read()
@@ -215,6 +229,12 @@ class Command(BaseCommand):
                         #print(tree_filename)
                         tree_imagefile = os.path.join( leg.leg_directory, "concensus_tree.svg" )
                         plt.savefig(tree_imagefile, format='svg')
+
+                        if original_leg_directory != "":
+                            shutil.copytree(leg_directory, original_leg_directory)
+                            leg.leg_directory = original_leg_directory
+                            leg.save()
+
                         
                     #print("\n")
                 #print("\n\n")
