@@ -329,7 +329,7 @@ def show_table(request):
         user_obj = None
 
     occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group","Species name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
+    column_list = ["Stratigraphic unit","Lithology","Fossil group","Species name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
     occ_hash = {}
     curr_row = None
     data_list = []
@@ -360,7 +360,7 @@ def show_table_by_genus(request):
         user_obj = None
 
     occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group","Genus name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
+    column_list = ["Stratigraphic unit","Lithology","Fossil group","Genus name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
     occ_hash = {}
     curr_row = None
     data_list = []
@@ -391,7 +391,7 @@ def show_cluster(request):
         user_obj = None
 
     occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group","Species name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
+    column_list = ["Stratigraphic unit","Lithology","Fossil group","Species name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
     occ_hash = {}
     curr_row = None
     data_list = []
@@ -429,7 +429,7 @@ def download_cluster(request):
         user_obj = None
 
     occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group","Species name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
+    column_list = ["Stratigraphic unit","Lithology","Fossil group","Species name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
     occ_hash = {}
     curr_row = None
     data_list = []
