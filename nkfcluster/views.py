@@ -382,45 +382,6 @@ def show_table(request):
 
     return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'local_regional_select':local_regional_select})
 
-def show_cluster(request): 
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
-
-    occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group","Species name","남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
-    occ_hash = {}
-    curr_row = None
-    data_list = []
-    prev_species_name = ""
-    for occ in occ_list:
-        if occ.species_name != prev_species_name:
-            if curr_row:
-                data_list.append(curr_row)
-            curr_row = [ occ.get_strat_unit_display(), occ.get_lithology_display(), occ.get_group_display(), occ.species_name ]
-            while len(curr_row) < len(column_list):
-                curr_row.append('0')
-
-        location = occ.get_location_display()
-        if location in column_list:
-            idx = column_list.index(location)
-            curr_row[idx] = '1'
-        prev_species_name = occ.species_name
-    
-    cluster_data = []
-    for col_name in column_list[4:]:
-        cluster_data.append([col_name])
-    for row in data_list:
-        occ_data = row[4:]
-        for idx in range(len(occ_data)):
-            cluster_data[idx].append(occ_data[idx])
- 
-    return render(request, 'nkfcluster/occ_cluster.html', {'cluster_data': cluster_data,'user_obj':user_obj,'column_list':column_list})
-
 def download_cluster(request): 
     if request.user.is_authenticated:
         user_obj = request.user
@@ -472,10 +433,12 @@ def download_cluster(request):
                 curr_row.append('0')
         location = occ.get_location_display()
         if locality_level == 1:
-            nkf_location = NkfLocality.objects.get(name=location)
-            while nkf_location.level > 1:
-                nkf_location = nkf_location.parent
-            location = nkf_location.name
+            nkf_location = NkfLocality.objects.filter(name=location)
+            if len(nkf_location) >0:
+                nkf_location = nkf_location[0]
+                while nkf_location.level > 1:
+                    nkf_location = nkf_location.parent
+                location = nkf_location.name
         if location in column_list:
             idx = column_list.index(location)
             curr_row[idx] = '1'
