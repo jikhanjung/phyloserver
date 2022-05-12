@@ -1,0 +1,17 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>Edit Locality</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+<div>
+    <table width="800" border="1">
+        <tr><th>{{locality_form.index.label}}</th><td>{{locality_form.index}}</td></tr>
+        <tr><th>{{locality_form.name.label}}</th><td>{{locality_form.name}}</td></tr>
+        <tr><th>{{locality_form.level.label}}</th><td>{{locality_form.level}}</td></tr>
+        <tr><th>{{locality_form.parent.label}}</th><td>{{locality_form.parent}}</td></tr>
+    </table>
+</div>
+<input type="submit" value="Save">
+</div>
+</form>
+{% endblock %}

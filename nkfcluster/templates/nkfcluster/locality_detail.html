@@ -1,0 +1,15 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>Locality info</h1>
+
+<table border="1" width="800">
+    <tr><th width="150">index</th><td>{{ locality.index }}</td></tr>
+    <tr><th>Name</th><td> {{ locality.name }}</td></tr>
+    <tr><th>Level</th><td> {{ locality.level }}</td></tr>
+    <tr><th>Parent</th><td> {{ locality.parent }}</td></tr>
+</table>
+<a href="{% url 'locality_list' %}">[Locality List]</a>
+<a href="{% url 'edit_locality' locality.id %}">[Edit]</a>
+<a href="{% url 'delete_locality' locality.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
+
+{% endblock %}

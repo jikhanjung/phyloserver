@@ -26,4 +26,11 @@ urlpatterns = [
     #path('show_table_by_genus/', views.show_table_by_genus, name='show_table_by_genus'),
     #path('show_cluster/', views.show_cluster, name='show_cluster'),
     path('download_cluster/', views.download_cluster, name='download_cluster'),
+
+    path('locality_list/', views.locality_list, name='locality_list'),
+    path('locality_detail/<int:pk>/', views.locality_detail, name='locality_detail'),
+    path('add_locality/', views.add_locality, name='add_locality'),
+    path('edit_locality/<int:pk>/', views.edit_locality, name='edit_locality'),
+    path('delete_locality/<int:pk>/', views.delete_locality, name='delete_locality'),
+
 ] 

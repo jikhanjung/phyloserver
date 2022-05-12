@@ -3,10 +3,10 @@
 <h1>Occurrence Table</h1>
 <table border="0" width="1350">
     <tr><td width="600" align="left">
-        <a href="{% url 'download_cluster' %}?local_regional_select={{local_regional_select}}&genus_species_select={{genus_species_select}}">Download data</a>
+        <a href="{% url 'download_cluster' %}?local_regional_select={{local_regional_select}}&genus_species_select={{genus_species_select}}">[Download data]</a>
     </td><td width="750" align="right"><form method="GET" action="{% url 'show_table'%}">
         {% csrf_token %}
-        <span style="background-color:cornflowerblue; width:400px;"><input type="radio" id="local_select" name="local_regional_select" value="local" {%if local_regional_select != "regional"%}checked{%endif%}>local
+        <span style="background-color:burlywood; width:400px;"><input type="radio" id="local_select" name="local_regional_select" value="local" {%if local_regional_select != "regional"%}checked{%endif%}>local
         <input type="radio" id="regional_select" name="local_regional_select" value="regional" {%if local_regional_select == "regional"%}checked{%endif%}>regional</span>
         <span style="background-color: aqua; width:400px;"><input type="radio" id="genus_select" name="genus_species_select" value="genus" {%if genus_species_select == "genus"%}checked{%endif%}>by genus
         <input type="radio" id="species_select" name="genus_species_select" value="species" {%if genus_species_select != "genus"%}checked{%endif%}>by species</span><span>
@@ -27,6 +27,5 @@
 {% else %}
     <p>No occurrences are available.</p>
 {% endif %}
-
 
 {% endblock %}

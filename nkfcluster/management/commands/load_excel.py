@@ -1,6 +1,6 @@
 from multiprocessing.spawn import prepare
 from unittest import runner
-from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
+from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfLocality, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
 from django.core.management.base import BaseCommand
 import subprocess
 from django.conf import settings
@@ -12,6 +12,42 @@ import matplotlib.pyplot as plt
 from Bio import Phylo
 import io
 import pandas as pd
+
+LOCALITY_LIST = [
+    { 'name': "평남분지 남부", 'level': 1 },
+    { 'name': "황주-법동향사대", 'level': 2, 'parent': "평남분지 남부" },
+    { 'name': "황주-법동향사대 남부지역", 'level': 2, 'parent': "평남분지 남부" },
+    { 'name': "남포", 'level': 3, 'parent': "황주-법동향사대" },
+    { 'name': "송림", 'level': 3, 'parent': "황주-법동향사대" },
+    { 'name': "황주", 'level': 3, 'parent': "황주-법동향사대" },
+    { 'name': "수안", 'level': 3, 'parent': "황주-법동향사대" },
+    { 'name': "곡산", 'level': 3, 'parent': "황주-법동향사대" },
+    { 'name': "법동", 'level': 3, 'parent': "황주-법동향사대" },
+    { 'name': "은률-과일", 'level': 3, 'parent': "황주-법동향사대 남부지역" },
+    { 'name': "평산-금천", 'level': 3, 'parent': "황주-법동향사대 남부지역" },
+    { 'name': "옹진-강령", 'level': 3, 'parent': "황주-법동향사대 남부지역" },
+    { 'name': "평남분지 북부", 'level': 1 },
+    { 'name': "덕천-맹산요함대", 'level': 2, 'parent': "평남분지 북부" },
+    { 'name': "개천-덕천-순천", 'level': 3, 'parent': "덕천-맹산요함대" },
+    { 'name': "구장", 'level': 3, 'parent': "덕천-맹산요함대" },
+    { 'name': "맹산", 'level': 3, 'parent': "덕천-맹산요함대" },
+    { 'name': "은산", 'level': 3, 'parent': "덕천-맹산요함대" },
+    { 'name': "중화-상원", 'level': 3, 'parent': "평남분지 북부" },
+    { 'name': "승호-사동", 'level': 3, 'parent': "평남분지 북부" },
+    { 'name': "연산-신평", 'level': 3, 'parent': "평남분지 북부" },
+    { 'name': "강서-강동", 'level': 3, 'parent': "평남분지 북부" },
+    { 'name': "고원-천내", 'level': 3, 'parent': "평남분지 북부" },
+    { 'name': "낭림육괴", 'level': 1 },
+    { 'name': "초산-고풍", 'level': 3, 'parent': "낭림육괴" },
+    { 'name': "강계-만포", 'level': 3, 'parent': "낭림육괴" },
+    { 'name': "화평", 'level': 3, 'parent': "낭림육괴" },
+    { 'name': "전천-성간", 'level': 3, 'parent': "낭림육괴" },
+    { 'name': "장진", 'level': 3, 'parent': "낭림육괴" },
+    { 'name': "부전", 'level': 3, 'parent': "낭림육괴" },
+    { 'name': "대흥", 'level': 3, 'parent': "낭림육괴" },
+    { 'name': "신포", 'level': 3, 'parent': "낭림육괴" },
+    { 'name': "혜산", 'level': 3, 'parent': "낭림육괴" },
+]
 
 LOCATION_CONVERSION_TABLE = [
 ("자강도 초산군 구평리","초산-고풍"),
@@ -92,10 +128,20 @@ class Command(BaseCommand):
         print(options)
 
 
-        NkfOccurrence.objects.all().delete()
-        NkfOccurrence2.objects.all().delete()
-        NkfOccurrence3.objects.all().delete()
+        NkfLocality.objects.all().delete()
+        print(LOCALITY_LIST)
+        for idx, loc in enumerate(LOCALITY_LIST):
+            nkfloc = NkfLocality()
+            nkfloc.name = loc['name']
+            nkfloc.level = loc['level']
+            nkfloc.index = idx+1
+            if 'parent' in loc.keys():
+                parent = NkfLocality.objects.get(name=loc['parent'])
+                nkfloc.parent = parent
+            nkfloc.save()
 
+
+        NkfOccurrence.objects.all().delete()
         excel_filename = r'D:/projects/phyloserver/nkfcluster/data/2022-05-03 화석산출 정리.xls'
         sheet_name = '220426 조선지질총서2'
         df = pd.read_excel (r'nkfcluster/data/2022-05-03 화석산출 정리.xls',sheet_name)
@@ -151,6 +197,8 @@ class Command(BaseCommand):
                         #print(occ)
                         occ.save()
 
+
+        NkfOccurrence2.objects.all().delete()
         sheet_name = r'220321 김덕성 조선의화석 삼엽충'
         df = pd.read_excel (r'nkfcluster/data/2022-05-03 화석산출 정리.xls',sheet_name)
         print(df)
@@ -202,7 +250,7 @@ class Command(BaseCommand):
 
                 occ.save()
 
-
+        NkfOccurrence3.objects.all().delete()
         sheet_name = r'220503 individual articles'
         df = pd.read_excel (r'nkfcluster/data/2022-05-03 화석산출 정리.xls',sheet_name)
         print(df)
@@ -229,3 +277,4 @@ class Command(BaseCommand):
                 occ.note = row['Note']
                 occ.source = sheet_name
                 occ.save()
+

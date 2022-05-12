@@ -137,3 +137,11 @@ class NkfOccurrence3(models.Model):
     def __str__(self):
         return self.title
 
+class NkfLocality(models.Model):
+    index = models.IntegerField(blank=True,null=True)
+    name = models.CharField(max_length=100,blank=True,null=True)
+    level = models.IntegerField(blank=True,null=True)
+    parent = models.ForeignKey('self',on_delete=models.CASCADE,blank=True,null=True,related_name='children')
+
+    def __str__(self):
+        return self.name

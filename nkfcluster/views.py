@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfLocality
 from django.core.paginator import Paginator
-from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3
+from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfLocalityForm
 #from cStringIO import StringIO
 
 import xlsxwriter
@@ -338,11 +338,19 @@ def show_table(request):
 
     if local_regional_select != "regional":
         local_regional_select = "local"
+        locality_level = 3
     else:
         local_regional_select = "regional"
+        locality_level = 1
+    
+    locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
+    locality_name_list = [ loc.name for loc in locality_list ]
+    print(locality_name_list)
 
     occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header,"남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
+    column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header]
+    column_list.extend(locality_name_list)#,"남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
+
     occ_hash = {}
     curr_row = None
     data_list = []
@@ -360,6 +368,11 @@ def show_table(request):
             while len(curr_row) < len(column_list):
                 curr_row.append('')
         location = occ.get_location_display()
+        if locality_level == 1:
+            nkf_location = NkfLocality.objects.get(name=location)
+            while nkf_location.level > 1:
+                nkf_location = nkf_location.parent
+            location = nkf_location.name
         if location in column_list:
             idx = column_list.index(location)
             curr_row[idx] = 'O'
@@ -426,11 +439,18 @@ def download_cluster(request):
 
     if local_regional_select != "regional":
         local_regional_select = "local"
+        locality_level = 3
     else:
         local_regional_select = "regional"
+        locality_level = 1
+    
+    locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
+    locality_name_list = [ loc.name for loc in locality_list ]
+    print(locality_name_list)
 
     occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header,"남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
+    column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header]
+    column_list.extend(locality_name_list)#,"남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
     occ_hash = {}
     curr_row = None
     data_list = []
@@ -448,6 +468,11 @@ def download_cluster(request):
             while len(curr_row) < len(column_list):
                 curr_row.append('0')
         location = occ.get_location_display()
+        if locality_level == 1:
+            nkf_location = NkfLocality.objects.get(name=location)
+            while nkf_location.level > 1:
+                nkf_location = nkf_location.parent
+            location = nkf_location.name
         if location in column_list:
             idx = column_list.index(location)
             curr_row[idx] = '1'
@@ -483,3 +508,104 @@ def download_cluster(request):
     return FileResponse(buffer, as_attachment=True, filename=filename)
 
     return render(request, 'nkfcluster/occ_cluster.html', {'cluster_data': cluster_data,'user_obj':user_obj,'column_list':column_list})
+
+
+def locality_list(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    locality_list = NkfLocality.objects.order_by('index')
+    paginator = Paginator(locality_list, 25) # Show 25 contacts per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'locality_list': locality_list,
+        'user_obj': user_obj,
+        'page_obj': page_obj,
+    }
+    return render(request, 'nkfcluster/locality_list.html', context)
+
+def locality_detail(request, pk):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    locality = get_object_or_404(NkfLocality, pk=pk)
+    return render(request, 'nkfcluster/locality_detail.html', {'locality': locality, 'user_obj':user_obj})
+
+
+def add_locality(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        locality_form = NkfLocalityForm(request.POST,request.FILES)
+        # check whether it's valid:
+        if locality_form.is_valid():
+            locality=locality_form.save()
+                
+            return HttpResponseRedirect('/nkfcluster/locality_detail/'+str(locality.id))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        locality_form = NkfLocalityForm()
+    return render(request, 'nkfcluster/locality_form.html', {'locality_form': locality_form,'user_obj':user_obj})
+
+
+def edit_locality(request,pk):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    #print("edit run")
+    locality = get_object_or_404(NkfLocality, pk=pk)
+    
+    if request.method == 'POST':
+        locality_form = NkfLocalityForm(request.POST,request.FILES,instance=locality)
+        #print("method POST")
+        # create a form instance and populate it with data from the request:
+        # check whether it's valid:
+        if locality_form.is_valid():
+            #print("run form valid")
+            locality = locality_form.save()
+            return HttpResponseRedirect('/nkfcluster/locality_detail/'+str(locality.id))
+        else:
+            pass
+            #print(run_form)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        locality_form = NkfLocalityForm(instance=locality)
+
+    return render(request, 'nkfcluster/locality_form.html', {'locality_form': locality_form,'user_obj':user_obj})
+
+def delete_locality(request, pk):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    locality = get_object_or_404(NkfLocality, pk=pk)
+    locality.delete()
+    return HttpResponseRedirect('/nkfcluster/locality_list')

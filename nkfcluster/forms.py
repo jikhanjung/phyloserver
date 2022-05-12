@@ -1,6 +1,6 @@
 from django import forms
 from django.db import models
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfLocality
 from django.forms import ModelForm, inlineformset_factory, modelformset_factory
 
 from django.contrib.auth.models import User
@@ -22,3 +22,8 @@ class NkfOccurrenceForm3(ModelForm):
         model = NkfOccurrence3
         fields = ['author','year','publication','issue','pages','geologic_period','fossil_group','fossil_group_code','locality','locality_code',
         'stratigraphy','stratigraphy_code','lithology','figure','implication','title','listed_name', 'note']
+
+class NkfLocalityForm(ModelForm):
+    class Meta:
+        model = NkfLocality
+        fields = ['index', 'name','level','parent']
