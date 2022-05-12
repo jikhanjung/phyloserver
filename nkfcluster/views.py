@@ -369,10 +369,12 @@ def show_table(request):
                 curr_row.append('')
         location = occ.get_location_display()
         if locality_level == 1:
-            nkf_location = NkfLocality.objects.get(name=location)
-            while nkf_location.level > 1:
-                nkf_location = nkf_location.parent
-            location = nkf_location.name
+            nkf_location = NkfLocality.objects.filter(name=location)
+            if len(nkf_location) >0:
+                nkf_location = nkf_location[0]
+                while nkf_location.level > 1:
+                    nkf_location = nkf_location.parent
+                location = nkf_location.name
         if location in column_list:
             idx = column_list.index(location)
             curr_row[idx] = 'O'
@@ -402,6 +404,7 @@ def show_cluster(request):
             curr_row = [ occ.get_strat_unit_display(), occ.get_lithology_display(), occ.get_group_display(), occ.species_name ]
             while len(curr_row) < len(column_list):
                 curr_row.append('0')
+
         location = occ.get_location_display()
         if location in column_list:
             idx = column_list.index(location)
