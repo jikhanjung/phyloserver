@@ -34,7 +34,7 @@
             <tr><th width="200">{{leg_formset.empty_form.leg_title.label}}</th><td>{{leg_formset.empty_form.leg_title}}</td></tr>
             <tr><th>{{leg_formset.empty_form.leg_status.label}}</th><td>{{leg_formset.empty_form.instance.get_leg_status_display}}</td></tr>
             <tr><th>{{leg_formset.empty_form.leg_package.label}}</th><td>{{leg_formset.empty_form.leg_package}}</td></tr>
-            <tr><th>{{leg_formset.empty_form.leg_type.label}}</th><td>{{leg_formset.empty_form.leg_type}}</td></tr>
+            <tr style="display:none"><th>{{leg_formset.empty_form.leg_type.label}}</th><td>{{leg_formset.empty_form.leg_type}}</td></tr>
             <!--tr><th>{{leg_formset.empty_form.start_datetime.label}}</th><td>{{leg_formset.empty_form.start_datetime.value}}</td></tr>
             <tr><th>{{leg_formset.empty_form.finish_datetime.label}}</th><td>{{leg_formset.empty_form.finish_datetime.value}}</td></tr-->
     </table>
@@ -68,7 +68,7 @@
             <tr><th width="200">{{leg.leg_title.label}}</th><td>{{leg.leg_title}}</td></tr>
             <tr><th>{{leg.leg_status.label}}</th><td>{{leg.instance.get_leg_status_display}}</td></tr>
             <tr><th>{{leg.leg_package.label}}</th><td>{{leg.leg_package}}</td></tr>
-            <tr><th>{{leg.leg_type.label}}</th><td>{{leg.leg_type}}</td></tr>
+            <tr style="display:none"><th>{{leg.leg_type.label}}</th><td>{{leg.leg_type}}</td></tr>
             <!--tr><th>{{leg.start_datetime.label}}</th><td>{{leg.start_datetime.value}}</td></tr>
             <tr><th>{{leg.finish_datetime.label}}</th><td>{{leg.finish_datetime.value}}</td></tr-->
     </table>
@@ -267,7 +267,7 @@
         //console.log('formNum:', formNum);
     }   
 
-    console.log( "current legform length", legForm.length);
+    //console.log( "current legform length", legForm.length);
     for( var idx=0;idx<legForm.length;idx++){
         leg_type[idx] = document.getElementById('id_leg_set-'+String(idx)+'-leg_type');
         set_leg_type_event_listener( leg_type[idx], idx );
