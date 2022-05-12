@@ -95,8 +95,12 @@
 </div>
 {% endfor %}
 
+<table width="800" border="0" id="button_table"><tr><td width="400" align="center">
 <input type="button" id="add-form" value="Add Leg">
+<input type="button" id="del-form" value="Delete Leg">
+</td><td width="400" align="center">
 <input type="submit" value="Save">
+</td></tr></table>
 </div>
 </form>
 <script>
@@ -175,16 +179,19 @@
         }
     }
 
-    let legForm = document.querySelectorAll(".leg-form")
-    let emptyForm = document.querySelector("#empty-form")
-    let container = document.querySelector("#leg-form-container")
-    let addButton = document.querySelector("#add-form")
-    let totalForms = document.querySelector("#id_leg_set-TOTAL_FORMS")
+    let legForm = document.querySelectorAll(".leg-form");
+    let emptyForm = document.querySelector("#empty-form");
+    let container = document.querySelector("#leg-form-container");
+    let addButton = document.querySelector("#add-form");
+    let delButton = document.querySelector("#del-form");
+    let button_table = document.querySelector("#button_table");
+    let totalForms = document.querySelector("#id_leg_set-TOTAL_FORMS");
 
     //console.log(emptyForm);
     //console.log(totalForms);
 
-    addButton.addEventListener('click', addForm)
+    addButton.addEventListener('click', addForm);
+    delButton.addEventListener('click', deleteForm);
 
     function set_leg_type_event_listener(  a_leg,  a_idx ) {
         a_leg.addEventListener('change', set_leg_type, false);
@@ -234,15 +241,30 @@
         newForm.style.display="block";
         newForm.innerHTML = newForm.innerHTML.replace(/__prefix__/g, formNum);
         //console.log(newForm);
-        container.insertBefore(newForm, addButton)
+        container.insertBefore(newForm, button_table)
         totalForms.setAttribute('value', `${formNum+1}`)
         //console.log('formNum:', formNum);
+        //id_leg_set-0-leg_title
 
+        leg_title = document.getElementById('id_leg_set-'+String(formNum)+'-leg_title');
+        leg_title.value = String(formNum+1);
         leg_type[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_type');
         set_leg_type_event_listener( leg_type[formNum], formNum );
         leg_package[formNum] = document.getElementById('id_leg_set-'+String(formNum)+'-leg_package');
         set_leg_package_event_listener( leg_package[formNum], formNum );
         //console.log( "current legform length", formNum);
+    }   
+
+    function deleteForm(e){
+        e.preventDefault();
+        legForm = document.querySelectorAll(".leg-form");
+        let formNum = legForm.length;
+        //console.log("length of legform", legForm.length);
+        //console.log("fornNum:", formNum);
+        last_leg = legForm[legForm.length - 1];
+        last_leg.parentNode.removeChild(last_leg);        
+        totalForms.setAttribute('value', `${formNum-1}`)
+        //console.log('formNum:', formNum);
     }   
 
     console.log( "current legform length", legForm.length);
@@ -266,6 +288,8 @@ function toggle_datamatrix(){
         toggle_button.innerHTML = '[Hide Data]';
     }
 }
+leg_title_0 = document.getElementById('id_leg_set-0-leg_title');
+if( leg_title_0.value == '' ) leg_title_0.value = '1';
 
 </script>
 {% endblock %}
