@@ -106,8 +106,8 @@ class Command(BaseCommand):
                             leg_directory = os.path.join( temp_directory_name, leg.get_dirname() )
                             if not os.path.isdir( leg_directory ):
                                 os.makedirs( leg_directory )
-                            print("original leg directory", original_leg_directory, os.path.isdir( original_leg_directory))
-                            print("leg directory", leg_directory, os.path.isdir( leg_directory))
+                            #print("original leg directory", original_leg_directory, os.path.isdir( original_leg_directory))
+                            #print("leg directory", leg_directory, os.path.isdir( leg_directory))
                         else:
                             if not os.path.isdir( leg_directory ):
                                 os.makedirs( leg_directory )
@@ -238,8 +238,8 @@ class Command(BaseCommand):
                         plt.savefig(tree_imagefile, format='svg')
 
                         if original_leg_directory != "":
-                            print("after leg done, original leg directory", original_leg_directory, os.path.isdir( original_leg_directory))
-                            print("after leg done, leg directory", leg_directory, os.path.isdir( leg_directory))
+                            #print("after leg done, original leg directory", original_leg_directory, os.path.isdir( original_leg_directory))
+                            #print("after leg done, leg directory", leg_directory, os.path.isdir( leg_directory))
 
                             shutil.copytree(leg_directory, original_leg_directory)
                             leg.leg_directory = original_leg_directory
