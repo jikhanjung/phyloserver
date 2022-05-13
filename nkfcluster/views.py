@@ -326,7 +326,7 @@ def show_table(request):
     else:
         user_obj = None
 
-    local_regional_select = request.GET.get('local_regional_select')
+    locality_level = request.GET.get('locality_level')
     genus_species_select = request.GET.get('genus_species_select')
 
     if genus_species_select != "genus":
@@ -336,12 +336,9 @@ def show_table(request):
         genus_species_select = "genus"
         taxon_header = "Genus name"
 
-    if local_regional_select != "regional":
-        local_regional_select = "local"
+    if locality_level not in ['1','2','3']:
         locality_level = 3
-    else:
-        local_regional_select = "regional"
-        locality_level = 1
+    locality_level = int(locality_level)
     
     locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
     locality_name_list = [ loc.name for loc in locality_list ]
@@ -368,11 +365,11 @@ def show_table(request):
             while len(curr_row) < len(column_list):
                 curr_row.append('')
         location = occ.get_location_display()
-        if locality_level == 1:
+        if locality_level < 3:
             nkf_location = NkfLocality.objects.filter(name=location)
             if len(nkf_location) >0:
                 nkf_location = nkf_location[0]
-                while nkf_location.level > 1:
+                while int(nkf_location.level) > int(locality_level):
                     nkf_location = nkf_location.parent
                 location = nkf_location.name
         if location in column_list:
@@ -380,7 +377,7 @@ def show_table(request):
             curr_row[idx] = 'O'
         prev_taxon_name = taxon_name
 
-    return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'local_regional_select':local_regional_select})
+    return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level})
 
 def download_cluster(request): 
     if request.user.is_authenticated:
@@ -394,6 +391,9 @@ def download_cluster(request):
     local_regional_select = request.GET.get('local_regional_select')
     genus_species_select = request.GET.get('genus_species_select')
 
+    locality_level = request.GET.get('locality_level')
+    genus_species_select = request.GET.get('genus_species_select')
+
     if genus_species_select != "genus":
         genus_species_select = "species"
         taxon_header = "Species name"
@@ -401,12 +401,9 @@ def download_cluster(request):
         genus_species_select = "genus"
         taxon_header = "Genus name"
 
-    if local_regional_select != "regional":
-        local_regional_select = "local"
+    if locality_level not in ['1','2','3']:
         locality_level = 3
-    else:
-        local_regional_select = "regional"
-        locality_level = 1
+    locality_level = int(locality_level)
     
     locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
     locality_name_list = [ loc.name for loc in locality_list ]
@@ -432,11 +429,11 @@ def download_cluster(request):
             while len(curr_row) < len(column_list):
                 curr_row.append('0')
         location = occ.get_location_display()
-        if locality_level == 1:
+        if locality_level < 3:
             nkf_location = NkfLocality.objects.filter(name=location)
             if len(nkf_location) >0:
                 nkf_location = nkf_location[0]
-                while nkf_location.level > 1:
+                while nkf_location.level > locality_level:
                     nkf_location = nkf_location.parent
                 location = nkf_location.name
         if location in column_list:

@@ -23,6 +23,7 @@ urlpatterns = [
     path('nkfcluster/', include('nkfcluster.urls')),
     path('admin/', admin.site.urls),
     path("phylomanager/", include("django.contrib.auth.urls")), 
+    path('', include('snippets.urls')),
 ]
 
 if settings.DEBUG: 
