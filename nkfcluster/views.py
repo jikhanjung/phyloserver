@@ -606,7 +606,7 @@ def download_cluster(request):
     for row in data_list:
         occ_data = [row[0]]
         occ_data.extend(row[3:])
-        print("occ_data len", len(occ_data))
+        #print("occ_data len", len(occ_data))
         for idx in range(len(occ_data)):
             cluster_data[idx].append(occ_data[idx])
 
