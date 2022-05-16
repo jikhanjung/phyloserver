@@ -418,160 +418,6 @@ def delete_occurrence4(request, pk):
     occ.delete()
     return HttpResponseRedirect('/nkfcluster/occ_list4')
 
-def show_table(request): 
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
-
-    locality_level = request.GET.get('locality_level')
-    genus_species_select = request.GET.get('genus_species_select')
-
-    if genus_species_select != "genus":
-        genus_species_select = "species"
-        taxon_header = "Species name"
-    else:
-        genus_species_select = "genus"
-        taxon_header = "Genus name"
-
-    if locality_level not in ['1','2','3']:
-        locality_level = 3
-    locality_level = int(locality_level)
-    
-    locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
-    locality_name_list = [ loc.name for loc in locality_list ]
-    print(locality_name_list)
-
-    occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header]
-    column_list.extend(locality_name_list)#,"남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
-
-    occ_hash = {}
-    curr_row = None
-    data_list = []
-    prev_taxon_name = ""
-    for occ in occ_list:
-        taxon_name = ""
-        if genus_species_select == "genus":
-            taxon_name = occ.genus_name
-        else:
-            taxon_name = occ.species_name
-        if taxon_name != prev_taxon_name:
-            if curr_row:
-                data_list.append(curr_row)
-            curr_row = [ occ.get_strat_unit_display(), occ.get_lithology_display(), occ.get_group_display(), taxon_name ]
-            while len(curr_row) < len(column_list):
-                curr_row.append('')
-        location = occ.get_location_display()
-        if locality_level < 3:
-            nkf_location = NkfLocality.objects.filter(name=location)
-            if len(nkf_location) >0:
-                nkf_location = nkf_location[0]
-                while int(nkf_location.level) > int(locality_level):
-                    nkf_location = nkf_location.parent
-                location = nkf_location.name
-        if location in column_list:
-            idx = column_list.index(location)
-            curr_row[idx] = 'O'
-        prev_taxon_name = taxon_name
-
-    return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level})
-
-def download_cluster(request): 
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
-
-    local_regional_select = request.GET.get('local_regional_select')
-    genus_species_select = request.GET.get('genus_species_select')
-
-    locality_level = request.GET.get('locality_level')
-    genus_species_select = request.GET.get('genus_species_select')
-
-    if genus_species_select != "genus":
-        genus_species_select = "species"
-        taxon_header = "Species name"
-    else:
-        genus_species_select = "genus"
-        taxon_header = "Genus name"
-
-    if locality_level not in ['1','2','3']:
-        locality_level = 3
-    locality_level = int(locality_level)
-    
-    locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
-    locality_name_list = [ loc.name for loc in locality_list ]
-    print(locality_name_list)
-
-    occ_list = NkfOccurrence.objects.order_by('index')
-    column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header]
-    column_list.extend(locality_name_list)#,"남포","송림","황주","수안","곡산","법동","은률-과일","평산-금천","옹진-강령","중화-상원","승호-사동","연산-신평","강서-강동","개천-덕천-순천","구장","맹산","은산","고원-천내","초산-고풍","강계-만포","화평","전천-성간","장진","부전","대흥","신포","혜산","태백"]
-    occ_hash = {}
-    curr_row = None
-    data_list = []
-    prev_taxon_name = ""
-    for occ in occ_list:
-        taxon_name = ""
-        if genus_species_select == "genus":
-            taxon_name = occ.genus_name
-        else:
-            taxon_name = occ.species_name
-        if taxon_name != prev_taxon_name:
-            if curr_row:
-                data_list.append(curr_row)
-            curr_row = [ occ.get_strat_unit_display(), occ.get_lithology_display(), occ.get_group_display(), taxon_name ]
-            while len(curr_row) < len(column_list):
-                curr_row.append('0')
-        location = occ.get_location_display()
-        if locality_level < 3:
-            nkf_location = NkfLocality.objects.filter(name=location)
-            if len(nkf_location) >0:
-                nkf_location = nkf_location[0]
-                while nkf_location.level > locality_level:
-                    nkf_location = nkf_location.parent
-                location = nkf_location.name
-        if location in column_list:
-            idx = column_list.index(location)
-            curr_row[idx] = '1'
-        prev_taxon_name = taxon_name
-    
-    cluster_data = []
-    for col_name in column_list[4:]:
-        cluster_data.append([col_name])
-
-    for row in data_list:
-        occ_data = row[4:]
-        for idx in range(len(occ_data)):
-            cluster_data[idx].append(occ_data[idx])
-
-    import datetime
-    today = datetime.datetime.now()
-    date_str = today.strftime("%Y%m%d_%H%M%S")
-    buffer = io.BytesIO()
-
-    filename = 'cluster_data_{}.xlsx'.format(date_str)
-    doc = xlsxwriter.Workbook(buffer)
-    worksheet = doc.add_worksheet()
-    row_index = 0
-    column_index = 0
-
-    for row_idx in range(len(cluster_data)):
-        for col_idx in range(len(cluster_data[0])):
-            worksheet.write(row_idx,col_idx,cluster_data[row_idx][col_idx])
-
-    doc.close()
-    buffer.seek(0)
-
-    return FileResponse(buffer, as_attachment=True, filename=filename)
-
-    return render(request, 'nkfcluster/occ_cluster.html', {'cluster_data': cluster_data,'user_obj':user_obj,'column_list':column_list})
 
 
 def locality_list(request):
@@ -673,3 +519,115 @@ def delete_locality(request, pk):
     locality = get_object_or_404(NkfLocality, pk=pk)
     locality.delete()
     return HttpResponseRedirect('/nkfcluster/locality_list')
+
+def read_occurrence_data(request):
+
+    locality_level = request.GET.get('locality_level')
+    genus_species_select = request.GET.get('genus_species_select')
+
+    if genus_species_select != "genus":
+        genus_species_select = "species"
+        taxon_header = "Species name"
+    else:
+        genus_species_select = "genus"
+        taxon_header = "Genus name"
+
+    if locality_level not in ['1','2','3']:
+        locality_level = 3
+    locality_level = int(locality_level)
+    
+    locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
+    locality_name_list = [ loc.name for loc in locality_list ]
+    print(locality_name_list)
+
+    occ_list = NkfOccurrence.objects.order_by('strat_unit','species_name')
+    column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header]
+    column_list.extend(locality_name_list)
+
+    occ_hash = {}
+    curr_row = None
+    data_list = []
+    prev_taxon_name = ""
+    for occ in occ_list:
+        taxon_name = ""
+        if genus_species_select == "genus":
+            taxon_name = occ.genus_name
+        else:
+            taxon_name = occ.species_name
+        if taxon_name != prev_taxon_name:
+            if curr_row:
+                data_list.append(curr_row)
+            curr_row = [ occ.get_strat_unit_display(), occ.get_lithology_display(), occ.get_group_display(), taxon_name ]
+            while len(curr_row) < len(column_list):
+                curr_row.append('')
+        location = occ.get_location_display()
+        if locality_level < 3:
+            nkf_location = NkfLocality.objects.filter(name=location)
+            if len(nkf_location) >0:
+                nkf_location = nkf_location[0]
+                while int(nkf_location.level) > int(locality_level):
+                    nkf_location = nkf_location.parent
+                location = nkf_location.name
+        if location in column_list:
+            idx = column_list.index(location)
+            curr_row[idx] = 'O'
+        prev_taxon_name = taxon_name
+    return data_list, column_list, genus_species_select, locality_level
+
+def show_table(request): 
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+    
+    data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
+    return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level})
+
+
+
+def download_cluster(request): 
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
+    
+    cluster_data = [['strat_unit'],['species_name']]
+    for col_name in column_list[4:]:
+        cluster_data.append([col_name])
+
+    for row in data_list:
+        occ_data = [row[0]]
+        occ_data.extend(row[3:])
+        print("occ_data len", len(occ_data))
+        for idx in range(len(occ_data)):
+            cluster_data[idx].append(occ_data[idx])
+
+    import datetime
+    today = datetime.datetime.now()
+    date_str = today.strftime("%Y%m%d_%H%M%S")
+    buffer = io.BytesIO()
+
+    filename = 'cluster_data_{}.xlsx'.format(date_str)
+    doc = xlsxwriter.Workbook(buffer)
+    worksheet = doc.add_worksheet()
+    row_index = 0
+    column_index = 0
+
+    for row_idx in range(len(cluster_data)):
+        for col_idx in range(len(cluster_data[0])):
+            worksheet.write(row_idx,col_idx,cluster_data[row_idx][col_idx])
+
+    doc.close()
+    buffer.seek(0)
+
+    return FileResponse(buffer, as_attachment=True, filename=filename)
+
+    return render(request, 'nkfcluster/occ_cluster.html', {'cluster_data': cluster_data,'user_obj':user_obj,'column_list':column_list})

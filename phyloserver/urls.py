@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings 
 from django.conf.urls.static import static
-from django.conf.urls import re_path, include
+from django.conf.urls import include #, re_path
 
 from rest_framework import routers
 from dolfinrest import views
@@ -33,8 +33,8 @@ urlpatterns = [
     path("phylomanager/", include("django.contrib.auth.urls")), 
     #path('', include('snippets.urls')),
     #path('', include('dolfinrest.urls')),
-    re_path(r'^', include(router.urls)),
-    re_path(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    #re_path(r'^', include(router.urls)),
+    #re_path(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]
 
 if settings.DEBUG: 
