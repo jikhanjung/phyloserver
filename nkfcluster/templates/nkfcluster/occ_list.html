@@ -19,7 +19,8 @@
             <th><div class="occ_list_lithology">Lithology</div></th>
             <th><div class="occ_list_group">Group</div></th>
             <th><div class="occ_list_species_name">Species name</div></th>
-            <th><div class="occ_list_location">Location</div></th></tr></tr>
+            <th><div class="occ_list_location">Location</div></th>
+            <th><div class="occ_list_location">Source</div></th></tr>
     {% for occ in page_obj %}
         <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail' occ.id %}';">
             <td align="center">{{ occ.get_strat_unit_display }}</td>
@@ -27,6 +28,7 @@
             <td align="center">{{ occ.get_group_display }}</td>
             <td align="center"><a href="{% url 'occ_detail' occ.id %}">{{ occ.species_name }}</a></td>
             <td align="center">{{ occ.get_location_display }}</td>
+            <td align="center">{{ occ.source }}</td>
         </tr>
     {% endfor %}
     </table>

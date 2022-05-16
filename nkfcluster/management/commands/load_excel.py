@@ -1,6 +1,6 @@
 from multiprocessing.spawn import prepare
 from unittest import runner
-from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfLocality, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
+from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
 from django.core.management.base import BaseCommand
 import subprocess
 from django.conf import settings
@@ -90,6 +90,41 @@ LOCATION_CONVERSION_TABLE = [
 ("평양시 승호구역 광정리","승호-사동"),
 ("평안남도 덕천시","개천-덕천-순천"),
 ("평안남도 순천시 은산","개천-덕천-순천"),
+# occ4
+("상원","중화-상원"),
+("수안","수안"),
+("중화","중화-상원"),
+("황주","황주"),
+("초산","초산-고풍"),
+("과일","은률-과일"),
+("초산, 고풍","초산-고풍"),
+("사동구역","승호-사동"),
+("황해북도 연탄군",""),
+("중강군 토성리",""),
+("평산군 평화리","평산-금천"),
+("평산군 평산읍","평산-금천"),
+("황해북도 서흥호",""),
+("자성군 연풍리",""),
+("황해북도 린산군 모정",""),
+("황주군 천주리 두암산일대","황주"),
+("중화군 중화읍 옥로봉지역","중화-상원"),
+("연탄군 금봉리 비랑동지역",""),
+("연탄군 수봉리",""),
+("강원도 천내","고원-천내"),
+("황해북도 황주군 두암산","황주"),
+("황주군 운성리","황주"),
+("혜산시 강구동지구","혜산"),
+("혜산시 마산-강구동지구","혜산"),
+("평양시 력포구역",""),
+("황주군 운성리 계암동의 동쪽에 있는 북쪽릉선","황주"),
+("혜산시 강구지역","혜산"),
+("양강도 혜산시 강구동","혜산"),
+("황해북도 황주군 운성리 신사동","황주"),
+("과일군 염전리","은률-과일"),
+("과일군 북창리","은률-과일"),
+("평산군 평화리, 례성리","평산-금천"),
+("덕천","개천-덕천-순천"),
+("황주군 두암산","황주"),
 ]
 
 UNIT_CONVERSION_TABLE = [
@@ -121,6 +156,31 @@ UNIT_CONVERSION_TABLE = [
 ("신곡통","신곡주층"),
 ("고풍통","고풍주층"),
 ("신창리층","신곡주층"),
+#occ4
+("연탄군층 릉리주층",""),
+("림촌층","림촌주층"),
+("무진통","무진주층"),
+("흑교통","흑교주층"),
+("심곡층","흑교주층"),
+("명월리층","무진주층"),
+("중화주층","중화주층"),
+("상원계 사당우통",""),
+("구현계 비랑동통",""),
+("상원계 직현통 토성층",""),
+("상원게 묵천통 묵천층",""),
+("설화산층 (상원계 묵천통)",""),
+("신곡주층","신곡주층"),
+("황주군층 흑교주층","흑교주층"),
+("비랑동통",""),
+("구현계 릉리통",""),
+("홍점통",""),
+("신곡통","신곡주층"),
+("황주계 신곡통","신곡주층"),
+("고풍통","고풍주층"),
+("만달통","만달주층"),
+("무진통-고풍통 경계부","무진주층"),
+("릉리주층 상부층",""),
+("고풍주층의 '아래층'","고풍주층"),
 ]
 
 class Command(BaseCommand):
@@ -281,3 +341,68 @@ class Command(BaseCommand):
                 occ.source = sheet_name
                 occ.save()
 
+        NkfOccurrence4.objects.all().delete()
+        sheet_name = r'220511 individual articles-rev.'
+        df = pd.read_excel (r'nkfcluster/data/2022-05-03 화석산출 정리.xls',sheet_name)
+        print(df)
+
+        for index, row in df.iterrows():
+            #print(row)
+            if pd.notna(row['Title']):
+                occ = NkfOccurrence4()
+                occ.index = index
+                occ.author1 = row['1저자'] if pd.notna(row['1저자']) else ''
+                occ.author2 = row['2저자'] if pd.notna(row['2저자']) else ''
+                occ.author3 = row['3저자'] if pd.notna(row['3저자']) else ''
+                occ.author4 = row['4저자'] if pd.notna(row['4저자']) else ''
+                occ.author_list = row['Author list']
+                occ.year = row['Year']
+                occ.publication = row['Publication']
+                occ.issue = row['Issue']
+                occ.pages = row['Pages']
+                occ.geologic_period = row['Geologic period']
+                occ.fossil_group = row['Fossil group']
+                occ.locality = row['Locality']
+                occ.stratigraphy = row['Stratigraphy']
+                occ.lithology = row['Lithology']
+                occ.figure = row['Figure']
+                occ.implication = row['Implication']
+                occ.title = row['Title']
+                occ.listed_species = row['Listed species']
+                #occ.note = row['Note']
+                occ.note = row['Note'] if pd.notna(row['Note']) else ''
+                occ.source = sheet_name
+
+                for loc in LOCATION_CONVERSION_TABLE:
+                    val1, val2 = loc
+                    #print(loc,row['Locality'])
+                    if str(row['Locality']) == str(val1):
+                        print("matches!", loc,row['Locality'])
+                        location_name = val2
+                        for choice in LOCATION_CHOICES:
+                            #print(choice)
+                            val, disp = choice
+                            if disp == location_name:
+                                print("matches!", loc,choice,row['Locality'],location_name)
+                                occ.locality_code = val
+                                print("locality code:", occ.locality_code, val)
+                                break
+                        break
+
+                for unit in UNIT_CONVERSION_TABLE:
+                    val1, val2 = unit
+                    if val1.upper() == row['Stratigraphy'].upper():
+                        unit_name = val2
+                        for choice in STRATUNIT_CHOICES:
+                            val, disp = choice
+                            if disp.upper() == unit_name.upper():
+                                occ.stratigraphy_code = val
+                                break
+                        break
+                for choice in GROUP_CHOICES:
+                    val, disp = choice
+                    if disp.upper() == str(row['Fossil group']).upper():
+                        occ.fossil_group_code = val
+                        break
+
+                occ.save()
