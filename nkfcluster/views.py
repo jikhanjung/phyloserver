@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES
 from django.core.paginator import Paginator
 from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfLocalityForm
 #from cStringIO import StringIO
@@ -522,6 +522,16 @@ def delete_locality(request, pk):
 
 def read_occurrence_data(request):
 
+    #selected_stratunit = []
+    strat_keylist = []
+    for choice in STRATUNIT_CHOICES:
+        val, disp = choice
+        strat_keylist.append(val)        
+
+    selected_stratunit = request.GET.getlist('selected_stratunit')
+    if len(selected_stratunit) == 0:
+        selected_stratunit = strat_keylist
+    #print("selected_stratunit",selected_stratunit)
     locality_level = request.GET.get('locality_level')
     genus_species_select = request.GET.get('genus_species_select')
 
@@ -538,9 +548,9 @@ def read_occurrence_data(request):
     
     locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
     locality_name_list = [ loc.name for loc in locality_list ]
-    print(locality_name_list)
+    #print(locality_name_list)
 
-    occ_list = NkfOccurrence.objects.order_by('strat_unit','species_name')
+    occ_list = NkfOccurrence.objects.filter(strat_unit__in=selected_stratunit).order_by('strat_unit','species_name')
     column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header]
     column_list.extend(locality_name_list)
 
@@ -572,7 +582,7 @@ def read_occurrence_data(request):
             idx = column_list.index(location)
             curr_row[idx] = 'O'
         prev_taxon_name = taxon_name
-    return data_list, column_list, genus_species_select, locality_level
+    return data_list, column_list, genus_species_select, locality_level, selected_stratunit
 
 def show_table(request): 
     if request.user.is_authenticated:
@@ -583,10 +593,14 @@ def show_table(request):
     else:
         user_obj = None
     
-    data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
-    return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level})
-
-
+    data_list, column_list, genus_species_select, locality_level, selected_stratunit = read_occurrence_data(request)
+    stratunit_choices = []
+    for choice in STRATUNIT_CHOICES:
+        val, disp = choice
+        stratunit_choices.append( {'value':val,'display': disp})
+        #stratunit_choices[
+    #print(stratunit_choices)
+    return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level,'stratunit_choices':stratunit_choices,'selected_stratunit':selected_stratunit})
 
 def download_cluster(request): 
     if request.user.is_authenticated:
@@ -597,18 +611,33 @@ def download_cluster(request):
     else:
         user_obj = None
 
-    data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
-    
+    #data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
+
+    data_list, column_list, genus_species_select, locality_level, selected_stratunit = read_occurrence_data(request)
+    stratunit_choices = []
+    for choice in STRATUNIT_CHOICES:
+        val, disp = choice
+        stratunit_choices.append( {'value':val,'display': disp})
+
+
     cluster_data = [['strat_unit'],['species_name']]
     for col_name in column_list[4:]:
         cluster_data.append([col_name])
 
+    
     for row in data_list:
         occ_data = [row[0]]
         occ_data.extend(row[3:])
         #print("occ_data len", len(occ_data))
         for idx in range(len(occ_data)):
-            cluster_data[idx].append(occ_data[idx])
+            cell_value = "0"
+            if occ_data[idx] == "O":
+                cell_value = "1"
+            elif occ_data[idx] == "":
+                cell_value = "0"
+            else:
+                cell_value = occ_data[idx]
+            cluster_data[idx].append(cell_value)
 
     import datetime
     today = datetime.datetime.now()

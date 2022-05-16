@@ -6,16 +6,22 @@
         <a href="{% url 'download_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}">[Download data]</a>
     </td><td width="750" align="right"><form method="GET" action="{% url 'show_table'%}">
         {% csrf_token %}
-        <span style="background-color:burlywood; width:400px;">
+        <div style="width:400px">
+            Stratigraphic unit:
+            {%for stratunit in stratunit_choices%}
+            <input type="checkbox" name="selected_stratunit" value="{{stratunit.value}}" {%if stratunit.value in selected_stratunit%}checked{%endif%}>{{stratunit.display}}
+            {%endfor%}
+        </div>
+        <div style="background-color:burlywood; width:400px;">
             Locality: 
             <input type="radio" id="locality_level1" name="locality_level" value="1" {%if locality_level == 1%}checked{%endif%}>Level 1
             <input type="radio" id="locality_level2" name="locality_level" value="2" {%if locality_level == 2%}checked{%endif%}>Level 2
             <input type="radio" id="locality_level3" name="locality_level" value="3" {%if not locality_level == 1 and not locality_level == 2%}checked{%endif%}>Level 3
-        </span>
-        <span style="background-color: aqua; width:400px;">
+        </div>
+        <div style="background-color: aqua; width:400px;">
             Group by:
             <input type="radio" id="genus_select" name="genus_species_select" value="genus" {%if genus_species_select == "genus"%}checked{%endif%}>genus
-            <input type="radio" id="species_select" name="genus_species_select" value="species" {%if genus_species_select != "genus"%}checked{%endif%}>species</span><span>
+            <input type="radio" id="species_select" name="genus_species_select" value="species" {%if genus_species_select != "genus"%}checked{%endif%}>species</div><span>
         <button type="submit">보기</button></span>
     </form></td></tr></table>
 
