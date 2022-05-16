@@ -3,5 +3,6 @@ from dolfinrest import views
 
 urlpatterns = [
     path('dolfinrest/', views.dolfinrest_list),
-    path('dolfinrest/<int:pk>/', views.dolfinrest_detail),
+    path('dolfinrest/<str:md5>/', views.dolfinrest_detail),
+    #path('dolfinrest/md5hash/<str:md5hash>/', views.dolfinrest_md5hash),
 ]

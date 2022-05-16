@@ -10,6 +10,7 @@ STRATUNIT_CHOICES = [
     ('GP','고풍주층'),
     ('SG','신곡주층'),
     ('MD','만달주층'),
+    ('BRD','비랑동주층'),
 ]
 LITHOLOGY_CHOICES = [
     ('PR','phosphatic rock'),
@@ -59,6 +60,7 @@ LOCATION_CHOICES = [
     ("SP","신포"),
     ("HS","혜산"),
     ("TB","태백"),
+    ("YT","연탄"),
 ]
 GROUP_CHOICES = [
     ("SP","sponge"),
