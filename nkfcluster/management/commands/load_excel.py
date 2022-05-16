@@ -42,7 +42,6 @@ LOCALITY_LIST = [
     { 'name': "낭림육괴(Lv.1)", 'level': 1 },
     { 'name': "낭림육괴(Lv.2)", 'level': 2, 'parent': "낭림육괴(Lv.1)" },
     { 'name': "초산-고풍", 'level': 3, 'parent': "낭림육괴(Lv.2)" },
-    { 'name': "초산-고풍", 'level': 3, 'parent': "낭림육괴(Lv.2)" },
     { 'name': "강계-만포", 'level': 3, 'parent': "낭림육괴(Lv.2)" },
     { 'name': "화평", 'level': 3, 'parent': "낭림육괴(Lv.2)" },
     { 'name': "전천-성간", 'level': 3, 'parent': "낭림육괴(Lv.2)" },
