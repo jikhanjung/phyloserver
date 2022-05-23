@@ -2,23 +2,29 @@
 {% block content %}
 <h1>Occurrence Table</h1>
 <table border="0" width="1350">
-    <tr><td width="600" align="left">
-        <a href="{% url 'download_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}">[Download data]</a>
-    </td><td width="750" align="right"><form method="GET" action="{% url 'show_table'%}">
+    <tr><td width="350" align="left">
+        <a href="{% url 'download_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.fossilgroup}}&{{urlparameter.stratunit}}">[Download data]</a>
+    </td><td width="1000" align="right"><form method="GET" action="{% url 'show_table'%}">
         {% csrf_token %}
-        <div style="width:400px">
+        <div style="background-color:lightgray; width:500px">
             Stratigraphic unit:
             {%for stratunit in stratunit_choices%}
-            <input type="checkbox" name="selected_stratunit" value="{{stratunit.value}}" {%if stratunit.value in selected_stratunit%}checked{%endif%}>{{stratunit.display}}
+            <span style="display: inline-block;"><input type="checkbox" name="selected_stratunit" value="{{stratunit.value}}" {%if stratunit.value in selected_stratunit%}checked{%endif%}>{{stratunit.display}}</span>
             {%endfor%}
         </div>
-        <div style="background-color:burlywood; width:400px;">
+        <div style="background-color: white; width:500px">
+            Fossil group:
+            {%for fossilgroup in fossilgroup_choices%}
+            <span style="display: inline-block;"><input type="checkbox" name="selected_fossilgroup" value="{{fossilgroup.value}}" {%if fossilgroup.value in selected_fossilgroup%}checked{%endif%}>{{fossilgroup.display}}</span>
+            {%endfor%}
+        </div>
+        <div style="background-color:lightgray; width:500px;">
             Locality: 
             <input type="radio" id="locality_level1" name="locality_level" value="1" {%if locality_level == 1%}checked{%endif%}>Level 1
             <input type="radio" id="locality_level2" name="locality_level" value="2" {%if locality_level == 2%}checked{%endif%}>Level 2
             <input type="radio" id="locality_level3" name="locality_level" value="3" {%if not locality_level == 1 and not locality_level == 2%}checked{%endif%}>Level 3
         </div>
-        <div style="background-color: aqua; width:400px;">
+        <div style="background-color: white; width:500px;">
             Group by:
             <input type="radio" id="genus_select" name="genus_species_select" value="genus" {%if genus_species_select == "genus"%}checked{%endif%}>genus
             <input type="radio" id="species_select" name="genus_species_select" value="species" {%if genus_species_select != "genus"%}checked{%endif%}>species</div><span>

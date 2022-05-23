@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES
 from django.core.paginator import Paginator
 from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfLocalityForm
 #from cStringIO import StringIO
@@ -527,10 +527,19 @@ def read_occurrence_data(request):
     for choice in STRATUNIT_CHOICES:
         val, disp = choice
         strat_keylist.append(val)        
+    fossilgroup_keylist = []
+    for choice in GROUP_CHOICES:
+        val, disp = choice
+        fossilgroup_keylist.append(val)        
 
     selected_stratunit = request.GET.getlist('selected_stratunit')
     if len(selected_stratunit) == 0:
         selected_stratunit = strat_keylist
+
+    selected_fossilgroup = request.GET.getlist('selected_fossilgroup')
+    if len(selected_fossilgroup) == 0:
+        selected_fossilgroup = fossilgroup_keylist
+
     #print("selected_stratunit",selected_stratunit)
     locality_level = request.GET.get('locality_level')
     genus_species_select = request.GET.get('genus_species_select')
@@ -550,7 +559,7 @@ def read_occurrence_data(request):
     locality_name_list = [ loc.name for loc in locality_list ]
     #print(locality_name_list)
 
-    occ_list = NkfOccurrence.objects.filter(strat_unit__in=selected_stratunit).order_by('strat_unit','species_name')
+    occ_list = NkfOccurrence.objects.filter(strat_unit__in=selected_stratunit,group__in=selected_fossilgroup).order_by('strat_unit','group','species_name')
     column_list = ["Stratigraphic unit","Lithology","Fossil group",taxon_header]
     column_list.extend(locality_name_list)
 
@@ -582,7 +591,7 @@ def read_occurrence_data(request):
             idx = column_list.index(location)
             curr_row[idx] = 'O'
         prev_taxon_name = taxon_name
-    return data_list, column_list, genus_species_select, locality_level, selected_stratunit
+    return data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup
 
 def show_table(request): 
     if request.user.is_authenticated:
@@ -593,14 +602,23 @@ def show_table(request):
     else:
         user_obj = None
     
-    data_list, column_list, genus_species_select, locality_level, selected_stratunit = read_occurrence_data(request)
+    data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
     stratunit_choices = []
     for choice in STRATUNIT_CHOICES:
         val, disp = choice
         stratunit_choices.append( {'value':val,'display': disp})
+
+    fossilgroup_choices = []
+    for choice in GROUP_CHOICES:
+        val, disp = choice
+        fossilgroup_choices.append( {'value':val,'display': disp})
         #stratunit_choices[
     #print(stratunit_choices)
-    return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level,'stratunit_choices':stratunit_choices,'selected_stratunit':selected_stratunit})
+    group_parameter = '&'.join([ 'selected_fossilgroup=' + x for x in selected_fossilgroup ])
+    strat_parameter = '&'.join([ 'selected_stratunit=' + x for x in selected_stratunit ])
+    urlparameter = { 'fossilgroup': group_parameter, 'stratunit': strat_parameter}
+
+    return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level,'stratunit_choices':stratunit_choices,'selected_stratunit':selected_stratunit,'fossilgroup_choices':fossilgroup_choices,'selected_fossilgroup':selected_fossilgroup,'urlparameter':urlparameter})
 
 def download_cluster(request): 
     if request.user.is_authenticated:
@@ -613,21 +631,26 @@ def download_cluster(request):
 
     #data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
 
-    data_list, column_list, genus_species_select, locality_level, selected_stratunit = read_occurrence_data(request)
+    data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
     stratunit_choices = []
     for choice in STRATUNIT_CHOICES:
         val, disp = choice
         stratunit_choices.append( {'value':val,'display': disp})
+    
+    fossilgroup_choices = []
+    for choice in GROUP_CHOICES:
+        val, disp = choice
+        fossilgroup_choices.append( {'value':val,'display': disp})
 
 
-    cluster_data = [['strat_unit'],['species_name']]
+    cluster_data = [['strat_unit'],['fossil_group'],['species_name']]
     for col_name in column_list[4:]:
         cluster_data.append([col_name])
 
     
     for row in data_list:
         occ_data = [row[0]]
-        occ_data.extend(row[3:])
+        occ_data.extend(row[2:])
         #print("occ_data len", len(occ_data))
         for idx in range(len(occ_data)):
             cell_value = "0"
@@ -652,7 +675,7 @@ def download_cluster(request):
 
     for row_idx in range(len(cluster_data)):
         for col_idx in range(len(cluster_data[0])):
-            worksheet.write(row_idx,col_idx,cluster_data[row_idx][col_idx])
+            worksheet.write(col_idx,row_idx,cluster_data[row_idx][col_idx])
 
     doc.close()
     buffer.seek(0)
