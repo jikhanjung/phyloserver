@@ -20,6 +20,9 @@
             <a href="/phylomanager/package_list/">Package list</a><br/>
             <a href="{% url 'server_status' %}">Server status</a><br/>
         </div>
+        <div class="switch_menu">
+            <a href="/nkfcluster/">NK Fossils</a><br/>
+        </div>
         {% if user_obj %} 
         <div>
             {{ user_obj.username }}<br/>
