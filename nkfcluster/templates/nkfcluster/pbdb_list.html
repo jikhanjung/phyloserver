@@ -4,7 +4,7 @@
 <table border="0" width="800">
     <tr><td width="400" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
-    </td><td width="400" align="right"><form method="GET" action="{% url 'occ_list'%}">
+    </td><td width="400" align="right"><form method="GET" action="{% url 'pbdb_list'%}">
         {% csrf_token %}
         <select name="filter2" id="filter2">
             <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
