@@ -1,0 +1,49 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>PBDB Occurrence list</h1>
+<table border="0" width="800">
+    <tr><td width="400" align="left">
+     {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
+    </td><td width="400" align="right"><form method="GET" action="{% url 'occ_list'%}">
+        {% csrf_token %}
+        <select name="filter2" id="filter2">
+            <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
+          </select>
+        <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:""}}"><button type="submit">검색</button>
+    </form></td></tr></table>
+
+{% if occ_list %}   
+    <table border="1" width="800" class="list_table">
+        <tr>
+            <th><div class="">Species name</div></th>
+            <th><div class="">Genus name</div></th>
+            <th><div class="">Country</div></th>
+            <th><div class="">State</div></th>
+            <th><div class="">County</div></th>
+            <th><div class="">Age</div></th>
+            <th><div class="">Formation</div></th></tr>
+    {% for occ in page_obj %}
+        <tr class="tr_link" onclick="javascript:window.location='{% url 'pbdb_detail' occ.id %}';">
+            <td align="center"><a href="{% url 'occ_detail' occ.id %}">{{ occ.species_name|default_if_none:'' }}</a></td>
+            <td align="center">{{ occ.genus_name|default_if_none:'' }}</td>
+            <td align="center">{{ occ.country }}</td>
+            <td align="center">{{ occ.state|default_if_none:'' }}</td>
+            <td align="center">{{ occ.county|default_if_none:'' }}</td>
+            <td align="center">{{ occ.max_ma|default_if_none:'' }}-{{ occ.min_ma|default_if_none:'' }}</td>
+            <td align="center">{{ occ.formation|default_if_none:'' }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No occurrences are available.</p>
+{% endif %}
+
+<table border="0" width="800">
+    <tr><td width="400" align="left">
+        {% include "paginator.html" %}
+    </td><td width="400" align="right">
+        <a href="{% url 'add_occurrence' %}">[Add Occurrence]</a>
+        <a href="{% url 'show_table' %}">[Show Table]</a>
+    </td></tr></table>
+
+{% endblock %}

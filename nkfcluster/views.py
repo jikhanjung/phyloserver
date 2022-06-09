@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES, PbdbOccurrence
 from django.core.paginator import Paginator
 from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfLocalityForm
 #from cStringIO import StringIO
@@ -683,3 +683,35 @@ def download_cluster(request):
     return FileResponse(buffer, as_attachment=True, filename=filename)
 
     return render(request, 'nkfcluster/occ_cluster.html', {'cluster_data': cluster_data,'user_obj':user_obj,'column_list':column_list})
+
+def pbdb_list(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    occ_list = PbdbOccurrence.objects.order_by('species_name')
+    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'occ_list': occ_list,
+        'user_obj': user_obj,
+        'page_obj': page_obj,
+    }
+    return render(request, 'nkfcluster/pbdb_list.html', context)
+
+def pbdb_detail(request, occ_id):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    occ = get_object_or_404(PbdbOccurrence, pk=occ_id)
+    return render(request, 'nkfcluster/pbdb_detail.html', {'occ': occ, 'user_obj':user_obj})

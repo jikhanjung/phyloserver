@@ -39,4 +39,8 @@ urlpatterns = [
     path('edit_locality/<int:pk>/', views.edit_locality, name='edit_locality'),
     path('delete_locality/<int:pk>/', views.delete_locality, name='delete_locality'),
 
+
+    path('pbdb_list/', views.pbdb_list, name='pbdb_list'),
+    path('pbdb_detail/<int:occ_id>/', views.pbdb_detail, name='pbdb_detail'),
+
 ] 

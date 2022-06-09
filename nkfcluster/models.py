@@ -176,3 +176,28 @@ class NkfLocality(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class PbdbOccurrence(models.Model):
+    occno = models.CharField(max_length=50,blank=True,null=True,verbose_name="PBDB OccurrenceNo")
+    collno = models.CharField(max_length=50,blank=True,null=True,verbose_name="PBDB CollectionNo")
+    species_name = models.CharField(max_length=200,blank=True,null=True,verbose_name="종명")
+    genus_name = models.CharField(max_length=200,blank=True,null=True,verbose_name="속명")
+    group = models.CharField(max_length=10,choices=GROUP_CHOICES,blank=True,null=True)
+    early_interval = models.CharField(max_length=100,blank=True,null=True,verbose_name="From")
+    late_interval = models.CharField(max_length=100,blank=True,null=True,verbose_name="To")
+    max_ma = models.CharField(max_length=10,blank=True,null=True,verbose_name="From Ma")
+    min_ma = models.CharField(max_length=10,blank=True,null=True,verbose_name="To Ma")
+    latitude = models.CharField(max_length=20,blank=True,null=True,verbose_name="경도")
+    longitude = models.CharField(max_length=20,blank=True,null=True,verbose_name="위도")
+    country = models.CharField(max_length=10,blank=True,null=True,verbose_name="국가")
+    state = models.CharField(max_length=100,blank=True,null=True,verbose_name="State")
+    county = models.CharField(max_length=100,blank=True,null=True,verbose_name="County")
+    formation = models.CharField(max_length=100,blank=True,null=True)
+    remarks = models.CharField(max_length=200,blank=True,null=True)
+    def __str__(self):
+        return self.species_name + "@" + self.state
+    def process_genus_name(self):
+        name_list = self.species_name.split(" ")
+        if len(name_list) > 0:
+            self.genus_name = name_list[0]
