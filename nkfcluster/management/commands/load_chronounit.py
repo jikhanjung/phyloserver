@@ -32,8 +32,8 @@ class Command(BaseCommand):
                 chronounit.name = row['name']
                 chronounit.level = row['level']
                 chronounit.abbreviation = row['abbreviation']
-                chronounit.begin = row['begin']
-                chronounit.end = row['end']
+                chronounit.begin = float(row['begin'])
+                chronounit.end = float(row['end'])
                 chronounit.parent = None
                 if pd.notna(row['parent']):
                     chronounit.parent = ChronoUnit.objects.get(pk=row['parent'])

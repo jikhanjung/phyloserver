@@ -67,9 +67,10 @@ class Command(BaseCommand):
                     if pd.notna(row['late_interval']):
                         occ.late_interval = row['late_interval']
                     if pd.notna(row['max_ma']):
-                        occ.max_ma = row['max_ma']
+                        occ.max_ma = float(row['max_ma'])
                     if pd.notna(row['min_ma']):    
-                        occ.min_ma = row['min_ma']
+                        occ.min_ma = float(row['min_ma'])
+                    occ.process_chronounit()
                     occ.latitude = row['lat']
                     occ.longitude = row['lng']
                     if pd.notna(row['formation']):
@@ -88,4 +89,5 @@ class Command(BaseCommand):
                     else:
                         occ.save()
 
-
+                if index == 10:
+                    break

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 # Create your models here.
 STRATUNIT_CHOICES = [
@@ -77,6 +78,8 @@ GROUP_CHOICES = [
     ("CR","crinoid"),
     ("BZ","bryozoan"),
 ]
+
+
 
 class NkfOccurrence(models.Model):
     index = models.IntegerField(blank=True,null=True)
@@ -191,8 +194,8 @@ class ChronoUnit(models.Model):
     name = models.CharField(max_length=200)
     level = models.CharField(max_length=1, choices=CHRONOUNIT_LEVEL_CHOICES, blank=True)
     abbreviation = models.CharField(max_length=200, blank=True)
-    begin = models.DecimalField(max_digits=19, decimal_places=10, blank=True, null=True)
-    end = models.DecimalField(max_digits=19, decimal_places=10, blank=True, null=True)
+    begin = models.FloatField(blank=True, null=True)
+    end = models.FloatField(blank=True, null=True)
     terminal_unit_count = models.IntegerField(default=0)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='children')
     created_on = models.DateTimeField(blank=True,null=True,auto_now_add=True)
@@ -337,10 +340,10 @@ class PbdbOccurrence(models.Model):
     group = models.CharField(max_length=10,choices=GROUP_CHOICES,blank=True,null=True)
     early_interval = models.CharField(max_length=100,blank=True,null=True,verbose_name="From")
     late_interval = models.CharField(max_length=100,blank=True,null=True,verbose_name="To")
-    max_ma = models.CharField(max_length=10,blank=True,null=True,verbose_name="From Ma")
-    min_ma = models.CharField(max_length=10,blank=True,null=True,verbose_name="To Ma")
-    chrono_from = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True,verbose_name="Chrono From")
-    chrono_to = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True,verbose_name="Chrono To")
+    max_ma = models.FloatField(blank=True,null=True,verbose_name="From Ma")
+    min_ma = models.FloatField(blank=True,null=True,verbose_name="To Ma")
+    chrono_from = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True,verbose_name="Chrono From",related_name='ChronoFrom')
+    chrono_to = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True,verbose_name="Chrono To",related_name='ChronoTo')
     latitude = models.CharField(max_length=20,blank=True,null=True,verbose_name="경도")
     longitude = models.CharField(max_length=20,blank=True,null=True,verbose_name="위도")
     country = models.CharField(max_length=10,blank=True,null=True,verbose_name="국가")
@@ -356,7 +359,7 @@ class PbdbOccurrence(models.Model):
         if len(name_list) > 0:
             self.genus_name = name_list[0]
     def process_region(self):
-        print(self.country, self.state, self.county )
+        #print(self.country, self.state, self.county )
         region_key = "-".join([ self.country or '', self.state or '', self.county or '' ])
         region_value = ''
         if region_key in CHINA_REGION_HASH.keys():
@@ -367,4 +370,34 @@ class PbdbOccurrence(models.Model):
         if region_key == ('CN-Yunnan-'):
             region_value = ''
         self.region = region_value
-        
+
+    def process_chronounit(self):
+        min_ma = 0
+        max_ma = 0
+        if self.max_ma and self.max_ma != '':
+            max_ma = self.max_ma
+        if self.min_ma and self.min_ma != '':
+            min_ma = self.min_ma
+        #print(min_ma, max_ma, self.min_ma, self.max_ma)
+        chrono_list = ChronoUnit.objects.filter((Q(begin__gte=max_ma)|Q(end__lte=min_ma))&Q(level='2')).order_by('level','begin')
+        #for chrono in chrono_list:
+            #print(chrono.name, chrono.begin, chrono.end)
+        if len(chrono_list)>0:
+            self.chrono_from = chrono_list[0]
+        if len(chrono_list)>1:
+            self.chrono_to = chrono_list[1]
+        #print(chrono_list)
+
+
+        #self.chrono_from = min_unit
+        #self.chrono_to = min_unit
+
+class TotalOccurrence(models.Model):
+    group = models.CharField(max_length=200,choices=GROUP_CHOICES,blank=True,null=True)
+    species_name = models.CharField(max_length=200,blank=True,null=True)
+    genus_name = models.CharField(max_length=200,blank=True,null=True)
+    locality = models.CharField(max_length=10, blank=True,null=True )
+    chrono = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True)
+    source = models.CharField(max_length=200,blank=True,null=True )
+    def __str__(self):
+        return self.species_name + " @" + self.location
