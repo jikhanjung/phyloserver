@@ -178,6 +178,157 @@ class NkfLocality(models.Model):
         return self.name
 
 
+class ChronoUnit(models.Model):
+    #CHRONOUNIT_NUMERIC_LEVEL = { 'SE': 5, 'EO': 4, 'ER': 3, 'PE': 2, 'EP': 1, 'AG': 0 }
+    CHRONOUNIT_LEVEL_CHOICES = [
+        ( '6', 'Supereon' ),
+        ( '5', 'Eon' ),
+        ( '4', 'Era' ),
+        ( '3', 'Period' ),
+        ( '2', 'Epoch' ),
+        ( '1', 'Age' ),
+    ]
+    name = models.CharField(max_length=200)
+    level = models.CharField(max_length=1, choices=CHRONOUNIT_LEVEL_CHOICES, blank=True)
+    abbreviation = models.CharField(max_length=200, blank=True)
+    begin = models.DecimalField(max_digits=19, decimal_places=10, blank=True, null=True)
+    end = models.DecimalField(max_digits=19, decimal_places=10, blank=True, null=True)
+    terminal_unit_count = models.IntegerField(default=0)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='children')
+    created_on = models.DateTimeField(blank=True,null=True,auto_now_add=True)
+    created_by = models.CharField(max_length=20,blank=True)
+    modified_on = models.DateTimeField(blank=True,null=True,auto_now=True)
+    modified_by = models.CharField(max_length=20,blank=True)
+    #terminal_unit_count = 0
+
+    def __str__(self):
+        return self.name
+    
+    def get_numeric_level(self):
+        return range(int(self.level)-1)
+        #return self.CHRONOUNIT_NUMERIC_LEVEL[self.level]
+
+    def get_children_count(self):
+        return len(self.children)
+    
+    def calculate_terminal_unit_count(self):
+        import logging
+        logger = logging.getLogger(__name__)
+
+        terminal_unit_count = 0
+        if self.children.all():
+            for child in self.children.all():
+                terminal_unit_count += child.calculate_terminal_unit_count()
+        else:
+            terminal_unit_count = 1
+        self.terminal_unit_count = terminal_unit_count
+        logger.error('Something went wrong! '+str(self.id)+":"+str(terminal_unit_count))
+        self.save()
+        return terminal_unit_count
+    class Meta:
+        ordering = ["begin"]
+
+CHINA_REGION_HASH ={
+"CN-Anhui-Chuxian":"BELT",
+"CN-Anhui-Huainan":"NC",
+"CN-Anhui-Jing Xian":"SC",
+"CN-Anhui-Jingxian":"SC",
+"CN-Chongqing-Chengkou":"SC",
+"CN-Chongqing-Youyang":"SC",
+"CN-Gansu-":"Other",
+"CN-Guangxi-":"SC",
+"CN-Guangxi-Jingxi":"SC",
+"CN-Guannxi-":"SC",
+"CN-Guizhou-":"SC",
+"CN-Guizhou-Danzhai":"SC",
+"CN-Guizhou-Fuquan":"SC",
+"CN-Guizhou-Jianhe":"SC",
+"CN-Guizhou-Jinsha":"SC",
+"CN-Guizhou-Kaiyang":"SC",
+"CN-Guizhou-Meitan":"SC",
+"CN-Guizhou-Songtao":"SC",
+"CN-Guizhou-Taijiang":"SC",
+"CN-Guizhou-Tongren":"SC",
+"CN-Guizhou-Wanshan":"SC",
+"CN-Guizhou-Weng'an":"SC",
+"CN-Guizhou-Yuping":"SC",
+"CN-Guizhou-Yuqing":"SC",
+"CN-Guizhou-Zhenyuan":"SC",
+"CN-Guizhou-Zunyi":"SC",
+"CN-Hebei-Tangshan":"NC",
+"CN-Henan-Dengfeng":"NC",
+"CN-Henan-Jixian":"NC",
+"CN-Henan-Linru":"NC",
+"CN-Henan-Linxian":"NC",
+"CN-Henan-Lushan":"NC",
+"CN-Henan-Mianchi":"NC",
+"CN-Henan-Ruzhou":"NC",
+"CN-Henan-Xichuan":"BELT",
+"CN-Henan-Ye Xian":"NC",
+"CN-Hubai-":"SC",
+"CN-Hubei-":"SC",
+"CN-Hubei-Changyang":"SC",
+"CN-Hubei-Chongyang":"SC",
+"CN-Hubei-Junxian":"SC",
+"CN-Hubei-Yichang":"SC",
+"CN-Hubei-Zhuxi":"SC",
+"CN-Hunan-":"SC",
+"CN-Hunan-Cili":"SC",
+"CN-Hunan-Fenghuang":"SC",
+"CN-Hunan-Guzhang":"SC",
+"CN-Hunan-Longshan":"SC",
+"CN-Hunan-Taoyuan":"SC",
+"CN-Hunan-Zhijiang":"SC",
+"CN-Jiangsu-Jiawang":"SC",
+"CN-Jiangsu-Kunshan":"SC",
+"CN-Jiangsu-Luhe":"SC",
+"CN-Jilin-":"NC",
+"CN-Jilin Provence-":"NC",
+"CN-Liaoning-Benxi":"NC",
+"CN-Liaoning-Liaoyang":"NC",
+"CN-Liaoning-Wafangdian":"NC",
+"CN-Nei Mongol-":"OTHER",
+"CN-Nei Mongol-Qingshuihe":"OTHER",
+"CN-Ningxia-":"NC",
+"CN-Qinghai-":"OTHER",
+"CN-Shaanxi-":"",
+"CN-Shaanxi-Longxian":"NC",
+"CN-Shaanxi-Luonan":"NC",
+"CN-Shaanxi-Mianxian":"SC",
+"CN-Shaanxi-Nanzheng":"SC",
+"CN-Shaanxi-Ningqiang":"SC",
+"CN-Shaanxi-Shangnan":"SC",
+"CN-Shaanxi-Zhenba":"SC",
+"CN-Shandong-":"NC",
+"CN-Shandong-Changqing":"NC",
+"CN-Shandong-Laiwu":"NC",
+"CN-Shandong-Xintai":"NC",
+"CN-Shanghai-Baoshan":"SC",
+"CN-Shanxi-":"NC",
+"CN-Shanxi-Pinglu":"NC",
+"CN-Shanxi-Ruicheng":"NC",
+"CN-Shanxi-Xixian":"NC",
+"CN-Sichuan-Emei":"SC",
+"CN-Sichuan-Leshan":"SC",
+"CN-Sichuan-Nanjiang":"SC",
+"CN-Sichuan-Wanyuan":"BELT",
+"CN-Xinjiang-":"OTHER",
+"CN-Yunnan-":"SC",
+"CN-Yunnan-Anning":"SC",
+"CN-Yunnan-Chengjiang":"SC",
+"CN-Yunnan-Fumin":"SC",
+"CN-Yunnan-Funing":"SC",
+"CN-Yunnan-Haikou":"SC",
+"CN-Yunnan-Jinning":"SC",
+"CN-Yunnan-Kunming":"SC",
+"CN-Yunnan-Malong":"SC",
+"CN-Yunnan-Wuding":"SC",
+"CN-Yunnan-Yiliang":"SC",
+"CN-Yunnan-Zhongdian":"SC",
+"CN-Zhejiang-":"SC",
+"CN-Zhejiang-Changshan":"SC",
+"CN-Zhejiang-Jiangshan":"SC",
+}
 class PbdbOccurrence(models.Model):
     occno = models.CharField(max_length=50,blank=True,null=True,verbose_name="PBDB OccurrenceNo")
     collno = models.CharField(max_length=50,blank=True,null=True,verbose_name="PBDB CollectionNo")
@@ -188,11 +339,14 @@ class PbdbOccurrence(models.Model):
     late_interval = models.CharField(max_length=100,blank=True,null=True,verbose_name="To")
     max_ma = models.CharField(max_length=10,blank=True,null=True,verbose_name="From Ma")
     min_ma = models.CharField(max_length=10,blank=True,null=True,verbose_name="To Ma")
+    chrono_from = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True,verbose_name="Chrono From")
+    chrono_to = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True,verbose_name="Chrono To")
     latitude = models.CharField(max_length=20,blank=True,null=True,verbose_name="경도")
     longitude = models.CharField(max_length=20,blank=True,null=True,verbose_name="위도")
     country = models.CharField(max_length=10,blank=True,null=True,verbose_name="국가")
     state = models.CharField(max_length=100,blank=True,null=True,verbose_name="State")
     county = models.CharField(max_length=100,blank=True,null=True,verbose_name="County")
+    region = models.CharField(max_length=100,blank=True,null=True,verbose_name="Region")
     formation = models.CharField(max_length=100,blank=True,null=True)
     remarks = models.CharField(max_length=200,blank=True,null=True)
     def __str__(self):
@@ -201,3 +355,16 @@ class PbdbOccurrence(models.Model):
         name_list = self.species_name.split(" ")
         if len(name_list) > 0:
             self.genus_name = name_list[0]
+    def process_region(self):
+        print(self.country, self.state, self.county )
+        region_key = "-".join([ self.country or '', self.state or '', self.county or '' ])
+        region_value = ''
+        if region_key in CHINA_REGION_HASH.keys():
+            region_value = CHINA_REGION_HASH[region_key]
+        if region_key.find('CN-Jilin') > -1:
+            if self.formation and self.formation.upper().find('FENGSHAN') > -1:
+                region_value = 'NC'
+        if region_key == ('CN-Yunnan-'):
+            region_value = ''
+        self.region = region_value
+        

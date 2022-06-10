@@ -1,0 +1,14 @@
+{% for chronounit in chronounit_list %}
+        <td class="align-middle text-center" rowspan="{{chronounit.terminal_unit_count}}"><!--colspan="{% if chronounit.children.all %}1{%else%}{{chronounit.level}}{%endif%}"-->
+        <a href="{% url 'chronounit_detail' chronounit.id %}">{{ chronounit.name }}</a>
+        <a class="btn btn-primary btn-sm" role="button" href="{% url 'chronounit_edit' chronounit.id %}">+</a>
+        </td>
+        {% if chronounit.children.all %}
+        {% include "nkfcluster/chronounit_chart_sub.html" with chronounit_list=chronounit.children.all %}
+        {% else %}
+        {% for idx in chronounit.get_numeric_level %}
+        <td></td>
+        {% endfor %}
+        </tr><tr>
+        {% endif %}       
+{% endfor %}

@@ -1,6 +1,6 @@
 from django import forms
 from django.db import models
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, ChronoUnit
 from django.forms import ModelForm, inlineformset_factory, modelformset_factory
 
 from django.contrib.auth.models import User
@@ -33,3 +33,8 @@ class NkfLocalityForm(ModelForm):
     class Meta:
         model = NkfLocality
         fields = ['index', 'name','level','parent']
+
+class ChronoUnitForm(ModelForm):
+    class Meta:
+        model = ChronoUnit
+        fields = ['name', 'level', 'begin', 'end', 'parent']

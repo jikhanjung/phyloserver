@@ -44,15 +44,23 @@ class Command(BaseCommand):
                     #print(index,"Strat unit:",row['Stratigraphic unit'])
                     if row['accepted_rank'] not in ['genus','species']:
                         continue
+                    if row['cc'] != 'CN':
+                        continue
 
                     occ = PbdbOccurrence()
                     if row['identified_rank'].upper() == 'SPECIES':
                         occ.species_name = row['identified_name']
                         occ.process_genus_name()
-                    elif row['identified_rank'].upper() == 'GENUS':
+                    elif row['identified_rank'].upper() in ['GENUS','SUBGENUS']:
                         occ.species_name = row['identified_name']
                         occ.process_genus_name()
                         occ.species_name = ''
+
+                    if pd.notna(row['occurrence_no']):
+                        occ.occno = row['occurrence_no']
+                    if pd.notna(row['collection_no']):
+                        occ.collno = row['collection_no']
+
 
                     if pd.notna(row['early_interval']):
                         occ.early_interval = row['early_interval']
@@ -74,6 +82,7 @@ class Command(BaseCommand):
                     if pd.notna(row['county']):    
                         occ.county = row['county']
                     occ.group = 'TR'
+                    occ.process_region()
                     if occ.species_name == '' and occ.genus_name == '':
                         continue
                     else:

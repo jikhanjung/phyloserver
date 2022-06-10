@@ -20,6 +20,7 @@
             <th><div class="">Country</div></th>
             <th><div class="">State</div></th>
             <th><div class="">County</div></th>
+            <th><div class="">Region</div></th>
             <th><div class="">Age</div></th>
             <th><div class="">Formation</div></th></tr>
     {% for occ in page_obj %}
@@ -29,6 +30,7 @@
             <td align="center">{{ occ.country }}</td>
             <td align="center">{{ occ.state|default_if_none:'' }}</td>
             <td align="center">{{ occ.county|default_if_none:'' }}</td>
+            <td align="center">{{ occ.region|default_if_none:'' }}</td>
             <td align="center">{{ occ.max_ma|default_if_none:'' }}-{{ occ.min_ma|default_if_none:'' }}</td>
             <td align="center">{{ occ.formation|default_if_none:'' }}</td>
         </tr>

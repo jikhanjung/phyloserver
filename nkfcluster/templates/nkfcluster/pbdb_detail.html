@@ -3,13 +3,16 @@
 <h1>Occrrence info</h1>
 
 <table border="1" width="800">
-    <tr><th width="150">Species name</th><td>{{ occ.species_name|default_if_none:'' }}</td></tr>
+    <tr><th width="150">Occurrence no</th><td>{{ occ.occno|default_if_none:'' }}</td></tr>
+    <tr><th>Collection no</th><td>{{ occ.collno|default_if_none:'' }}</td></tr>
+    <tr><th>Species name</th><td>{{ occ.species_name|default_if_none:'' }}</td></tr>
     <tr><th>Genus name</th><td> {{ occ.genus_name|default_if_none:'' }}</td></tr>
     <tr><th>Group</th><td> {{ occ.get_group_display|default_if_none:'' }}</td></tr>
     <tr><th>Age Name</th><td> {{ occ.early_interval|default_if_none:'' }}-{{ occ.late_interval|default_if_none:'' }}</td></tr>
     <tr><th>Age in Ma</th><td> {{ occ.max_ma|default_if_none:'' }}-{{ occ.min_ma|default_if_none:'' }}</td></tr>
     <tr><th>Lat/Lng</th><td>{{ occ.latitude|default_if_none:'' }}/{{ occ.longitude|default_if_none:'' }}</td></tr>
     <tr><th>Country/State/County</th><td>{{ occ.country|default_if_none:'' }}/{{ occ.state|default_if_none:'' }}/{{ occ.county|default_if_none:'' }}</td></tr>
+    <tr><th>Region</th><td>{{ occ.region|default_if_none:'' }}</td></tr>
     <tr><th>Formation</th><td>{{ occ.formation|default_if_none:'' }}</td></tr>
 </table>
 <a href="{% url 'pbdb_list' %}">[PBDB List]</a>

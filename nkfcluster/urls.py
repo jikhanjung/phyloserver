@@ -43,4 +43,13 @@ urlpatterns = [
     path('pbdb_list/', views.pbdb_list, name='pbdb_list'),
     path('pbdb_detail/<int:occ_id>/', views.pbdb_detail, name='pbdb_detail'),
 
+    # chronostrat unit urls
+    path('chronounit_list/', views.chronounit_list, name='chronounit_list'),
+    path('chronounit_chart/', views.chronounit_chart, name='chronounit_chart'),
+    path('chronounit_list/<int:pk>/', views.chronounit_list, name='chronounit_list'),
+    path('chronounit_detail/<int:pk>/', views.chronounit_detail, name='chronounit_detail'),
+    path('chronounit_add/', views.chronounit_add, name='chronounit_add'),
+    path('chronounit_edit/<int:pk>/', views.chronounit_edit, name='chronounit_edit'),
+    path('chronounit_delete/<int:pk>/', views.chronounit_delete, name='chronounit_delete'),
+
 ] 
