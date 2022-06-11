@@ -4,6 +4,7 @@
 
 <table border="1" width="800">
     <tr><th width="150">Stratigraphic unit</th><td>{{ occ.get_strat_unit_display }}</td></tr>
+    <tr><th>ChronoUnit</th><td> {{ occ.chronounit.name}}</td></tr>
     <tr><th>Lithology</th><td> {{ occ.get_lithology_display }}</td></tr>
     <tr><th>Group</th><td> {{ occ.get_group_display }}</td></tr>
     <tr><th>Species name</th><td> {{ occ.species_name }}</td></tr>

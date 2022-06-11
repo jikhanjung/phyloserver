@@ -43,6 +43,11 @@ urlpatterns = [
     path('pbdb_list/', views.pbdb_list, name='pbdb_list'),
     path('pbdb_detail/<int:occ_id>/', views.pbdb_detail, name='pbdb_detail'),
 
+    path('combined_list/', views.combined_list, name='combined_list'),
+    path('combined_detail/<int:occ_id>/', views.combined_detail, name='combined_detail'),
+    path('show_combined_table/', views.show_combined_table, name='show_combined_table'),
+    path('download_combined_cluster/', views.download_combined_cluster, name='download_combined_cluster'),
+
     # chronostrat unit urls
     path('chronounit_list/', views.chronounit_list, name='chronounit_list'),
     path('chronounit_chart/', views.chronounit_chart, name='chronounit_chart'),

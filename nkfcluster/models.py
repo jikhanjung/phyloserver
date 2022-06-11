@@ -13,6 +13,19 @@ STRATUNIT_CHOICES = [
     ('MD','만달주층'),
     ('BRD','비랑동주층'),
 ]
+
+STRATUNIT_CHOICES = [
+    ('PS','평산주층'),
+    ('JH','중화주층'),
+    ('HG','흑교주층'),
+    ('LC','림촌주층'),
+    ('MJ','무진주층'),
+    ('GP','고풍주층'),
+    ('SG','신곡주층'),
+    ('MD','만달주층'),
+    ('BRD','비랑동주층'),
+]
+
 LITHOLOGY_CHOICES = [
     ('PR','phosphatic rock'),
     ('ST','siltstone'),
@@ -80,10 +93,60 @@ GROUP_CHOICES = [
 ]
 
 
+class ChronoUnit(models.Model):
+    #CHRONOUNIT_NUMERIC_LEVEL = { 'SE': 5, 'EO': 4, 'ER': 3, 'PE': 2, 'EP': 1, 'AG': 0 }
+    CHRONOUNIT_LEVEL_CHOICES = [
+        ( '6', 'Supereon' ),
+        ( '5', 'Eon' ),
+        ( '4', 'Era' ),
+        ( '3', 'Period' ),
+        ( '2', 'Epoch' ),
+        ( '1', 'Age' ),
+    ]
+    name = models.CharField(max_length=200)
+    level = models.CharField(max_length=1, choices=CHRONOUNIT_LEVEL_CHOICES, blank=True)
+    abbreviation = models.CharField(max_length=200, blank=True)
+    begin = models.FloatField(blank=True, null=True)
+    end = models.FloatField(blank=True, null=True)
+    terminal_unit_count = models.IntegerField(default=0)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='children')
+    created_on = models.DateTimeField(blank=True,null=True,auto_now_add=True)
+    created_by = models.CharField(max_length=20,blank=True)
+    modified_on = models.DateTimeField(blank=True,null=True,auto_now=True)
+    modified_by = models.CharField(max_length=20,blank=True)
+    #terminal_unit_count = 0
+
+    def __str__(self):
+        return self.name
+    
+    def get_numeric_level(self):
+        return range(int(self.level)-1)
+        #return self.CHRONOUNIT_NUMERIC_LEVEL[self.level]
+
+    def get_children_count(self):
+        return len(self.children)
+    
+    def calculate_terminal_unit_count(self):
+        import logging
+        logger = logging.getLogger(__name__)
+
+        terminal_unit_count = 0
+        if self.children.all():
+            for child in self.children.all():
+                terminal_unit_count += child.calculate_terminal_unit_count()
+        else:
+            terminal_unit_count = 1
+        self.terminal_unit_count = terminal_unit_count
+        logger.error('Something went wrong! '+str(self.id)+":"+str(terminal_unit_count))
+        self.save()
+        return terminal_unit_count
+    class Meta:
+        ordering = ["begin"]
 
 class NkfOccurrence(models.Model):
     index = models.IntegerField(blank=True,null=True)
     strat_unit = models.CharField(max_length=10,choices=STRATUNIT_CHOICES,blank=True,null=True)
+    chronounit = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True)
     lithology = models.CharField(max_length=10,choices=LITHOLOGY_CHOICES,blank=True,null=True)
     group = models.CharField(max_length=200,choices=GROUP_CHOICES,blank=True,null=True)
     species_name = models.CharField(max_length=200,blank=True,null=True)
@@ -179,57 +242,6 @@ class NkfLocality(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class ChronoUnit(models.Model):
-    #CHRONOUNIT_NUMERIC_LEVEL = { 'SE': 5, 'EO': 4, 'ER': 3, 'PE': 2, 'EP': 1, 'AG': 0 }
-    CHRONOUNIT_LEVEL_CHOICES = [
-        ( '6', 'Supereon' ),
-        ( '5', 'Eon' ),
-        ( '4', 'Era' ),
-        ( '3', 'Period' ),
-        ( '2', 'Epoch' ),
-        ( '1', 'Age' ),
-    ]
-    name = models.CharField(max_length=200)
-    level = models.CharField(max_length=1, choices=CHRONOUNIT_LEVEL_CHOICES, blank=True)
-    abbreviation = models.CharField(max_length=200, blank=True)
-    begin = models.FloatField(blank=True, null=True)
-    end = models.FloatField(blank=True, null=True)
-    terminal_unit_count = models.IntegerField(default=0)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='children')
-    created_on = models.DateTimeField(blank=True,null=True,auto_now_add=True)
-    created_by = models.CharField(max_length=20,blank=True)
-    modified_on = models.DateTimeField(blank=True,null=True,auto_now=True)
-    modified_by = models.CharField(max_length=20,blank=True)
-    #terminal_unit_count = 0
-
-    def __str__(self):
-        return self.name
-    
-    def get_numeric_level(self):
-        return range(int(self.level)-1)
-        #return self.CHRONOUNIT_NUMERIC_LEVEL[self.level]
-
-    def get_children_count(self):
-        return len(self.children)
-    
-    def calculate_terminal_unit_count(self):
-        import logging
-        logger = logging.getLogger(__name__)
-
-        terminal_unit_count = 0
-        if self.children.all():
-            for child in self.children.all():
-                terminal_unit_count += child.calculate_terminal_unit_count()
-        else:
-            terminal_unit_count = 1
-        self.terminal_unit_count = terminal_unit_count
-        logger.error('Something went wrong! '+str(self.id)+":"+str(terminal_unit_count))
-        self.save()
-        return terminal_unit_count
-    class Meta:
-        ordering = ["begin"]
 
 CHINA_REGION_HASH ={
 "CN-Anhui-Chuxian":"BELT",
@@ -344,6 +356,7 @@ class PbdbOccurrence(models.Model):
     min_ma = models.FloatField(blank=True,null=True,verbose_name="To Ma")
     chrono_from = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True,verbose_name="Chrono From",related_name='ChronoFrom')
     chrono_to = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True,verbose_name="Chrono To",related_name='ChronoTo')
+    chrono_list = models.CharField(max_length=200,blank=True,null=True,verbose_name="시대")
     latitude = models.CharField(max_length=20,blank=True,null=True,verbose_name="경도")
     longitude = models.CharField(max_length=20,blank=True,null=True,verbose_name="위도")
     country = models.CharField(max_length=10,blank=True,null=True,verbose_name="국가")
@@ -378,26 +391,46 @@ class PbdbOccurrence(models.Model):
             max_ma = self.max_ma
         if self.min_ma and self.min_ma != '':
             min_ma = self.min_ma
-        #print(min_ma, max_ma, self.min_ma, self.max_ma)
-        chrono_list = ChronoUnit.objects.filter((Q(begin__gte=max_ma)|Q(end__lte=min_ma))&Q(level='2')).order_by('level','begin')
-        #for chrono in chrono_list:
-            #print(chrono.name, chrono.begin, chrono.end)
-        if len(chrono_list)>0:
-            self.chrono_from = chrono_list[0]
-        if len(chrono_list)>1:
-            self.chrono_to = chrono_list[1]
-        #print(chrono_list)
+        print(min_ma, max_ma, self.min_ma, self.max_ma)
+        #chrono_list = ChronoUnit.objects.filter((Q(begin__gte=max_ma)|Q(end__lte=min_ma))&Q(level='2')).order_by('level','begin')
+        qs = ChronoUnit.objects.filter(
+            (   
+                Q(begin__lt=max_ma)&Q(begin__gt=min_ma) |   
+                Q(end__lt=max_ma)&Q(end__gt=min_ma) |   
+                (   
+                    Q(begin__gte=max_ma)&Q(end__lte=min_ma)
+                )
+            )
+            &Q(level='2')
+        ).order_by('level','-begin')
+        print(qs)
+
+        chrono_list = [ q for q in qs ]
+        print(chrono_list)
+        for chrono in chrono_list:
+            print(chrono.name, chrono.begin, chrono.end)
+        
+        self.chrono_from = chrono_list[0]
+        self.chrono_to = chrono_list[-1]
+
+        chrononame_list = ", ".join([ c.name for c in chrono_list ])
+        self.chrono_list = chrononame_list
+        print(self.chrono_list)
 
 
         #self.chrono_from = min_unit
         #self.chrono_to = min_unit
 
 class TotalOccurrence(models.Model):
+    country = models.CharField(max_length=10, blank=True,null=True )
     group = models.CharField(max_length=200,choices=GROUP_CHOICES,blank=True,null=True)
     species_name = models.CharField(max_length=200,blank=True,null=True)
     genus_name = models.CharField(max_length=200,blank=True,null=True)
-    locality = models.CharField(max_length=10, blank=True,null=True )
-    chrono = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True)
+    locality_lvl1 = models.CharField(max_length=20, blank=True,null=True )
+    locality_lvl2 = models.CharField(max_length=20, blank=True,null=True )
+    locality_lvl3 = models.CharField(max_length=20, blank=True,null=True )
+    chrono_lvl1 = models.CharField(max_length=20, blank=True,null=True )
+    chrono_lvl2 = models.CharField(max_length=20, blank=True,null=True )
     source = models.CharField(max_length=200,blank=True,null=True )
     def __str__(self):
-        return self.species_name + " @" + self.location
+        return self.species_name 

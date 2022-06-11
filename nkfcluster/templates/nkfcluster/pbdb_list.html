@@ -31,7 +31,7 @@
             <td align="center">{{ occ.state|default_if_none:'' }}</td>
             <td align="center">{{ occ.county|default_if_none:'' }}</td>
             <td align="center">{{ occ.region|default_if_none:'' }}</td>
-            <td align="center">{{ occ.max_ma|default_if_none:'' }}-{{ occ.min_ma|default_if_none:'' }}</td>
+            <td align="center">{{ occ.chrono_list|default_if_none:'' }}</td>
             <td align="center">{{ occ.formation|default_if_none:'' }}</td>
         </tr>
     {% endfor %}

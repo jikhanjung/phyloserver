@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES, PbdbOccurrence, ChronoUnit
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES, PbdbOccurrence, TotalOccurrence, ChronoUnit
 from django.core.paginator import Paginator
 from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfLocalityForm, ChronoUnitForm
 from django.urls import reverse
@@ -817,3 +817,152 @@ def chronounit_delete(request, pk):
     chrono = get_object_or_404(ChronoUnit, pk=pk)
     chrono.delete()
     return HttpResponseRedirect('/nkfcluster/chronounit_list')
+
+
+def combined_list(request):
+    user_obj = get_user_obj( request )
+
+    occ_list = TotalOccurrence.objects.order_by('genus_name','species_name')
+    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'occ_list': occ_list,
+        'user_obj': user_obj,
+        'page_obj': page_obj,
+    }
+    return render(request, 'nkfcluster/combined_list.html', context)
+
+def combined_detail(request, occ_id):
+    user_obj = get_user_obj( request )
+
+    occ = get_object_or_404(TotalOccurrence, pk=occ_id)
+    return render(request, 'nkfcluster/combined_detail.html', {'occ': occ, 'user_obj':user_obj})
+
+
+def read_combined_data(request):
+
+    #selected_stratunit = []
+    chrono_list = [ 'Terreneuvian','Series 2','Miaolingian','Furongian']
+    chrono_keylist = chrono_list
+
+    selected_chronounit = request.GET.getlist('selected_chronounit')
+    if len(selected_chronounit) == 0:
+        selected_chronounit = chrono_keylist
+
+    #print("selected_stratunit",selected_stratunit)
+    locality_level = request.GET.get('locality_level') 
+    genus_species_select = request.GET.get('genus_species_select')
+
+    if genus_species_select != "genus":
+        genus_species_select = "species"
+        taxon_header = "Species name"
+    else:
+        genus_species_select = "genus"
+        taxon_header = "Genus name"
+
+    if locality_level not in ['1','2','3']:
+        locality_level = 3
+    locality_level = int(locality_level)
+    
+    locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
+    locality_name_list = [ loc.name for loc in locality_list ]
+    locality_name_list.extend( ['NC','SC','BELT','Other'])
+    #print(locality_name_list)
+
+    print(selected_chronounit)
+    occ_list = TotalOccurrence.objects.filter(chrono_lvl2__in=selected_chronounit,species_name__gt='').order_by('species_name','genus_name')
+    column_list = ["ChronoUnit",taxon_header]
+    column_list.extend(locality_name_list)
+
+    occ_hash = {}
+    curr_row = None
+    data_list = []
+    prev_taxon_name = ""
+    for occ in occ_list:
+        print(occ.id,occ.species_name,occ.chrono_lvl2,occ.locality_lvl3,occ.genus_name,occ.species_name)
+        taxon_name = ""
+        if genus_species_select == "genus":
+            taxon_name = occ.genus_name
+        else:
+            taxon_name = occ.species_name
+        if taxon_name != prev_taxon_name:
+            if curr_row:
+                data_list.append(curr_row)
+            
+            curr_row = [ occ.chrono_lvl2, taxon_name ]
+            while len(curr_row) < len(column_list):
+                curr_row.append('')
+        if locality_level == 1:
+            locality = occ.locality_lvl1
+        elif locality_level == 2:
+            locality = occ.locality_lvl2
+        elif locality_level == 3:
+            locality = occ.locality_lvl3
+
+        if locality in column_list:
+            idx = column_list.index(locality)
+            curr_row[idx] = 'O'
+        prev_taxon_name = taxon_name
+    return data_list, column_list, genus_species_select, locality_level, selected_chronounit
+
+def show_combined_table(request): 
+    user_obj = get_user_obj( request )
+    
+    chrono_list = [ 'Terreneuvian','Series 2','Miaolingian','Furongian']
+    data_list, column_list, genus_species_select, locality_level, selected_chronounit = read_combined_data(request)
+    chronounit_choices = chrono_list
+
+    chrono_parameter = '&'.join([ 'selected_chronounit=' + x for x in selected_chronounit ])
+    urlparameter = { 'chronounit': chrono_parameter}
+
+    return render(request, 'nkfcluster/combined_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level,'chronounit_choices':chronounit_choices,'selected_chronounit':selected_chronounit,'urlparameter':urlparameter})
+
+def download_combined_cluster(request): 
+    user_obj = get_user_obj( request )
+
+    #data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
+    chrono_list = [ 'Terreneuvian','Series 2','Miaolingian','Furongian']
+    data_list, column_list, genus_species_select, locality_level, selected_chronounit = read_combined_data(request)
+
+    #data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
+    chronounit_choices = chrono_list
+    
+    cluster_data = [['chrono_unit'],['species_name']]
+    for col_name in column_list[2:]:
+        cluster_data.append([col_name])
+
+    
+    for row in data_list:
+        occ_data = [row[0]]
+        occ_data.extend(row[1:])
+        #print("occ_data len", len(occ_data))
+        for idx in range(len(occ_data)):
+            cell_value = "0"
+            if occ_data[idx] == "O":
+                cell_value = "1"
+            elif occ_data[idx] == "":
+                cell_value = "0"
+            else:
+                cell_value = occ_data[idx]
+            cluster_data[idx].append(cell_value)
+
+    import datetime
+    today = datetime.datetime.now()
+    date_str = today.strftime("%Y%m%d_%H%M%S")
+    buffer = io.BytesIO()
+
+    filename = 'cluster_data_{}.xlsx'.format(date_str)
+    doc = xlsxwriter.Workbook(buffer)
+    worksheet = doc.add_worksheet()
+    row_index = 0
+    column_index = 0
+
+    for row_idx in range(len(cluster_data)):
+        for col_idx in range(len(cluster_data[0])):
+            worksheet.write(col_idx,row_idx,cluster_data[row_idx][col_idx])
+
+    doc.close()
+    buffer.seek(0)
+
+    return FileResponse(buffer, as_attachment=True, filename=filename)

@@ -1,0 +1,43 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>Occurrence Table</h1>
+<table border="0" width="1350">
+    <tr><td width="350" align="left">
+        <a href="{% url 'download_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}">[Download data]</a>
+    </td><td width="1000" align="right"><form method="GET" action="{% url 'show_combined_table'%}">
+        {% csrf_token %}
+        <div style="background-color:lightgray; width:500px">
+            ChronoUnit:
+            {%for chronounit in chronounit_choices%}
+            <span style="display: inline-block;"><input type="checkbox" name="selected_chronounit" value="{{chronounit}}" {%if chronounit in selected_chronounit%}checked{%endif%}>{{chronounit}}</span>
+            {%endfor%}
+        </div>
+        <div style="background-color:lightgray; width:500px;">
+            Locality: 
+            <input type="radio" id="locality_level1" name="locality_level" value="1" {%if locality_level == 1%}checked{%endif%}>Level 1
+            <input type="radio" id="locality_level2" name="locality_level" value="2" {%if locality_level == 2%}checked{%endif%}>Level 2
+            <input type="radio" id="locality_level3" name="locality_level" value="3" {%if not locality_level == 1 and not locality_level == 2%}checked{%endif%}>Level 3
+        </div>
+        <div style="background-color: white; width:500px;">
+            Group by:
+            <input type="radio" id="genus_select" name="genus_species_select" value="genus" {%if genus_species_select == "genus"%}checked{%endif%}>genus
+            <input type="radio" id="species_select" name="genus_species_select" value="species" {%if genus_species_select != "genus"%}checked{%endif%}>species</div><span>
+        <button type="submit">보기</button></span>
+    </form></td></tr></table>
+
+{% if data_list %}   
+    <table border="1" width="800" class="list_table">
+        <tr>
+            {%for col in column_list%}<th>{{col}}</th>{%endfor%}
+        </tr>
+    {% for row in data_list %}
+        <tr>
+            {%for val in row%}<td>{{val}}</td>{%endfor%}
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No occurrences are available.</p>
+{% endif %}
+
+{% endblock %}

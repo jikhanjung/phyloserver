@@ -1,6 +1,6 @@
 {% extends "nkfbase.html" %}
 {% block content %}
-<h1>Occurrence list</h1>
+<h1>Combined occurrence list for trilobites</h1>
 <table border="0" width="800">
     <tr><td width="400" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
@@ -15,21 +15,27 @@
 {% if occ_list %}   
     <table border="1" width="800" class="list_table">
         <tr>
-            <th><div>LithoUnit</div></th>
-            <th><div>ChronoUnit</div></th>
-            <th><div>Lithology</div></th>
+            <th><div>Country</div></th>
             <th><div>Group</div></th>
             <th><div>Species name</div></th>
-            <th><div>Location</div></th>
+            <th><div>Genus name</div></th>
+            <th><div>Locality lvl1</div></th>
+            <th><div>Locality lvl2</div></th>
+            <th><div>Locality lvl3</div></th>
+            <th><div>Chronounit lvl1</div></th>
+            <th><div>Chronounit lvl2</div></th>
             <th><div>Source</div></th></tr>
     {% for occ in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail' occ.id %}';">
-            <td align="center">{{ occ.get_strat_unit_display }}</td>
-            <td align="center">{{ occ.chronounit }}</td>
-            <td align="center">{{ occ.get_lithology_display }}</td>
-            <td align="center">{{ occ.get_group_display }}</td>
-            <td align="center"><a href="{% url 'occ_detail' occ.id %}">{{ occ.species_name }}</a></td>
-            <td align="center">{{ occ.get_location_display }}</td>
+        <tr>
+            <td align="center">{{ occ.country }}</td>
+            <td align="center">{{ occ.group }}</td>
+            <td align="center">{{ occ.genus_name }}</td>
+            <td align="center"><!--a href="{% url 'combined_detail' occ.id %}"-->{{ occ.species_name }}<!--/a--></td>
+            <td align="center">{{ occ.locality_lvl1 }}</td>
+            <td align="center">{{ occ.locality_lvl2 }}</td>
+            <td align="center">{{ occ.locality_lvl3 }}</td>
+            <td align="center">{{ occ.chrono_lvl1 }}</td>
+            <td align="center">{{ occ.chrono_lvl2 }}</td>
             <td align="center">{{ occ.source }}</td>
         </tr>
     {% endfor %}
@@ -43,7 +49,7 @@
         {% include "paginator.html" %}
     </td><td width="400" align="right">
         <!--a href="{% url 'add_occurrence' %}">[Add Occurrence]</a-->
-        <a href="{% url 'show_table' %}">[Show Table]</a>
+        <a href="{% url 'show_combined_table' %}">[Show Table]</a>
     </td></tr></table>
 
 {% endblock %}
