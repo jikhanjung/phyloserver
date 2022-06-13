@@ -37,6 +37,7 @@ class Command(BaseCommand):
             for ( code, name ) in LOCATION_CHOICES:
                 if location_code == code:
                     occ.locality_lvl3 = name
+                    print(name)
                     loc3 = NkfLocality.objects.get(name=name)
                     loc2 = loc3.parent
                     occ.locality_lvl2 = loc2.name

@@ -39,20 +39,22 @@ class Command(BaseCommand):
                 location = ""
                 
                 #print( row['기관표본번호'])
+                print(row['accepted_rank'],row['accepted_name'])
                 if pd.notna(row['identified_name']):
                     
                     #print(index,"Strat unit:",row['Stratigraphic unit'])
-                    if row['accepted_rank'] not in ['genus','species']:
+                    if row['accepted_rank'] not in ['genus','subgenus','species']:
                         continue
                     if row['cc'] != 'CN':
                         continue
+                    print(row['accepted_rank'],row['accepted_name'])
 
                     occ = PbdbOccurrence()
-                    if row['identified_rank'].upper() == 'SPECIES':
-                        occ.species_name = row['identified_name']
+                    if row['accepted_rank'].upper() == 'SPECIES':
+                        occ.species_name = row['accepted_name']
                         occ.process_genus_name()
-                    elif row['identified_rank'].upper() in ['GENUS','SUBGENUS']:
-                        occ.species_name = row['identified_name']
+                    elif row['accepted_rank'].upper() in ['GENUS','SUBGENUS']:
+                        occ.species_name = row['accepted_name']
                         occ.process_genus_name()
                         occ.species_name = ''
 
