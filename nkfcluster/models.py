@@ -244,7 +244,7 @@ class NkfLocality(models.Model):
         return self.name
 
 CHINA_REGION_HASH ={
-"CN-Anhui-Chuxian":"BELT",
+"CN-Anhui-Chuxian":"SC",
 "CN-Anhui-Huainan":"NC",
 "CN-Anhui-Jing Xian":"SC",
 "CN-Anhui-Jingxian":"SC",
@@ -278,8 +278,8 @@ CHINA_REGION_HASH ={
 "CN-Henan-Lushan":"NC",
 "CN-Henan-Mianchi":"NC",
 "CN-Henan-Ruzhou":"NC",
-"CN-Henan-Xichuan":"BELT",
-"CN-Henan-Ye Xian":"NC",
+"CN-Henan-Xichuan":"SC",
+"CN-Henan-Ye Xian":"BELT",
 "CN-Hubai-":"SC",
 "CN-Hubei-":"SC",
 "CN-Hubei-Changyang":"SC",
@@ -326,7 +326,7 @@ CHINA_REGION_HASH ={
 "CN-Sichuan-Emei":"SC",
 "CN-Sichuan-Leshan":"SC",
 "CN-Sichuan-Nanjiang":"SC",
-"CN-Sichuan-Wanyuan":"BELT",
+"CN-Sichuan-Wanyuan":"SC",
 "CN-Xinjiang-":"OTHER",
 "CN-Yunnan-":"SC",
 "CN-Yunnan-Anning":"SC",
