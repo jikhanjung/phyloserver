@@ -853,6 +853,8 @@ def read_combined_data(request):
     #print("selected_stratunit",selected_stratunit)
     locality_level = request.GET.get('locality_level') 
     genus_species_select = request.GET.get('genus_species_select')
+    exclude_china_only_taxa = request.GET.get('exclude_china_only_taxa') 
+    print("china only:",exclude_china_only_taxa)
 
     if genus_species_select != "genus":
         genus_species_select = "species"
@@ -870,7 +872,7 @@ def read_combined_data(request):
     locality_name_list.extend( ['NC','SC','BELT','Other'])
     #print(locality_name_list)
 
-    print(selected_chronounit)
+    #print(selected_chronounit)
     occ_list = TotalOccurrence.objects.filter(chrono_lvl2__in=selected_chronounit,species_name__gt='').order_by('species_name','genus_name')
     column_list = ["ChronoUnit",taxon_header]
     column_list.extend(locality_name_list)
@@ -880,7 +882,7 @@ def read_combined_data(request):
     data_list = []
     prev_taxon_name = ""
     for occ in occ_list:
-        print(occ.id,occ.species_name,occ.chrono_lvl2,occ.locality_lvl3,occ.genus_name,occ.species_name)
+        #print(occ.id,occ.species_name,occ.chrono_lvl2,occ.locality_lvl3,occ.genus_name,occ.species_name)
         taxon_name = ""
         if genus_species_select == "genus":
             taxon_name = occ.genus_name
@@ -888,7 +890,14 @@ def read_combined_data(request):
             taxon_name = occ.species_name
         if taxon_name != prev_taxon_name:
             if curr_row:
-                data_list.append(curr_row)
+                nk_data = curr_row[2:-5]
+                nk_data_exist = False
+                for nk_cell in nk_data:
+                    if nk_cell == 'O':
+                        nk_data_exist = True
+                #print(nk_data,nk_data_exist)
+                if exclude_china_only_taxa != '1' or nk_data_exist:
+                    data_list.append(curr_row)
             
             curr_row = [ occ.chrono_lvl2, taxon_name ]
             while len(curr_row) < len(column_list):
@@ -904,26 +913,26 @@ def read_combined_data(request):
             idx = column_list.index(locality)
             curr_row[idx] = 'O'
         prev_taxon_name = taxon_name
-    return data_list, column_list, genus_species_select, locality_level, selected_chronounit
+    return data_list, column_list, genus_species_select, locality_level, selected_chronounit, exclude_china_only_taxa
 
 def show_combined_table(request): 
     user_obj = get_user_obj( request )
     
     chrono_list = [ 'Terreneuvian','Series 2','Miaolingian','Furongian']
-    data_list, column_list, genus_species_select, locality_level, selected_chronounit = read_combined_data(request)
+    data_list, column_list, genus_species_select, locality_level, selected_chronounit, exclude_china_only_taxa = read_combined_data(request)
     chronounit_choices = chrono_list
 
     chrono_parameter = '&'.join([ 'selected_chronounit=' + x for x in selected_chronounit ])
     urlparameter = { 'chronounit': chrono_parameter}
 
-    return render(request, 'nkfcluster/combined_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level,'chronounit_choices':chronounit_choices,'selected_chronounit':selected_chronounit,'urlparameter':urlparameter})
+    return render(request, 'nkfcluster/combined_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level,'chronounit_choices':chronounit_choices,'selected_chronounit':selected_chronounit,'urlparameter':urlparameter,'exclude_china_only_taxa':exclude_china_only_taxa})
 
 def download_combined_cluster(request): 
     user_obj = get_user_obj( request )
 
     #data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
     chrono_list = [ 'Terreneuvian','Series 2','Miaolingian','Furongian']
-    data_list, column_list, genus_species_select, locality_level, selected_chronounit = read_combined_data(request)
+    data_list, column_list, genus_species_select, locality_level, selected_chronounit,exclude_china_only_taxa = read_combined_data(request)
 
     #data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
     chronounit_choices = chrono_list

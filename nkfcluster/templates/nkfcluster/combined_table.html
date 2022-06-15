@@ -3,9 +3,12 @@
 <h1>Occurrence Table</h1>
 <table border="0" width="1350">
     <tr><td width="350" align="left">
-        <a href="{% url 'download_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}">[Download data]</a>
+        <a href="{% url 'download_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}&exclude_china_only_taxa={{exclude_china_only_taxa}}">[Download data]</a>
     </td><td width="1000" align="right"><form method="GET" action="{% url 'show_combined_table'%}">
         {% csrf_token %}
+        <div style="background-color:lightgray; width:500px">
+            <span style="display: inline-block;"><input type="checkbox" name="exclude_china_only_taxa" value="1" {%if exclude_china_only_taxa %}checked{%endif%}>Exclude China only taxa</span>
+        </div>
         <div style="background-color:lightgray; width:500px">
             ChronoUnit:
             {%for chronounit in chronounit_choices%}
