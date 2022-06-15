@@ -9,7 +9,7 @@
         <div style="background-color:lightgray; width:500px">
             <span style="display: inline-block;"><input type="checkbox" name="exclude_china_only_taxa" value="1" {%if exclude_china_only_taxa %}checked{%endif%}>Exclude China only taxa</span>
         </div>
-        <div style="background-color:lightgray; width:500px">
+        <div style="background-color:white; width:500px">
             ChronoUnit:
             {%for chronounit in chronounit_choices%}
             <span style="display: inline-block;"><input type="checkbox" name="selected_chronounit" value="{{chronounit}}" {%if chronounit in selected_chronounit%}checked{%endif%}>{{chronounit}}</span>
@@ -28,7 +28,7 @@
         <button type="submit">보기</button></span>
     </form></td></tr></table>
 
-{% if data_list %}   
+{% if data_list %}
     <table border="1" width="800" class="list_table">
         <tr>
             {%for col in column_list%}<th>{{col}}</th>{%endfor%}
