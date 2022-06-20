@@ -46,16 +46,20 @@ def nkdata_download(request):
     row_idx = 0
     #column_index = 0
 
-    col_list = ['strat_unit','lithology','fossil_group','location','chronounit','species_name','genus_name','source']
+    col_list = ['strat_unit','strat_unit_code','lithology','lithology_code','fossil_group','group_code','location','location_code',
+                'chronounit','chronounit_id','species_name','genus_name','source']
 
     for occ in occ_list:
         #for col_idx in range(len(col_list)):
         if not occ.chronounit:
             unit = ''
+            unit_id = ''
         else:
             unit = occ.chronounit.name
-        worksheet.write_row(row_idx, 0, [occ.get_strat_unit_display(), occ.get_lithology_display(), occ.get_group_display(), 
-                         occ.get_location_display(), unit, occ.species_name, occ.genus_name, occ.source])
+            unit_id = occ.chronounit.id
+        worksheet.write_row(row_idx, 0, [occ.get_strat_unit_display(), occ.strat_unit, occ.get_lithology_display(), occ.lithology, 
+                         occ.get_group_display(), occ.group, occ.get_location_display(), occ.location, unit, unit_id, 
+                         occ.species_name, occ.genus_name, occ.source])
         row_idx += 1
 
     doc.close()
