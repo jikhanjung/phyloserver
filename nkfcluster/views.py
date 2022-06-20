@@ -10,6 +10,9 @@ import xlsxwriter
 from django.shortcuts import render
 import numpy as np, pandas as pd
 import io
+import csv 
+import datetime
+
 # Create your views here.
 ITEMS_PER_PAGE = 20
 
@@ -27,6 +30,39 @@ def get_user_obj( request ):
 
 def index(request):
     return HttpResponseRedirect('occ_list')
+
+def nkdata_download(request):
+    user_obj = get_user_obj(request)
+
+    occ_list = NkfOccurrence.objects.order_by('id')
+
+    today = datetime.datetime.now()
+    date_str = today.strftime("%Y%m%d_%H%M%S")
+    buffer = io.BytesIO()
+
+    filename = 'nk_data_{}.xlsx'.format(date_str)
+    doc = xlsxwriter.Workbook(buffer)
+    worksheet = doc.add_worksheet()
+    row_idx = 0
+    #column_index = 0
+
+    col_list = ['strat_unit','lithology','fossil_group','location','chronounit','species_name','genus_name','source']
+
+    for occ in occ_list:
+        #for col_idx in range(len(col_list)):
+        if not occ.chronounit:
+            unit = ''
+        else:
+            unit = occ.chronounit.name
+        worksheet.write_row(row_idx, 0, [occ.get_strat_unit_display(), occ.get_lithology_display(), occ.get_group_display(), 
+                         occ.get_location_display(), unit, occ.species_name, occ.genus_name, occ.source])
+        row_idx += 1
+
+    doc.close()
+    buffer.seek(0)
+
+    return FileResponse(buffer, as_attachment=True, filename=filename)
+
 
 def occ_list(request):
     if request.user.is_authenticated:
@@ -956,7 +992,6 @@ def download_combined_cluster(request):
                 cell_value = occ_data[idx]
             cluster_data[idx].append(cell_value)
 
-    import datetime
     today = datetime.datetime.now()
     date_str = today.strftime("%Y%m%d_%H%M%S")
     buffer = io.BytesIO()

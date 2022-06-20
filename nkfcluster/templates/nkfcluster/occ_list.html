@@ -1,19 +1,20 @@
 {% extends "nkfbase.html" %}
 {% block content %}
 <h1>Occurrence list</h1>
-<table border="0" width="800">
-    <tr><td width="400" align="left">
+<table border="1">
+    <thead>
+    <tr><td colspan="4" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
-    </td><td width="400" align="right"><form method="GET" action="{% url 'occ_list'%}">
+    </td><td colspan="3" align="right"><form method="GET" action="{% url 'occ_list'%}">
         {% csrf_token %}
         <!--select name="filter2" id="filter2">
             <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
           </select>
         <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:""}}"><button type="submit">검색</button-->
-    </form></td></tr></table>
-
-{% if occ_list %}   
-    <table border="1" width="800" class="list_table">
+    </form></td></tr>
+    </thead>
+    {% if occ_list %}   
+    <tbody>
         <tr>
             <th><div>LithoUnit</div></th>
             <th><div>ChronoUnit</div></th>
@@ -22,28 +23,30 @@
             <th><div>Species name</div></th>
             <th><div>Location</div></th>
             <th><div>Source</div></th></tr>
-    {% for occ in page_obj %}
+        {% for occ in page_obj %}
         <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail' occ.id %}';">
-            <td align="center">{{ occ.get_strat_unit_display }}</td>
-            <td align="center">{{ occ.chronounit }}</td>
-            <td align="center">{{ occ.get_lithology_display }}</td>
+            <td align="center">{{ occ.get_strat_unit_display|default_if_none:'' }}</td>
+            <td align="center">{{ occ.chronounit|default_if_none:'' }}</td>
+            <td align="center">{{ occ.get_lithology_display|default_if_none:'' }}</td>
             <td align="center">{{ occ.get_group_display }}</td>
             <td align="center"><a href="{% url 'occ_detail' occ.id %}">{{ occ.species_name }}</a></td>
             <td align="center">{{ occ.get_location_display }}</td>
             <td align="center">{{ occ.source }}</td>
         </tr>
-    {% endfor %}
-    </table>
-{% else %}
-    <p>No occurrences are available.</p>
-{% endif %}
-
-<table border="0" width="800">
-    <tr><td width="400" align="left">
-        {% include "paginator.html" %}
-    </td><td width="400" align="right">
-        <!--a href="{% url 'add_occurrence' %}">[Add Occurrence]</a-->
-        <a href="{% url 'show_table' %}">[Show Table]</a>
-    </td></tr></table>
+        {% endfor %}
+    {% else %}
+        <tr><td colspan="7">No occurrences are available.</td></tr>
+    {% endif %}
+    </tbody>
+    <tfooter>
+        <tr><td colspan="4" width="400" align="left">
+            {% include "paginator.html" %}
+        </td><td colspan="3" width="400" align="right">
+            <!--a href="{% url 'add_occurrence' %}">[Add Occurrence]</a-->
+            <a href="{% url 'show_table' %}">[Show Table]</a>
+            <a href="{% url 'nkdata_download' %}">[Download]</a>
+        </td></tr>
+    </tfooter>
+</table>
 
 {% endblock %}

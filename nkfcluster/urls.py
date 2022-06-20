@@ -57,4 +57,7 @@ urlpatterns = [
     path('chronounit_edit/<int:pk>/', views.chronounit_edit, name='chronounit_edit'),
     path('chronounit_delete/<int:pk>/', views.chronounit_delete, name='chronounit_delete'),
 
+
+    # NK data download
+    path('nkdata_download/', views.nkdata_download, name='nkdata_download'),
 ] 
