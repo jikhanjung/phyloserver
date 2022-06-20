@@ -50,6 +50,9 @@ def nkdata_download(request):
     col_list = ['strat_unit','strat_unit_code','lithology','lithology_code','fossil_group','group_code','location','location_code',
                 'chronounit','chronounit_id','species_name','genus_name','revised_species_name','revised_genus_name','source']
 
+    worksheet.write_row(row_idx, 0, col_list )
+    row_idx += 1
+
     for occ in occ_list:
         #for col_idx in range(len(col_list)):
         if not occ.chronounit:
