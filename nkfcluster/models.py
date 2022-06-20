@@ -159,12 +159,14 @@ class NkfOccurrence(models.Model):
         return self.species_name + " @" + self.location
 
     def process_genus_name(self):
-        name_list = self.species_name.split(" ")
-        if len(name_list) > 0:
-            self.genus_name = name_list[0]
-        revised_name_list = self.revised_species_name.split(" ")
-        if len(name_list) > 0:
-            self.revised_genus_name = revised_name_list[0]
+        if self.species_name and self.species_name != '':
+            name_list = self.species_name.split(" ")
+            if len(name_list) > 0:
+                self.genus_name = name_list[0]
+        if self.revised_species_name and self.revised_species_name != '':
+            revised_name_list = self.revised_species_name.split(" ")
+            if len(revised_name_list) > 0:
+                self.revised_genus_name = revised_name_list[0]
 
 class NkfOccurrence2(models.Model):
     index = models.IntegerField(blank=True,null=True)
