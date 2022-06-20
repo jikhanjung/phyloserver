@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfLocalityForm, ChronoUnitForm
 from django.urls import reverse
 #from cStringIO import StringIO
+from django.db.models import Q
 
 import xlsxwriter
 from django.shortcuts import render
@@ -69,15 +70,21 @@ def nkdata_download(request):
 
 
 def occ_list(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
+    #order_by = request.GET.get('order_by', 'year')
+    filter1 = request.GET.get('filter1')
 
-    occ_list = NkfOccurrence.objects.order_by('species_name')
+    occ_list = NkfOccurrence.objects.all()
+
+    if filter1:
+        occ_list = occ_list.filter(Q(species_name__contains=filter1)|Q(revised_species_name__contains=filter1)).distinct()
+        #print(ref_list)
+
+    occ_list = occ_list.order_by( 'species_name')
+
+    #occ_list = NkfOccurrence.objects.order_by('species_name')
+
+
     paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -85,6 +92,7 @@ def occ_list(request):
         'occ_list': occ_list,
         'user_obj': user_obj,
         'page_obj': page_obj,
+        'filter1': filter1,
     }
     return render(request, 'nkfcluster/occ_list.html', context)
 
@@ -116,7 +124,11 @@ def add_occurrence(request):
         occ_form = NkfOccurrenceForm(request.POST,request.FILES)
         # check whether it's valid:
         if occ_form.is_valid():
-            occ=occ_form.save()
+            #occ=occ_form.save()
+            occ = occ_form.save(commit=False)
+            #reference = form.save(commit=False)
+            occ.process_genus_name()
+            occ.save()
                 
             return HttpResponseRedirect('/nkfcluster/occ_detail/'+str(occ.id))
     # if a GET (or any other method) we'll create a blank form
@@ -144,7 +156,10 @@ def edit_occurrence(request,pk):
         # check whether it's valid:
         if occ_form.is_valid():
             #print("run form valid")
-            occ = occ_form.save()
+            occ = occ_form.save(commit=False)
+            #reference = form.save(commit=False)
+            occ.process_genus_name()
+            occ.save()
             return HttpResponseRedirect('/nkfcluster/occ_detail/'+str(occ.id))
         else:
             pass

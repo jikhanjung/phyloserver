@@ -8,6 +8,9 @@
     <tr><th>Lithology</th><td> {{ occ.get_lithology_display }}</td></tr>
     <tr><th>Group</th><td> {{ occ.get_group_display }}</td></tr>
     <tr><th>Species name</th><td> {{ occ.species_name }}</td></tr>
+    <tr><th>Genus name</th><td> {{ occ.genus_name }}</td></tr>
+    <tr><th>Revised Species name</th><td> {{ occ.revised_species_name|default_if_none:'' }}</td></tr>
+    <tr><th>Revised Genus name</th><td> {{ occ.revised_genus_name|default_if_none:'' }}</td></tr>
     <tr><th>Location</th><td>{{ occ.get_location_display }}</td></tr>
     <tr><th>Source</th><td>{{ occ.source }}</td></tr>
 </table>

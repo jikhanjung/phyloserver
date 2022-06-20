@@ -151,6 +151,8 @@ class NkfOccurrence(models.Model):
     group = models.CharField(max_length=200,choices=GROUP_CHOICES,blank=True,null=True)
     species_name = models.CharField(max_length=200,blank=True,null=True)
     genus_name = models.CharField(max_length=200,blank=True,null=True)
+    revised_species_name = models.CharField(max_length=200,blank=True,null=True)
+    revised_genus_name = models.CharField(max_length=200,blank=True,null=True)
     location = models.CharField(max_length=10, choices=LOCATION_CHOICES,blank=True,null=True )
     source = models.CharField(max_length=200,blank=True,null=True )
     def __str__(self):
@@ -160,6 +162,9 @@ class NkfOccurrence(models.Model):
         name_list = self.species_name.split(" ")
         if len(name_list) > 0:
             self.genus_name = name_list[0]
+        revised_name_list = self.revised_species_name.split(" ")
+        if len(name_list) > 0:
+            self.revised_genus_name = revised_name_list[0]
 
 class NkfOccurrence2(models.Model):
     index = models.IntegerField(blank=True,null=True)
