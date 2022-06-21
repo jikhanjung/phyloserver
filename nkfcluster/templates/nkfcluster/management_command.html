@@ -1,7 +1,6 @@
 {% extends "nkfbase.html" %}
 {% block content %}
-<h1>자료관리</h1>
-
+<h1>DB변환</h1>
 <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
 <table border="0">
@@ -13,10 +12,10 @@
     </thead>
     <tbody><tr><td>
     <div>
-        <br/><br/>
+        <br/>
         <input type="radio" id="command" name="command" value="convert_1_to_t">북한 자료 -> Combined 변환<br/>
         <input type="radio" id="command" name="command" value="convert_p_to_t">PBDB 자료 -> Combined 변환<br/>
-        <br/><br/>
+        <br/>
     </div>
     </td></tr>
     </tbody>

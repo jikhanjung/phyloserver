@@ -35,6 +35,11 @@ class Command(BaseCommand):
                 occ.group = 'TR'
                 occ.species_name = pocc.species_name
                 occ.genus_name = pocc.genus_name
+                if pocc.revised_species_name and pocc.revised_species_name != '':
+                    occ.species_name = pocc.revised_species_name
+                    occ.genus_name = pocc.revised_genus_name
+
+
                 occ.locality_lvl1 = pocc.region
                 occ.locality_lvl2 = pocc.region
                 occ.locality_lvl3 = pocc.region

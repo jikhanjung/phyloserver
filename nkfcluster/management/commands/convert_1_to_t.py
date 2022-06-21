@@ -34,7 +34,7 @@ class Command(BaseCommand):
             occ.group = nkocc.group
             occ.species_name = nkocc.species_name
             occ.genus_name = nkocc.genus_name
-            if nkocc.revised_species_name != '':
+            if nkocc.revised_species_name and nkocc.revised_species_name != '':
                 occ.species_name = nkocc.revised_species_name
                 occ.genus_name = nkocc.revised_genus_name
 
