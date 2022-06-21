@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
 from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES, PbdbOccurrence, TotalOccurrence, ChronoUnit
 from django.core.paginator import Paginator
-from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfLocalityForm, ChronoUnitForm
+from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfLocalityForm, ChronoUnitForm, PbdbOccurrenceForm
 from django.urls import reverse
 #from cStringIO import StringIO
 from django.db.models import Q
@@ -777,16 +777,36 @@ def pbdb_list(request):
     return render(request, 'nkfcluster/pbdb_list.html', context)
 
 def pbdb_detail(request, occ_id):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj( request )
 
     occ = get_object_or_404(PbdbOccurrence, pk=occ_id)
     return render(request, 'nkfcluster/pbdb_detail.html', {'occ': occ, 'user_obj':user_obj})
+
+def edit_pbdb(request,pk):
+    user_obj = get_user_obj( request )
+
+    #print("edit run")
+    pbdb = get_object_or_404(PbdbOccurrence, pk=pk)
+    
+    if request.method == 'POST':
+        pbdb_form = PbdbOccurrenceForm(request.POST,request.FILES,instance=pbdb)
+        #print("method POST")
+        # create a form instance and populate it with data from the request:
+        # check whether it's valid:
+        if pbdb_form.is_valid():
+            pbdb = pbdb_form.save(commit=False)
+            pbdb.process_genus_name()
+            pbdb.save()
+            return HttpResponseRedirect('/nkfcluster/pbdb_detail/'+str(pbdb.id))
+        else:
+            pass
+            #print(run_form)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        pbdb_form = PbdbOccurrenceForm(instance=pbdb)
+
+    return render(request, 'nkfcluster/pbdb_form.html', {'pbdb_form': pbdb_form,'user_obj':user_obj})
 
 
 def chronounit_list(request,pk=None):

@@ -42,6 +42,9 @@ urlpatterns = [
 
     path('pbdb_list/', views.pbdb_list, name='pbdb_list'),
     path('pbdb_detail/<int:occ_id>/', views.pbdb_detail, name='pbdb_detail'),
+    #path('add_occurrence/', views.add_occurrence, name='add_occurrence'),
+    path('edit_pbdb/<int:pk>/', views.edit_pbdb, name='edit_pbdb'),
+    #path('delete_pbdb/<int:pk>/', views.delete_occurrence, name='delete_occurrence'),
 
     path('combined_list/', views.combined_list, name='combined_list'),
     path('combined_detail/<int:occ_id>/', views.combined_detail, name='combined_detail'),

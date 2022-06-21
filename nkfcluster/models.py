@@ -356,6 +356,8 @@ class PbdbOccurrence(models.Model):
     collno = models.CharField(max_length=50,blank=True,null=True,verbose_name="PBDB CollectionNo")
     species_name = models.CharField(max_length=200,blank=True,null=True,verbose_name="종명")
     genus_name = models.CharField(max_length=200,blank=True,null=True,verbose_name="속명")
+    revised_species_name = models.CharField(max_length=200,blank=True,null=True,verbose_name="Revised 종명")
+    revised_genus_name = models.CharField(max_length=200,blank=True,null=True,verbose_name="Revised 속명")
     group = models.CharField(max_length=10,choices=GROUP_CHOICES,blank=True,null=True)
     early_interval = models.CharField(max_length=100,blank=True,null=True,verbose_name="From")
     late_interval = models.CharField(max_length=100,blank=True,null=True,verbose_name="To")
@@ -374,10 +376,17 @@ class PbdbOccurrence(models.Model):
     remarks = models.CharField(max_length=200,blank=True,null=True)
     def __str__(self):
         return self.species_name + "@" + self.state
+
     def process_genus_name(self):
-        name_list = self.species_name.split(" ")
-        if len(name_list) > 0:
-            self.genus_name = name_list[0]
+        #if self.species_name and self.species_name != '':
+        #    name_list = self.species_name.split(" ")
+        #    if len(name_list) > 0:
+        #        self.genus_name = name_list[0]
+        if self.revised_species_name and self.revised_species_name != '':
+            revised_name_list = self.revised_species_name.split(" ")
+            if len(revised_name_list) > 0:
+                self.revised_genus_name = revised_name_list[0]
+
     def process_region(self):
         #print(self.country, self.state, self.county )
         region_key = "-".join([ self.country or '', self.state or '', self.county or '' ])
