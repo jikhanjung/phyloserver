@@ -19,6 +19,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         print(options)
+        count = 0
 
         TotalOccurrence.objects.filter(country='KR').delete()
         nkocc_list = NkfOccurrence.objects.filter(group='TR')
@@ -33,11 +34,15 @@ class Command(BaseCommand):
             occ.group = nkocc.group
             occ.species_name = nkocc.species_name
             occ.genus_name = nkocc.genus_name
+            if nkocc.revised_species_name != '':
+                occ.species_name = nkocc.revised_species_name
+                occ.genus_name = nkocc.revised_genus_name
+
             location_code = nkocc.location
             for ( code, name ) in LOCATION_CHOICES:
                 if location_code == code:
                     occ.locality_lvl3 = name
-                    print(name)
+                    #print(name)
                     loc3 = NkfLocality.objects.get(name=name)
                     loc2 = loc3.parent
                     occ.locality_lvl2 = loc2.name
@@ -45,7 +50,11 @@ class Command(BaseCommand):
                     occ.locality_lvl1 = loc1.name
             occ.source = nkocc.source
             if nkocc.chronounit:
+                count += 1
                 occ.chrono_lvl2 = nkocc.chronounit.name
                 occ.chrono_lvl1 = nkocc.chronounit.parent.name
                 occ.save()
+        message = "북한 삼엽충 자료 " + str(count) + " 건이 변환되었습니다."
+        
+        return message
 

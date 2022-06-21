@@ -19,6 +19,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         print(options)
+        count = 0
 
         TotalOccurrence.objects.filter(country='CN').delete()
         pocc_list = PbdbOccurrence.objects.all()
@@ -41,4 +42,9 @@ class Command(BaseCommand):
                 occ.chrono_lvl1 = 'Cambrian'
                 occ.chrono_lvl2 = chrono
                 occ.save()
+                count += 1
+
+        message = "PBDB 자료 " + str(count) + " 건이 변환되었습니다."
+        
+        return message
 

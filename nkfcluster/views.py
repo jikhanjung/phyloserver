@@ -1032,3 +1032,21 @@ def download_combined_cluster(request):
     buffer.seek(0)
 
     return FileResponse(buffer, as_attachment=True, filename=filename)
+
+
+from django.core.management import call_command
+
+def management_command(request): 
+    user_obj = get_user_obj( request )
+    message = ''
+    if request.method == 'POST':
+        command = request.POST.get('command')
+        print(command)
+        message = call_command(command)
+        print("message:", message)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        pass
+
+    return render(request, 'nkfcluster/management_command.html', { 'message': message,})

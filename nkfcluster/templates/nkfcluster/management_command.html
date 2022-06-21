@@ -1,0 +1,34 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>자료관리</h1>
+
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+<table border="0">
+    <thead>
+    <tr><th><div>작업 선택</div></th></tr>
+    {% if message %}
+    <tr><th><div>{{message}}</div></th></tr>
+    {%endif%}
+    </thead>
+    <tbody><tr><td>
+    <div>
+        <br/><br/>
+        <input type="radio" id="command" name="command" value="convert_1_to_t">북한 자료 -> Combined 변환<br/>
+        <input type="radio" id="command" name="command" value="convert_p_to_t">PBDB 자료 -> Combined 변환<br/>
+        <br/><br/>
+    </div>
+    </td></tr>
+    </tbody>
+    <tfoot>
+        <tr><th>
+            <div><input type="submit" value="Run"></div>
+        </td></tr>
+    </tfoot>
+        <!--select name="command" id="command"-->
+        <!--/select-->
+</table>
+</div>
+</form>
+
+{% endblock %}

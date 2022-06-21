@@ -60,4 +60,5 @@ urlpatterns = [
 
     # NK data download
     path('nkdata_download/', views.nkdata_download, name='nkdata_download'),
+    path('management_command/', views.management_command, name='management_command'),
 ] 
