@@ -36,13 +36,15 @@ function checkKey(e) {
     else if (e.keyCode == '37') {
         prev_a = document.getElementById('prev');
         url = prev_a.getAttribute('href');
-        console.log(url);
+        window.location.href = url;
+        //console.log(url);
        // left arrow
     }
     else if (e.keyCode == '39') {
         next_a = document.getElementById('next');
         url = next_a.getAttribute('href');
-        console.log(url);
+        window.location.href = url;
+        //console.log(url);
        // right arrow
     }
 }

@@ -14,18 +14,6 @@ STRATUNIT_CHOICES = [
     ('BRD','비랑동주층'),
 ]
 
-STRATUNIT_CHOICES = [
-    ('PS','평산주층'),
-    ('JH','중화주층'),
-    ('HG','흑교주층'),
-    ('LC','림촌주층'),
-    ('MJ','무진주층'),
-    ('GP','고풍주층'),
-    ('SG','신곡주층'),
-    ('MD','만달주층'),
-    ('BRD','비랑동주층'),
-]
-
 LITHOLOGY_CHOICES = [
     ('PR','phosphatic rock'),
     ('ST','siltstone'),
@@ -89,7 +77,12 @@ GROUP_CHOICES = [
     ("CE","cephalopod"),
     ("CD","conodont"),
     ("CR","crinoid"),
+    ("CA","coral"),
     ("BZ","bryozoan"),
+    ("OS","ostracod"),
+    ("PL","plants"),
+    ("TF","trace fossils"),
+    ("IV","invertebrates"),
 ]
 
 
@@ -155,6 +148,7 @@ class NkfOccurrence(models.Model):
     revised_genus_name = models.CharField(max_length=200,blank=True,null=True)
     location = models.CharField(max_length=10, choices=LOCATION_CHOICES,blank=True,null=True )
     source = models.CharField(max_length=200,blank=True,null=True )
+    source_code = models.CharField(max_length=10,blank=True,null=True )
     def __str__(self):
         return self.species_name + " @" + self.location
 
@@ -240,6 +234,32 @@ class NkfOccurrence4(models.Model):
     def __str__(self):
         return self.title
 
+class NkfOccurrence5(models.Model):
+    index = models.IntegerField(blank=True,null=True)
+    author1 = models.CharField(max_length=200,blank=True,null=True)
+    author2 = models.CharField(max_length=200,blank=True,null=True)
+    author3 = models.CharField(max_length=200,blank=True,null=True)
+    author4 = models.CharField(max_length=200,blank=True,null=True)
+    author_list = models.CharField(max_length=200,blank=True,null=True)
+    year = models.CharField(max_length=10,blank=True,null=True)
+    publication = models.CharField(max_length=100,blank=True,null=True)
+    issue = models.CharField(max_length=10,blank=True,null=True)
+    pages = models.CharField(max_length=10,blank=True,null=True)
+    geologic_period = models.CharField(max_length=100,blank=True,null=True)
+    fossil_group = models.CharField(max_length=100,blank=True,null=True)
+    fossil_group_code = models.CharField(max_length=10,blank=True,null=True)
+    locality = models.CharField(max_length=200,blank=True,null=True)
+    locality_code = models.CharField(max_length=10,blank=True,null=True)
+    stratigraphy = models.CharField(max_length=100,blank=True,null=True)
+    stratigraphy_code = models.CharField(max_length=10,blank=True,null=True)
+    lithology = models.CharField(max_length=100,blank=True,null=True)
+    figure = models.CharField(max_length=100,blank=True,null=True)
+    implication = models.CharField(max_length=100,blank=True,null=True)
+    title = models.CharField(max_length=500,blank=True,null=True)
+    listed_species = models.CharField(max_length=500,blank=True,null=True )
+    note = models.CharField(max_length=500,blank=True,null=True )
+    def __str__(self):
+        return self.title
 
 class NkfLocality(models.Model):
     index = models.IntegerField(blank=True,null=True)

@@ -1,8 +1,8 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES, PbdbOccurrence, TotalOccurrence, ChronoUnit
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfOccurrence5, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES, PbdbOccurrence, TotalOccurrence, ChronoUnit
 from django.core.paginator import Paginator
-from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfLocalityForm, ChronoUnitForm, PbdbOccurrenceForm
+from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfOccurrenceForm5, NkfLocalityForm, ChronoUnitForm, PbdbOccurrenceForm
 from django.urls import reverse
 #from cStringIO import StringIO
 from django.db.models import Q
@@ -490,6 +490,107 @@ def delete_occurrence4(request, pk):
     occ.delete()
     return HttpResponseRedirect('/nkfcluster/occ_list4')
 
+
+def occ_list5(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    occ_list = NkfOccurrence5.objects.order_by('index')
+    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'occ_list': occ_list,
+        'user_obj': user_obj,
+        'page_obj': page_obj,
+    }
+    return render(request, 'nkfcluster/occ_list5.html', context)
+
+def occ_detail5(request, occ_id):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    occ = get_object_or_404(NkfOccurrence5, pk=occ_id)
+    return render(request, 'nkfcluster/occ_detail5.html', {'occ': occ, 'user_obj':user_obj})
+
+
+def add_occurrence5(request):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    data_json = []
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        occ_form = NkfOccurrenceForm5(request.POST,request.FILES)
+        # check whether it's valid:
+        if occ_form.is_valid():
+            occ=occ_form.save()
+                
+            return HttpResponseRedirect('/nkfcluster/occ_detail5/'+str(occ.id))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        occ_form = NkfOccurrenceForm5()
+    return render(request, 'nkfcluster/occ_form5.html', {'occ_form': occ_form,'user_obj':user_obj})
+
+
+def edit_occurrence5(request,pk):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    #print("edit run")
+    occ = get_object_or_404(NkfOccurrence5, pk=pk)
+    
+    if request.method == 'POST':
+        occ_form = NkfOccurrenceForm5(request.POST,request.FILES,instance=occ)
+        #print("method POST")
+        # create a form instance and populate it with data from the request:
+        # check whether it's valid:
+        if occ_form.is_valid():
+            #print("run form valid")
+            occ = occ_form.save()
+            return HttpResponseRedirect('/nkfcluster/occ_detail5/'+str(occ.id))
+        else:
+            pass
+            #print(run_form)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        occ_form = NkfOccurrenceForm5(instance=occ)
+
+    return render(request, 'nkfcluster/occ_form5.html', {'occ_form': occ_form,'user_obj':user_obj})
+
+def delete_occurrence5(request, pk):
+    if request.user.is_authenticated:
+        user_obj = request.user
+        user_obj.groupname_list = []
+        for g in request.user.groups.all():
+            user_obj.groupname_list.append(g.name)
+    else:
+        user_obj = None
+
+    occ = get_object_or_404(NkfOccurrence5, pk=pk)
+    occ.delete()
+    return HttpResponseRedirect('/nkfcluster/occ_list5')
 
 
 def locality_list(request):

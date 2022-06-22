@@ -1,6 +1,6 @@
 from django import forms
 from django.db import models
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, PbdbOccurrence, NkfLocality, ChronoUnit
+from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfOccurrence5, PbdbOccurrence, NkfLocality, ChronoUnit
 from django.forms import ModelForm, inlineformset_factory, modelformset_factory
 
 from django.contrib.auth.models import User
@@ -26,6 +26,12 @@ class NkfOccurrenceForm3(ModelForm):
 class NkfOccurrenceForm4(ModelForm):
     class Meta:
         model = NkfOccurrence4
+        fields = ['author1','author2','author3','author4','author_list','year','publication','issue','pages','geologic_period','fossil_group','fossil_group_code','locality','locality_code',
+        'stratigraphy','stratigraphy_code','lithology','figure','implication','title','listed_species', 'note']
+
+class NkfOccurrenceForm5(ModelForm):
+    class Meta:
+        model = NkfOccurrence5
         fields = ['author1','author2','author3','author4','author_list','year','publication','issue','pages','geologic_period','fossil_group','fossil_group_code','locality','locality_code',
         'stratigraphy','stratigraphy_code','lithology','figure','implication','title','listed_species', 'note']
 

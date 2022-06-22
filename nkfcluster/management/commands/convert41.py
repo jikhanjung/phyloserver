@@ -19,6 +19,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         print(options)
+        NkfOccurrence.objects.filter(source_code='4').delete()
 
         occ_list = NkfOccurrence4.objects.all()
         #print(len(occ3_list))
