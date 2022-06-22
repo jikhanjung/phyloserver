@@ -1,6 +1,6 @@
 from multiprocessing.spawn import prepare
 from unittest import runner
-from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfOccurrence5, NkfLocality, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
+from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfOccurrence5, NkfLocality, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES, ChronoUnit
 from django.core.management.base import BaseCommand
 import subprocess
 from django.conf import settings
@@ -183,6 +183,43 @@ UNIT_CONVERSION_TABLE = [
 ("고풍주층의 '아래층'","고풍주층"),
 ]
 
+LITHOUNIT_HASH = {
+"기저역암층 (송림력암층)":"송림산주층",
+"부암산통":"림진군층",
+"곡산통":"곡산주층",
+"후기 오르도비스기 지층?":"상서주층?",
+"상원계 직현통 ('독산층')":"직현군층",
+"곡산통 하부":"곡산주층",
+"옥로봉층":"중화주층",
+"신곡주층 최하부":"신곡주층",
+"림진군층 부압주층, 삭녕주층":"림진군층",
+"만달주층 운학층":"만달주층",
+"월양주층":"월양주층",
+"림진군층 부압주층":"부압주층",
+}
+
+LOCALITY_HASH = {
+"송림":"송림",
+"황해북도 금천":"평산-금천",
+"황해북도 신계군, 곡산군":"곡산",
+"황주군 삼정리 뒷산 북쪽사면 (삼정리, 룡궁리 일대)":"황주",
+"양강도 삼수군 번포리":"혜산",
+"황해북도 곡산군 월양리":"곡산",
+"황주":"황주",
+"황주군 신상리":"황주",
+"ㅇㅇ추공 767-768m 수준의 암심":"unknown",
+"개성시 려현리":"평산-금천",
+"승호지구":"승호",
+"수안군 룡현리":"수안",
+"금천":"평산-금천",
+}
+
+CHRONO_HASH = {
+"D1": "Lower Devonian",
+"D2": "Middle Devonian",
+"D3": "Upper Devonian",
+"Siluro": "Silurian",
+}
 class Command(BaseCommand):
     help = "Customized load data for DB migration"
     runner = None
@@ -222,36 +259,52 @@ class Command(BaseCommand):
                 occ.note = row['Note'] if pd.notna(row['Note']) else ''
                 occ.source = sheet_name
 
-                for loc in LOCATION_CONVERSION_TABLE:
-                    val1, val2 = loc
-                    #print(loc,row['Locality'])
-                    if str(row['Locality']) == str(val1):
-                        print("matches!", loc,row['Locality'])
-                        location_name = val2
-                        for choice in LOCATION_CHOICES:
-                            #print(choice)
-                            val, disp = choice
-                            if disp == location_name:
-                                print("matches!", loc,choice,row['Locality'],location_name)
-                                occ.locality_code = val
-                                print("locality code:", occ.locality_code, val)
-                                break
-                        break
+                locality = row['Locality']
+                if locality in LOCALITY_HASH.keys():
+                    location_name = LOCALITY_HASH[locality]
 
-                for unit in UNIT_CONVERSION_TABLE:
-                    val1, val2 = unit
-                    if val1.upper() == row['Stratigraphy'].upper():
-                        unit_name = val2
-                        for choice in STRATUNIT_CHOICES:
-                            val, disp = choice
-                            if disp.upper() == unit_name.upper():
-                                occ.stratigraphy_code = val
-                                break
-                        break
+                    for choice in LOCATION_CHOICES:
+                        #print(choice)
+                        val, disp = choice
+                        if disp == location_name:
+                            print("matches!", choice,row['Locality'],location_name)
+                            occ.locality_code = val
+                            print("locality code:", occ.locality_code, val)
+                            break
+
+                strat_unit = row['Stratigraphy']
+                if strat_unit in LITHOUNIT_HASH.keys():
+                    unit_name = LITHOUNIT_HASH[strat_unit]
+                    for choice in STRATUNIT_CHOICES:
+                        val, disp = choice
+                        if disp.upper() == unit_name.upper():
+                            occ.stratigraphy_code = val
+                            break
+
                 for choice in GROUP_CHOICES:
                     val, disp = choice
                     if disp.upper() == str(row['Fossil group']).upper():
                         occ.fossil_group_code = val
                         break
+                
+                chronounit = row['Geologic period']
+                chrono_list = chronounit.split('-')
+                print(chrono_list)
+                for idx, chrono in enumerate(chrono_list):
+                    if chrono in CHRONO_HASH.keys():
+                        chrono_list[idx] = CHRONO_HASH[chrono]
+                print(chrono_list)
+
+                if len(chrono_list) > 1:
+                    from_name, to_name = chrono_list
+                    #from_chronounit = ChronoUnit.objects.get(name=from_name)
+                    occ.from_chronounit = from_name
+                    occ.to_chronounit = to_name
+                else:
+                    
+                    occ.from_chronounit = chrono_list[0]
+                    occ.to_chronounit = chrono_list[0]
+
+                print(occ.from_chronounit, occ.to_chronounit)
 
                 occ.save()

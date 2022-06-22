@@ -12,6 +12,13 @@ STRATUNIT_CHOICES = [
     ('SG','신곡주층'),
     ('MD','만달주층'),
     ('BRD','비랑동주층'),
+    ('SLS','송림산주층'),
+    ('LJG','림진군층'),
+    ('GS','곡산주층'),
+    ('SS','상서주층'),
+    ('JHG','직현군층'),
+    ('WY','월양주층'),
+    ('BA','부압주층'),
 ]
 
 LITHOLOGY_CHOICES = [
@@ -272,6 +279,8 @@ class NkfOccurrence5(models.Model):
     issue = models.CharField(max_length=10,blank=True,null=True)
     pages = models.CharField(max_length=10,blank=True,null=True)
     geologic_period = models.CharField(max_length=100,blank=True,null=True)
+    from_chronounit = models.CharField(max_length=100,blank=True,null=True)
+    to_chronounit = models.CharField(max_length=100,blank=True,null=True)
     fossil_group = models.CharField(max_length=100,blank=True,null=True)
     fossil_group_code = models.CharField(max_length=10,blank=True,null=True)
     locality = models.CharField(max_length=200,blank=True,null=True)
