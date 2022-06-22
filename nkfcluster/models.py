@@ -162,6 +162,32 @@ class NkfOccurrence(models.Model):
             if len(revised_name_list) > 0:
                 self.revised_genus_name = revised_name_list[0]
 
+class NkfOccurrence1(models.Model):
+    index = models.IntegerField(blank=True,null=True)
+    strat_unit = models.CharField(max_length=10,choices=STRATUNIT_CHOICES,blank=True,null=True)
+    chronounit = models.ForeignKey(ChronoUnit,on_delete=models.CASCADE,blank=True,null=True)
+    lithology = models.CharField(max_length=10,choices=LITHOLOGY_CHOICES,blank=True,null=True)
+    group = models.CharField(max_length=200,choices=GROUP_CHOICES,blank=True,null=True)
+    species_name = models.CharField(max_length=200,blank=True,null=True)
+    genus_name = models.CharField(max_length=200,blank=True,null=True)
+    revised_species_name = models.CharField(max_length=200,blank=True,null=True)
+    revised_genus_name = models.CharField(max_length=200,blank=True,null=True)
+    location = models.CharField(max_length=10, choices=LOCATION_CHOICES,blank=True,null=True )
+    source = models.CharField(max_length=200,blank=True,null=True )
+    source_code = models.CharField(max_length=10,blank=True,null=True )
+    def __str__(self):
+        return self.species_name + " @" + self.location
+
+    def process_genus_name(self):
+        if self.species_name and self.species_name != '':
+            name_list = self.species_name.split(" ")
+            if len(name_list) > 0:
+                self.genus_name = name_list[0]
+        if self.revised_species_name and self.revised_species_name != '':
+            revised_name_list = self.revised_species_name.split(" ")
+            if len(revised_name_list) > 0:
+                self.revised_genus_name = revised_name_list[0]
+
 class NkfOccurrence2(models.Model):
     index = models.IntegerField(blank=True,null=True)
     type = models.CharField(max_length=200,blank=True,null=True)

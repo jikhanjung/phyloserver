@@ -1,6 +1,6 @@
 from django import forms
 from django.db import models
-from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfOccurrence5, PbdbOccurrence, NkfLocality, ChronoUnit
+from .models import NkfOccurrence, NkfOccurrence1, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfOccurrence5, PbdbOccurrence, NkfLocality, ChronoUnit
 from django.forms import ModelForm, inlineformset_factory, modelformset_factory
 
 from django.contrib.auth.models import User
@@ -10,6 +10,11 @@ from django.conf import settings
 class NkfOccurrenceForm(ModelForm):
     class Meta:
         model = NkfOccurrence
+        fields = ['strat_unit', 'chronounit', 'lithology','group','species_name','revised_species_name','location','source']
+
+class NkfOccurrenceForm1(ModelForm):
+    class Meta:
+        model = NkfOccurrence1
         fields = ['strat_unit', 'chronounit', 'lithology','group','species_name','revised_species_name','location','source']
 
 class NkfOccurrenceForm2(ModelForm):

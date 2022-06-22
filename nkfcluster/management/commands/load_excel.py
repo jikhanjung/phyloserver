@@ -1,6 +1,6 @@
 from multiprocessing.spawn import prepare
 from unittest import runner
-from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
+from nkfcluster.models import NkfOccurrence, NkfOccurrence1, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfLocality, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
 from django.core.management.base import BaseCommand
 import subprocess
 from django.conf import settings
@@ -204,7 +204,7 @@ class Command(BaseCommand):
             nkfloc.save()
 
 
-        NkfOccurrence.objects.all().delete()
+        NkfOccurrence1.objects.all().delete()
         excel_filename = r'D:/projects/phyloserver/nkfcluster/data/2022-05-03 화석산출 정리.xls'
         sheet_name = '220426 조선지질총서2'
         df = pd.read_excel (r'nkfcluster/data/2022-05-03 화석산출 정리.xls',sheet_name)
@@ -245,7 +245,7 @@ class Command(BaseCommand):
                     val, disp = choice
                     if disp in row.keys() and pd.notna(row[disp]):
                         #print(disp,row[disp])
-                        occ = NkfOccurrence()
+                        occ = NkfOccurrence1()
                         occ.strat_unit = strat_unit
                         occ.lithology = lithology
                         if lithology == '':
