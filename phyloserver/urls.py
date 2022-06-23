@@ -20,8 +20,8 @@ from django.conf.urls.static import static
 from django.conf.urls import include
 from django.urls import re_path
 
-from rest_framework import routers
-from dolfinrest import views
+#from rest_framework import routers
+#from dolfinrest import views
 
 
 #router = routers.DefaultRouter()
@@ -33,7 +33,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("phylomanager/", include("django.contrib.auth.urls")), 
     #path('', include('snippets.urls')),
-    path('dolfinrest/', include('dolfinrest.urls')),
+    #path('dolfinrest/', include('dolfinrest.urls')),
     #re_path(r'^', include(router.urls)),
     #re_path(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 ]

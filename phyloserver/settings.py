@@ -47,9 +47,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
-    'snippets',
-    'dolfinrest',
+    #'rest_framework',
+    #'snippets',
+    #'dolfinrest',
 ]
 
 AUTH_USER_MODEL = "phylomanager.PhyloUser"
