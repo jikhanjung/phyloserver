@@ -38,6 +38,8 @@ LITHOLOGY_CHOICES = [
     ('PRLS','phosphatic rock, limestone'),
     ('LSSL','limestone, slate'),
     ('SLDS','slate, dolostone'),
+    ('CA','carbonate rock'),
+    ('QZ','Quartzite'),
 ]
 
 LOCATION_CHOICES = [
@@ -287,7 +289,7 @@ class NkfOccurrence5(models.Model):
     locality_code = models.CharField(max_length=10,blank=True,null=True)
     stratigraphy = models.CharField(max_length=100,blank=True,null=True)
     stratigraphy_code = models.CharField(max_length=10,blank=True,null=True)
-    lithology = models.CharField(max_length=100,blank=True,null=True)
+    lithology = models.CharField(max_length=100,choices=LITHOLOGY_CHOICES,blank=True,null=True)
     figure = models.CharField(max_length=100,blank=True,null=True)
     implication = models.CharField(max_length=100,blank=True,null=True)
     title = models.CharField(max_length=500,blank=True,null=True)

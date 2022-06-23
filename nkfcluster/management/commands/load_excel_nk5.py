@@ -250,7 +250,7 @@ class Command(BaseCommand):
                 occ.fossil_group = row['Fossil group']
                 occ.locality = row['Locality']
                 occ.stratigraphy = row['Stratigraphy']
-                occ.lithology = row['Lithology']
+                #occ.lithology = row['Lithology']
                 occ.figure = row['Figure']
                 occ.implication = row['Implication']
                 occ.title = row['Title']
@@ -289,11 +289,11 @@ class Command(BaseCommand):
                 
                 chronounit = row['Geologic period']
                 chrono_list = chronounit.split('-')
-                print(chrono_list)
+                #print(chrono_list)
                 for idx, chrono in enumerate(chrono_list):
                     if chrono in CHRONO_HASH.keys():
                         chrono_list[idx] = CHRONO_HASH[chrono]
-                print(chrono_list)
+                #print(chrono_list)
 
                 if len(chrono_list) > 1:
                     from_name, to_name = chrono_list
@@ -305,6 +305,17 @@ class Command(BaseCommand):
                     occ.from_chronounit = chrono_list[0]
                     occ.to_chronounit = chrono_list[0]
 
-                print(occ.from_chronounit, occ.to_chronounit)
+                lithology_found = False
+                for choice in LITHOLOGY_CHOICES:
+                    val, disp = choice
+                    #print(row['Lithology'],disp,val)
+                    if disp.upper() == row['Lithology'].upper():
+                        occ.lithology = val
+                        lithology_found = True
+                        break
+                if not lithology_found:
+                    occ.lithology = ''
+                
+                #print(occ.from_chronounit, occ.to_chronounit)
 
                 occ.save()
