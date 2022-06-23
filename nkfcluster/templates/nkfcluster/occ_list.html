@@ -1,13 +1,20 @@
 {% extends "nkfbase.html" %}
 {% block content %}
-<h1>Occurrence list</h1>
-<table border="1">
+<h4 class="bd-title p-2 bg-secondary text-light">Occurrence List</h4>
+<table class="table table-striped table-sm">
     <thead>
     <tr><td colspan="4" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
     </td><td colspan="4" align="right">
         <form method="GET" action="{% url 'occ_list'%}">
             {% csrf_token %}
+            <select name="filter2" id="filter2">
+                <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
+                <option value="1" {% if filter2 == "1" %}selected{%endif%}>조선지질총서</option>
+                <option value="2" {% if filter2 == "2" %}selected{%endif%}>조선의 화석</option>
+                <option value="4" {% if filter2 == "4" %}selected{%endif%}>개별논문1</option>
+                <option value="5" {% if filter2 == "5" %}selected{%endif%}>개별논문2</option>
+            </select>
             <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:''}}"><button type="submit">검색</button>
             </form>
         </td></tr>

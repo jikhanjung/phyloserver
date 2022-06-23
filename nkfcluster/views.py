@@ -76,8 +76,12 @@ def occ_list(request):
     user_obj = get_user_obj(request)
     #order_by = request.GET.get('order_by', 'year')
     filter1 = request.GET.get('filter1')
+    filter2 = request.GET.get('filter2')
 
     occ_list = NkfOccurrence.objects.all()
+
+    if filter2:
+        occ_list = occ_list.filter(Q(source_code=filter2)).distinct()
 
     if filter1:
         occ_list = occ_list.filter(Q(species_name__contains=filter1)|Q(revised_species_name__contains=filter1)).distinct()
@@ -96,6 +100,7 @@ def occ_list(request):
         'user_obj': user_obj,
         'page_obj': page_obj,
         'filter1': filter1,
+        'filter2': filter2,
     }
     return render(request, 'nkfcluster/occ_list.html', context)
 

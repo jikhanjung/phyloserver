@@ -1,0 +1,41 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-info my-3 p-3">
+    <div class="container-fluid">
+      <a class="navbar-brand text-white" href="{% url 'occ_list' %}">NK Fossil cluster</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              북한화석DB
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'occ_list' %}">전체목록</a></li>
+              <li><a class="dropdown-item" href="{% url 'occ_list2' %}">조선의화석</a></li>
+              <li><a class="dropdown-item" href="{% url 'occ_list4' %}">개별논문1</a></li>
+              <li><a class="dropdown-item" href="{% url 'occ_list5' %}">개별논문2</a></li>
+              <li><a class="dropdown-item" href="{% url 'show_table' %}">차트</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              PBDB
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'pbdb_list' %}">목록</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              한-중 삼엽충
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'combined_list' %}">목록</a></li>
+              <li><a class="dropdown-item" href="{% url 'show_combined_table' %}">차트</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
