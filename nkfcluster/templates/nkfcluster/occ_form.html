@@ -1,10 +1,10 @@
 {% extends "nkfbase.html" %}
 {% block content %}
-<h1>Edit Occurrence</h1>
+<h4 class="bd-title p-2 bg-secondary text-light">Edit Occurrence</h4>
 <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
 <div>
-    <table width="800" border="1">
+    <table class="table table-striped table-sm">
         <tr><th>{{occ_form.strat_unit.label}}</th><td>{{occ_form.strat_unit}}</td></tr>
         <tr><th>{{occ_form.chronounit.label}}</th><td>{{occ_form.chronounit}}</td></tr>
         <tr><th>{{occ_form.lithology.label}}</th><td>{{occ_form.lithology}}</td></tr>

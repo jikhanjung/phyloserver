@@ -40,6 +40,7 @@ class Command(BaseCommand):
                         occ1.species_name = genus
                         occ1.genus_name = genus
                         occ1.source = occ3.author + "(" + occ3.year + ":" + occ3.issue + ")"
+                        occ1.source_code = '3'
                         occ1.save()
 
     def find_strat(self,strat):

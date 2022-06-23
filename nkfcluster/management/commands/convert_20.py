@@ -30,6 +30,7 @@ class Command(BaseCommand):
             occ1.location = occ2.location_code
             occ1.group = occ2.type_code
             occ1.source = occ2.source
+            occ1.source_code = '2'
             occ1.process_genus_name()
             occ1.save()
             #print(occ1.species_name, occ1.location, occ1.strat_unit)

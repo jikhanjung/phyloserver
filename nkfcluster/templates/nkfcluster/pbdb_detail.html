@@ -1,8 +1,7 @@
 {% extends "nkfbase.html" %}
 {% block content %}
-<h1>Occrrence info</h1>
-
-<table border="1" width="800">
+<h4 class="bd-title p-2 bg-secondary text-light">PBDB Detail</h4>
+<table class="table table-striped table-sm">
     <tr><th width="150">Occurrence no</th><td>{{ occ.occno|default_if_none:'' }}</td></tr>
     <tr><th>Collection no</th><td>{{ occ.collno|default_if_none:'' }}</td></tr>
     <tr><th>Species name</th><td>{{ occ.species_name|default_if_none:'' }}</td></tr>

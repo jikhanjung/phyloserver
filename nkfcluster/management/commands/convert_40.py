@@ -35,5 +35,6 @@ class Command(BaseCommand):
             occ.species_name = occ4.listed_species
             occ.process_genus_name()
             occ.source = occ4.author_list + "(" + occ4.year + ":" + occ4.issue + ")"
+            occ.source_code = '4'
             occ.save()
 
