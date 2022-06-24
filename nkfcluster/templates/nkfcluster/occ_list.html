@@ -31,7 +31,7 @@
             <th><div>Location</div></th>
             <th><div>Source</div></th></tr>
         {% for occ in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail' occ.id %}';">
             <td align="center">{{ occ.get_strat_unit_display|default_if_none:'' }}</td>
             <td align="center">{{ occ.chronounit|default_if_none:'' }}</td>
             <td align="center">{{ occ.get_lithology_display|default_if_none:'' }}</td>

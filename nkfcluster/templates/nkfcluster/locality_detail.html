@@ -1,8 +1,7 @@
 {% extends "nkfbase.html" %}
 {% block content %}
-<h1>Locality info</h1>
-
-<table border="1" width="800">
+<h4 class="bd-title p-2 bg-secondary text-light">Locality Info</h4>
+<table class="table table-striped table-sm">
     <tr><th width="150">index</th><td>{{ locality.index }}</td></tr>
     <tr><th>Name</th><td> {{ locality.name }}</td></tr>
     <tr><th>Level</th><td> {{ locality.level }}</td></tr>

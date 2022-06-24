@@ -26,7 +26,7 @@
         </tr>
         {% if occ_list %}   
         {% for occ in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail4' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail4' occ.id %}';">
             <td align="center">{{ occ.author_list }}</td>
             <td align="center">{{ occ.year }}</td>
             <td align="center">{{ occ.geologic_period }}</td>

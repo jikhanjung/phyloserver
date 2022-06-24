@@ -25,7 +25,7 @@
             <th><div class="">Formation</div></th></tr>
             {% if occ_list %}   
             {% for occ in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'pbdb_detail' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'pbdb_detail' occ.id %}';">
             <td align="center"><a href="{% url 'pbdb_detail' occ.id %}">{{ occ.species_name|default_if_none:'' }}</a></td>
             <td align="center">{{ occ.genus_name|default_if_none:'' }}</td>
             <td align="center">{{ occ.country }}</td>

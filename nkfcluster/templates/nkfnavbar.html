@@ -35,6 +35,16 @@
               <li><a class="dropdown-item" href="{% url 'show_combined_table' %}">차트</a></li>
             </ul>
           </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              관리
+            </a>
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'locality_list' %}">Locality list</a></li>
+              <li><a class="dropdown-item" href="{% url 'chronounit_chart' %}">ChronoUnit</a></li>
+              <li><a class="dropdown-item" href="{% url 'management_command' %}">DB변환</a></li>
+            </ul>
+          </li>
         </ul>
       </div>
     </div>

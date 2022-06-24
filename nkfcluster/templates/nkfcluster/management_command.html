@@ -1,9 +1,9 @@
 {% extends "nkfbase.html" %}
 {% block content %}
-<h1>DB변환</h1>
+<h4 class="bd-title p-2 bg-secondary text-light">DB 변환</h4>
 <form action="" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-<table border="0">
+<table class="table table-striped table-sm">
     <thead>
     <tr><th><div>작업 선택</div></th></tr>
     {% if message %}

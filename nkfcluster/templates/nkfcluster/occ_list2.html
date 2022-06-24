@@ -28,7 +28,7 @@
         </tr>
         {% if occ_list %}   
         {% for occ in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail2' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail2' occ.id %}';">
             <td align="center">{{ occ.type }}</td>
             <td align="center"><a href="{% url 'occ_detail2' occ.id %}">{{ occ.species }}</a></td>
             <td align="center">{{ occ.preservation }}</td>

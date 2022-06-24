@@ -32,7 +32,7 @@
             <th><div>Note</div></th>
         </tr>
     {% for occ in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'occ_detail3' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail3' occ.id %}';">
             <td align="center">{{ occ.author }}</td>
             <td align="center">{{ occ.year }}</td>
             <td align="center">{{ occ.publication }}</td>

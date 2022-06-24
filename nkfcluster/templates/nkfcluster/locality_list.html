@@ -1,42 +1,43 @@
 {% extends "nkfbase.html" %}
 {% block content %}
-<h1>Locality list</h1>
-<table border="0" width="800">
-    <tr><td width="400" align="left">
+<h4 class="bd-title p-2 bg-secondary text-light">Locality List</h4>
+<table class="table table-striped table-sm">
+    <thead>
+    <tr><td colspan="2" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
-    </td><td width="400" align="right"><form method="GET" action="{% url 'locality_list'%}">
+    </td><td colspan="2" align="right"><form method="GET" action="{% url 'locality_list'%}">
         {% csrf_token %}
         <select name="filter2" id="filter2">
             <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
           </select>
         <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:""}}"><button type="submit">검색</button>
-    </form></td></tr></table>
+    </form></td></tr></thead>
 
-{% if locality_list %}   
-    <table border="1" width="800" class="list_table">
+    <tbody>
         <tr>
             <th><div class="locality_list_index">Index</div></th>
             <th><div class="locality_list_name">Name</div></th>
             <th><div class="locality_list_level">Level</div></th>
             <th><div class="locality_list_parent">Parent</div></th></tr></tr>
-    {% for locality in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'locality_detail' locality.id %}';">
+        {% if locality_list %}   
+        {% for locality in page_obj %}
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'locality_detail' locality.id %}';">
             <td align="center">{{ locality.index }}</td>
             <td align="center"><a href="{% url 'locality_detail' locality.id %}">{{ locality.name }}</a></td>
             <td align="center">{{ locality.level }}</td>
             <td align="center">{{ locality.parent }}</td>
         </tr>
-    {% endfor %}
-    </table>
-{% else %}
-    <p>No Localities are available.</p>
-{% endif %}
+        {% endfor %}
+        {% else %}
+        <tr><td colspan="4"><p>No Localities are available.</p></td></tr>
+        {% endif %}
+    </tbody>
 
-<table border="0" width="800">
-    <tr><td width="400" align="left">
-        {% include "paginator.html" %}
-    </td><td width="400" align="right">
+<tfooter
+    <tr><td colspan="2" align="left">
+        {% include "nkfpaginator.html" %}
+    </td><td colspan="2" align="right">
         <a href="{% url 'add_locality' %}">[Add Locality]</a>
-    </td></tr></table>
+    </td></tr></tfooter></table>
 
 {% endblock %}
