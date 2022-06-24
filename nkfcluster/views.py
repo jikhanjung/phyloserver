@@ -92,7 +92,7 @@ def occ_list(request):
     #occ_list = NkfOccurrence.objects.order_by('species_name')
 
 
-    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -202,7 +202,7 @@ def occ_list2(request):
         user_obj = None
 
     occ_list = NkfOccurrence2.objects.order_by('index')
-    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -303,7 +303,7 @@ def occ_list3(request):
         user_obj = None
 
     occ_list = NkfOccurrence3.objects.order_by('index')
-    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -404,7 +404,7 @@ def occ_list4(request):
         user_obj = None
 
     occ_list = NkfOccurrence4.objects.order_by('index')
-    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -506,7 +506,7 @@ def occ_list5(request):
         user_obj = None
 
     occ_list = NkfOccurrence5.objects.order_by('index')
-    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -608,7 +608,7 @@ def locality_list(request):
         user_obj = None
 
     locality_list = NkfLocality.objects.order_by('index')
-    paginator = Paginator(locality_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(locality_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -872,7 +872,7 @@ def pbdb_list(request):
         user_obj = None
 
     occ_list = PbdbOccurrence.objects.order_by('genus_name','species_name')
-    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -1007,7 +1007,7 @@ def combined_list(request):
     user_obj = get_user_obj( request )
 
     occ_list = TotalOccurrence.objects.order_by('genus_name','species_name')
-    paginator = Paginator(occ_list, 25) # Show 25 contacts per page.
+    paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {

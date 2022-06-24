@@ -19,6 +19,12 @@ STRATUNIT_CHOICES = [
     ('JHG','직현군층'),
     ('WY','월양주층'),
     ('BA','부압주층'),
+    ('SDW','사당우주층'),
+    ('JN','직현주층'),
+    ('MC','묵천주층'),
+    ('MC2','묵천층'),
+    ('HJ','홍점통'),
+    ('RR','릉리주층'),
 ]
 
 LITHOLOGY_CHOICES = [
@@ -72,6 +78,7 @@ LOCATION_CHOICES = [
     ("HS","혜산"),
     ("TB","태백"),
     ("YT","연탄"),
+    ("JG","중강"),
 ]
 GROUP_CHOICES = [
     ("SP","sponge"),
@@ -92,6 +99,7 @@ GROUP_CHOICES = [
     ("PL","plants"),
     ("TF","trace fossils"),
     ("IV","invertebrates"),
+    ("AC","acritarch"),
 ]
 
 

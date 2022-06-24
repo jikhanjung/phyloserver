@@ -1,6 +1,6 @@
 from multiprocessing.spawn import prepare
 from unittest import runner
-from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES
+from nkfcluster.models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, STRATUNIT_CHOICES, LITHOLOGY_CHOICES, GROUP_CHOICES, LOCATION_CHOICES, ChronoUnit
 from django.core.management.base import BaseCommand
 import subprocess
 from django.conf import settings
@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from Bio import Phylo
 import io
 import pandas as pd
+from django.db.models import Q
 
 class Command(BaseCommand):
     help = "Customized load data for DB migration"
@@ -19,7 +20,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         print(options)
-        NkfOccurrence.objects.filter(source_code='4').delete()
+        NkfOccurrence.objects.filter(Q(source_code='4')&~Q(chronounit__name='Neoproterozoic')).delete()
 
         occ_list = NkfOccurrence4.objects.all()
         #print(len(occ3_list))
@@ -36,5 +37,8 @@ class Command(BaseCommand):
             occ.process_genus_name()
             occ.source = occ4.author_list + "(" + occ4.year + ":" + occ4.issue + ")"
             occ.source_code = '4'
+            chrono_unit = ChronoUnit.objects.get(name=occ4.geologic_period)
+            if chrono_unit:
+                occ.chronounit = chrono_unit
             occ.save()
 
