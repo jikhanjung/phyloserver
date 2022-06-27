@@ -105,26 +105,14 @@ def occ_list(request):
     return render(request, 'nkfcluster/occ_list.html', context)
 
 def occ_detail(request, occ_id):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence, pk=occ_id)
     return render(request, 'nkfcluster/occ_detail.html', {'occ': occ, 'user_obj':user_obj})
 
 
 def add_occurrence(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     data_json = []
     if request.method == 'POST':
@@ -146,13 +134,7 @@ def add_occurrence(request):
 
 
 def edit_occurrence(request,pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     #print("edit run")
     occ = get_object_or_404(NkfOccurrence, pk=pk)
@@ -180,26 +162,14 @@ def edit_occurrence(request,pk):
     return render(request, 'nkfcluster/occ_form.html', {'occ_form': occ_form,'user_obj':user_obj})
 
 def delete_occurrence(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence, pk=pk)
     occ.delete()
     return HttpResponseRedirect('/nkfcluster/occ_list')
 
 def occ_list2(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ_list = NkfOccurrence2.objects.order_by('index')
     paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
@@ -213,26 +183,14 @@ def occ_list2(request):
     return render(request, 'nkfcluster/occ_list2.html', context)
 
 def occ_detail2(request, occ_id):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence2, pk=occ_id)
     return render(request, 'nkfcluster/occ_detail2.html', {'occ': occ, 'user_obj':user_obj})
 
 
 def add_occurrence2(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     data_json = []
     if request.method == 'POST':
@@ -250,13 +208,7 @@ def add_occurrence2(request):
 
 
 def edit_occurrence2(request,pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     #print("edit run")
     occ = get_object_or_404(NkfOccurrence2, pk=pk)
@@ -281,26 +233,14 @@ def edit_occurrence2(request,pk):
     return render(request, 'nkfcluster/occ_form2.html', {'occ_form': occ_form,'user_obj':user_obj})
 
 def delete_occurrence2(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence2, pk=pk)
     occ.delete()
     return HttpResponseRedirect('/nkfcluster/occ_list2')
 
 def occ_list3(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ_list = NkfOccurrence3.objects.order_by('index')
     paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
@@ -314,26 +254,14 @@ def occ_list3(request):
     return render(request, 'nkfcluster/occ_list3.html', context)
 
 def occ_detail3(request, occ_id):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence3, pk=occ_id)
     return render(request, 'nkfcluster/occ_detail3.html', {'occ': occ, 'user_obj':user_obj})
 
 
 def add_occurrence3(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     data_json = []
     if request.method == 'POST':
@@ -351,13 +279,7 @@ def add_occurrence3(request):
 
 
 def edit_occurrence3(request,pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     #print("edit run")
     occ = get_object_or_404(NkfOccurrence3, pk=pk)
@@ -382,26 +304,14 @@ def edit_occurrence3(request,pk):
     return render(request, 'nkfcluster/occ_form3.html', {'occ_form': occ_form,'user_obj':user_obj})
 
 def delete_occurrence3(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence3, pk=pk)
     occ.delete()
     return HttpResponseRedirect('/nkfcluster/occ_list3')
 
 def occ_list4(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ_list = NkfOccurrence4.objects.order_by('index')
     paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
@@ -415,26 +325,14 @@ def occ_list4(request):
     return render(request, 'nkfcluster/occ_list4.html', context)
 
 def occ_detail4(request, occ_id):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence4, pk=occ_id)
     return render(request, 'nkfcluster/occ_detail4.html', {'occ': occ, 'user_obj':user_obj})
 
 
 def add_occurrence4(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     data_json = []
     if request.method == 'POST':
@@ -452,13 +350,7 @@ def add_occurrence4(request):
 
 
 def edit_occurrence4(request,pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     #print("edit run")
     occ = get_object_or_404(NkfOccurrence4, pk=pk)
@@ -483,13 +375,7 @@ def edit_occurrence4(request,pk):
     return render(request, 'nkfcluster/occ_form4.html', {'occ_form': occ_form,'user_obj':user_obj})
 
 def delete_occurrence4(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence4, pk=pk)
     occ.delete()
@@ -497,13 +383,7 @@ def delete_occurrence4(request, pk):
 
 
 def occ_list5(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ_list = NkfOccurrence5.objects.order_by('index')
     paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
@@ -517,26 +397,14 @@ def occ_list5(request):
     return render(request, 'nkfcluster/occ_list5.html', context)
 
 def occ_detail5(request, occ_id):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence5, pk=occ_id)
     return render(request, 'nkfcluster/occ_detail5.html', {'occ': occ, 'user_obj':user_obj})
 
 
 def add_occurrence5(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     data_json = []
     if request.method == 'POST':
@@ -554,13 +422,7 @@ def add_occurrence5(request):
 
 
 def edit_occurrence5(request,pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     #print("edit run")
     occ = get_object_or_404(NkfOccurrence5, pk=pk)
@@ -585,13 +447,7 @@ def edit_occurrence5(request,pk):
     return render(request, 'nkfcluster/occ_form5.html', {'occ_form': occ_form,'user_obj':user_obj})
 
 def delete_occurrence5(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     occ = get_object_or_404(NkfOccurrence5, pk=pk)
     occ.delete()
@@ -599,13 +455,7 @@ def delete_occurrence5(request, pk):
 
 
 def locality_list(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     locality_list = NkfLocality.objects.order_by('index')
     paginator = Paginator(locality_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
@@ -619,26 +469,14 @@ def locality_list(request):
     return render(request, 'nkfcluster/locality_list.html', context)
 
 def locality_detail(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     locality = get_object_or_404(NkfLocality, pk=pk)
     return render(request, 'nkfcluster/locality_detail.html', {'locality': locality, 'user_obj':user_obj})
 
 
 def add_locality(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -655,13 +493,7 @@ def add_locality(request):
 
 
 def edit_locality(request,pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     #print("edit run")
     locality = get_object_or_404(NkfLocality, pk=pk)
@@ -686,13 +518,7 @@ def edit_locality(request,pk):
     return render(request, 'nkfcluster/locality_form.html', {'locality_form': locality_form,'user_obj':user_obj})
 
 def delete_locality(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     locality = get_object_or_404(NkfLocality, pk=pk)
     locality.delete()
@@ -772,13 +598,7 @@ def read_occurrence_data(request):
     return data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup
 
 def show_table(request): 
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
     
     data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
     stratunit_choices = []
@@ -799,13 +619,7 @@ def show_table(request):
     return render(request, 'nkfcluster/occ_table.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level,'stratunit_choices':stratunit_choices,'selected_stratunit':selected_stratunit,'fossilgroup_choices':fossilgroup_choices,'selected_fossilgroup':selected_fossilgroup,'urlparameter':urlparameter})
 
 def download_cluster(request): 
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     #data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
 
@@ -863,15 +677,23 @@ def download_cluster(request):
     return render(request, 'nkfcluster/occ_cluster.html', {'cluster_data': cluster_data,'user_obj':user_obj,'column_list':column_list})
 
 def pbdb_list(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
+    #order_by = request.GET.get('order_by', 'year')
+    filter1 = request.GET.get('filter1')
+    #filter2 = request.GET.get('filter2')
 
-    occ_list = PbdbOccurrence.objects.order_by('genus_name','species_name')
+    occ_list = PbdbOccurrence.objects.all()
+
+    #if filter2:
+    #    occ_list = occ_list.filter(Q(source_code=filter2)).distinct()
+
+    if filter1:
+        occ_list = occ_list.filter(Q(species_name__contains=filter1)|Q(revised_species_name__contains=filter1)).distinct()
+        #print(ref_list)
+
+    occ_list = occ_list.order_by( 'genus_name', 'species_name')
+
+    #occ_list = PbdbOccurrence.objects.order_by('genus_name','species_name')
     paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -879,6 +701,8 @@ def pbdb_list(request):
         'occ_list': occ_list,
         'user_obj': user_obj,
         'page_obj': page_obj,
+        'filter1': filter1,
+        #'filter2': filter2,
     }
     return render(request, 'nkfcluster/pbdb_list.html', context)
 
