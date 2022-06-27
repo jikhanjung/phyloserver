@@ -34,6 +34,12 @@ urlpatterns = [
     path('edit_occurrence5/<int:pk>/', views.edit_occurrence5, name='edit_occurrence5'),
     path('delete_occurrence5/<int:pk>/', views.delete_occurrence5, name='delete_occurrence5'),
 
+    path('occ_list6/', views.occ_list6, name='occ_list6'),
+    path('occ_detail6/<int:occ_id>/', views.occ_detail6, name='occ_detail6'),
+    path('add_occurrence6/', views.add_occurrence6, name='add_occurrence6'),
+    path('edit_occurrence6/<int:pk>/', views.edit_occurrence6, name='edit_occurrence6'),
+    path('delete_occurrence6/<int:pk>/', views.delete_occurrence6, name='delete_occurrence6'),
+
     path('show_table/', views.show_table, name='show_table'),
     #path('show_table_by_genus/', views.show_table_by_genus, name='show_table_by_genus'),
     #path('show_cluster/', views.show_cluster, name='show_cluster'),

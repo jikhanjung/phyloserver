@@ -306,6 +306,28 @@ class NkfOccurrence5(models.Model):
     def __str__(self):
         return self.title
 
+class NkfOccurrence6(models.Model):
+    index = models.IntegerField(blank=True,null=True)
+    type = models.CharField(max_length=200,blank=True,null=True)
+    type_code = models.CharField(max_length=10,blank=True,null=True)
+    plate = models.CharField(max_length=10,blank=True,null=True)
+    figure = models.CharField(max_length=10,blank=True,null=True)
+    species = models.CharField(max_length=100,blank=True,null=True)
+    preservation = models.CharField(max_length=100,blank=True,null=True)
+    preservation_eng = models.CharField(max_length=100,blank=True,null=True)
+    location = models.CharField(max_length=200,blank=True,null=True)
+    location_code = models.CharField(max_length=10,blank=True,null=True)
+    unit = models.CharField(max_length=100,blank=True,null=True)
+    unit_eng = models.CharField(max_length=100,blank=True,null=True)
+    unit_code = models.CharField(max_length=10,blank=True,null=True)
+    strat_range = models.CharField(max_length=100,blank=True,null=True)
+    latitude = models.CharField(max_length=100,blank=True,null=True)
+    longitude = models.CharField(max_length=100,blank=True,null=True)
+    source = models.CharField(max_length=200,blank=True,null=True )
+    def __str__(self):
+        return self.species_name + " @" + self.location
+
+
 class NkfLocality(models.Model):
     index = models.IntegerField(blank=True,null=True)
     name = models.CharField(max_length=100,blank=True,null=True)

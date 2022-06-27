@@ -1,0 +1,26 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h1>Edit Occurrence 6</h1>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+<div>
+    <table width="800" border="1">
+        <tr><th>{{occ_form.type.label}}</th><td>{{occ_form.type}}</td></tr>
+        <tr><th>{{occ_form.plate.label}}</th><td>{{occ_form.plate}}</td></tr>
+        <tr><th>{{occ_form.figure.label}}</th><td>{{occ_form.figure}}</td></tr>
+        <tr><th>{{occ_form.species.label}}</th><td>{{occ_form.species}}</td></tr>
+        <tr><th>{{occ_form.preservation.label}}</th><td>{{occ_form.preservation}}</td></tr>
+        <tr><th>{{occ_form.preservation_eng.label}}</th><td>{{occ_form.preservation_eng}}</td></tr>
+        <tr><th>{{occ_form.location.label}}</th><td>{{occ_form.location}}</td></tr>
+        <tr><th>{{occ_form.unit.label}}</th><td>{{occ_form.unit}}</td></tr>
+        <tr><th>{{occ_form.unit_eng.label}}</th><td>{{occ_form.unit_eng}}</td></tr>
+        <tr><th>{{occ_form.strat_range.label}}</th><td>{{occ_form.strat_range}}</td></tr>
+        <tr><th>{{occ_form.latitude.label}}</th><td>{{occ_form.latitude}}</td></tr>
+        <tr><th>{{occ_form.longitude.label}}</th><td>{{occ_form.longitude}}</td></tr>
+        <tr><th>{{occ_form.source.label}}</th><td>{{occ_form.source}}</td></tr>
+    </table>
+</div>
+<input type="submit" value="Save">
+</div>
+</form>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "nkfbase.html" %}
+{% block content %}
+<h4 class="bd-title p-2 bg-secondary text-light">Occurrence List 6 - 조선의 화석(완족류/산호)</h4>
+<table class="table table-striped table-sm">
+    <thead>
+        <tr><td colspan="5" align="left">
+     {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
+    </td><td colspan="5" align="right"><form method="GET" action="{% url 'occ_list2'%}">
+        {% csrf_token %}
+        <!--select name="filter2" id="filter2">
+            <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
+          </select>
+        <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:""}}"><button type="submit">검색</button-->
+    </form></td></tr></thead>
+
+    <tbody>
+    <tr>
+            <th><div class="occ_list_type">type</div></th>
+            <th><div class="occ_list_species">species</div></th>
+            <th><div class="occ_list_preservation">preservation</div></th>
+            <th><div class="occ_list_preservation_eng">preservation_eng</div></th>
+            <th><div class="occ_list_location">location</div></th>
+            <th><div class="occ_list_location_code">location_code</div></th>
+            <th><div class="occ_list_unit">unit</div></th>
+            <th><div class="occ_list_unit">unit_code</div></th>
+            <th><div class="occ_list_unit_eng">unit_eng</div></th>
+            <th><div class="occ_list_strat_range">strat_range</div></th>
+        </tr>
+        {% if occ_list %}   
+        {% for occ in page_obj %}
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail6' occ.id %}';">
+            <td align="center">{{ occ.type }}</td>
+            <td align="center"><a href="{% url 'occ_detail6' occ.id %}">{{ occ.species }}</a></td>
+            <td align="center">{{ occ.preservation }}</td>
+            <td align="center">{{ occ.preservation_eng }}</td>
+            <td align="center">{{ occ.location }}</td>
+            <td align="center">{{ occ.location_code|default_if_none:'-'}}</td>
+            <td align="center">{{ occ.unit }}</td>
+            <td align="center">{{ occ.unit_code|default_if_none:'-' }}</td>
+            <td align="center">{{ occ.unit_eng }}</td>
+            <td align="center">{{ occ.strat_range }}</td>
+        </tr>
+    {% endfor %}
+    {% else %}
+        <tr><td colspan="10">No occurrences are available.</td></tr>
+    {% endif %}
+    </tbody>
+        <tfooter>
+        <tr><td colspan="5" align="left">
+            {% include "nkfpaginator.html" %}
+        </td><td colspan="5" align="right">
+            <!--a href="{% url 'add_occurrence' %}">[Add Occurrence]</a-->
+        </td></tr>
+    </tfooter>
+</table>
+{% endblock %}
