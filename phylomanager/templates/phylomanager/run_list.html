@@ -1,15 +1,19 @@
-{% extends "base.html" %}
+{% extends "phylobase.html" %}
 {% block content %}
-<h1>Run list</h1>
-{% if run_list %}
-    <table border="1" width="800" class="list_table">
+<h4 class="bd-title p-2 bg-secondary text-light">Run list</h4>
+<table class="table table-striped table-sm">
+    <thead>
         <tr>
             <th><div class="run_list_title">Title</div></th>
             <th><div class="run_list_status">Status</div></th>
             <th><div class="run_list_run_by">Run by</div></th>
             <th><div class="run_list_nlegs">No. of legs</div></th>
-            <th><div class="run_list_created">Created</div></th></tr>
-    {% for run in page_obj %}
+            <th><div class="run_list_created">Created</div></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if run_list %}
+        {% for run in page_obj %}
         <tr class="tr_link" onclick="javascript:window.location='{% url 'run_detail' run.id %}';">
             <td align="center"><a href="{% url 'run_detail' run.id %}">{{ run.run_title }}</a></td>
             <td align="center">{{ run.get_run_status_display }}</td>
@@ -17,17 +21,17 @@
             <td align="center">{{run.get_number_of_legs}}</td>
             <td align="center">{{run.created_datetime}}</td>
         </tr>
-    {% endfor %}
-    </table>
-{% else %}
-    <p>No runs are available.</p>
-{% endif %}
-
-<table border="0" width="800">
-    <tr><td width="400" align="left">
-        {% include "paginator.html" %}
-    </td><td width="400" align="right">
-        <a href="{% url 'add_run_upload_file' %}">[Add Run]</a>
-    </td></tr></table>
-
+        {% endfor %}
+        {% else %}
+            <p>No runs are available.</p>
+        {% endif %}
+    </tbody>
+    <tfooter>
+        <tr><td colspan="3" align="left">
+            {% include "paginator.html" %}
+        </td><td colspan="2" align="right">
+            <a href="{% url 'add_run_upload_file' %}">[Add Run]</a>
+        </td></tr>
+    </tfooter>
+</table>
 {% endblock %}
