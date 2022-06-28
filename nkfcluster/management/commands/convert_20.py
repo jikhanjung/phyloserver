@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
         NkfOccurrence.objects.filter(source_code='2').delete()
 
-        group_by_result = NkfOccurrence2.objects.raw('SELECT 1 as id, type_code, species, unit_code, location_code, source, COUNT(location_code) FROM nkfcluster_nkfoccurrence2 GROUP BY type_code, species, unit_code, location_code, source')
+        group_by_result = NkfOccurrence2.objects.raw('SELECT 1 as id, type_code, species, unit_code, strat_range, location_code, source, COUNT(location_code) FROM nkfcluster_nkfoccurrence2 GROUP BY type_code, species, unit_code, strat_range, location_code, source')
         for occ2 in group_by_result:
             occ1 = NkfOccurrence()
             occ1.species_name = occ2.species

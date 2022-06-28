@@ -125,7 +125,20 @@ LOCATION_CONVERSION_TABLE = [
 ("평산군 평화리, 례성리","평산-금천"),
 ("덕천","개천-덕천-순천"),
 ("황주군 두암산","황주"),
-
+#occ6
+("평안남도 북창군 원평리", "북창"),
+("황해북도 황주군 외상리", "황주"),
+("자강도 고풍군", "초산-고풍"),
+("황해북도 수안군 주경리 목굴산", "수안"),
+("황해북도 곡산군 월양리 큰굴산", "곡산"),
+("황해북도 곡산군 월양리", "곡산"),
+("황해북도 곡산군 송림리 아미산", "곡산"),
+("황해북도 곡산군 월양리 고말산", "곡산"),
+("황해북도 송림시", "송림"),
+("황해북도 수안군 룡현리", "수안"),
+("황해북도 신계군 해포리", "신계"),
+("황해북도 곡산군 송림리", "곡산"),
+("강원도 법동군 상서리", "법동"),
 ]
 
 UNIT_CONVERSION_TABLE = [
@@ -174,7 +187,7 @@ UNIT_CONVERSION_TABLE = [
 ("황주군층 흑교주층","흑교주층"),
 ("비랑동통","비랑동주층"),
 ("구현계 릉리통","릉리주층"),
-("홍점통",""),
+#("홍점통",""),
 ("신곡통","신곡주층"),
 ("황주계 신곡통","신곡주층"),
 ("고풍통","고풍주층"),
@@ -182,6 +195,15 @@ UNIT_CONVERSION_TABLE = [
 ("무진통-고풍통 경계부","무진주층"),
 ("릉리주층 상부층","릉리주층"),
 ("고풍주층의 '아래층'","고풍주층"),
+#occ6
+("홍점통", "홍점통"),
+("곡산통", "곡산주층"),
+("송림산통 기저력암층", "송림산주층"),
+("송림산통 기저력암 석회암력", "송림산주층"),
+("송림산통 기저력암층의 석회암력", "송림산주층"),
+("미루통", "상서주층"),
+("송림산통 기저력암층 석회암력", "송림산주층"),
+("Songrim basal congl. (lime)", "송림산주층"),
 ]
 
 class Command(BaseCommand):
@@ -194,7 +216,7 @@ class Command(BaseCommand):
         SOURCE_NK_BRACHIOPOD = '조선의 화석(완족류)'
         SOURCE_NK_CORAL = '조선의 화석(산호)'
         source_code_list = [ SOURCE_NK_BRACHIOPOD, SOURCE_NK_CORAL ]
-        filename_list = [ 'North_Korean_Fossil (Brachiopod).xls', 'North_Korean_Fossil (Coral).xls' ]
+        filename_list = [ 'North_Korean_Fossil (Brachiopod).xls', 'North_Korean_Fossil (Coral)_rev.xls' ]
         sheet_name_list = [ r'Original', r'Fossil Coral list' ]
 
         for i in range(2):

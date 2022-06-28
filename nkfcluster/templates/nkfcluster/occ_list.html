@@ -14,6 +14,7 @@
                 <option value="2" {% if filter2 == "2" %}selected{%endif%}>조선의 화석</option>
                 <option value="4" {% if filter2 == "4" %}selected{%endif%}>개별논문1</option>
                 <option value="5" {% if filter2 == "5" %}selected{%endif%}>개별논문2</option>
+                <option value="6" {% if filter2 == "6" %}selected{%endif%}>조선의 화석(완족류/산호)</option>
             </select>
             <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:''}}"><button type="submit">검색</button>
             </form>

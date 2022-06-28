@@ -77,8 +77,10 @@ LOCATION_CHOICES = [
     ("SP","신포"),
     ("HS","혜산"),
     ("TB","태백"),
-    ("YT","연탄"),
-    ("JG","중강"),
+    ("YT","연탄"), #occ4
+    ("JG","중강"), #occ4
+    ("SG","신계"), #new in occ6
+    ("BC","북창"), #new in occ6
 ]
 GROUP_CHOICES = [
     ("SP","sponge"),
