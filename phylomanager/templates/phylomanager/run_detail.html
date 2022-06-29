@@ -8,22 +8,22 @@
     <!--tr><th>Run directory</th><td> {{ run.run_directory }}</td></tr-->
     <tr><th>Run by</th><td>{{ run.get_run_by }}</td></tr>
     <tr><th>Started at</th><td>{{ run.start_datetime|default_if_none:"-" }}</td></tr>
-    <tr><th>Finished at</th><td>{{ run.finish_datetime|default_if_none:"-" }}</td></tr>
+<table class="table table-striped table-sm">
     <!--li>Created at: {{ run.created_datetime }}</li>
     <li>Modified at: {{ run.modified_datetime }}</li-->
     {% if run.run_status == 'FN' %}<tr><th>Results</th><td><a href="{% url 'download_run_result' run.id %}">Download Result(s)</a></td></tr>{% endif %}
 </table>
 {% if phylodata %}<table border="0" width="800"><tr><td colspan="2"><div style="text-align:center"><a href="javascript:toggle_datamatrix();"><div id="toggle_button">[Show Data]</div></a></div></td></tr></table>{%endif%}
 {% if phylodata %}
-<div style="width:800px;overflow-x:auto;white-space:nowrap;display:none;" id="datamatrix_div">
-<table border="1">
-{{ phylodata.datamatrix_as_table_rows }}
+<div style="overflow-x:auto;white-space:nowrap;display:none;" id="datamatrix_div">
+<table class="table table-striped table-sm">
+    {{ phylodata.datamatrix_as_table_rows }}
 </table>
 </div>
 {% endif %}
 <br/>
 {% for leg in run.leg_set.all %}
-<table border="1" width="800">
+<table class="table table-striped table-sm">
     <tr><th width="150">Leg title</th><td>{{ leg.leg_title }}</td></tr>
     <tr><th>Status</th><td>{{ leg.get_leg_status_display }}</td></tr>
     <tr><th>Package</th><td>{{ leg.leg_package }}</td></tr>
@@ -33,7 +33,6 @@
     <tr><th>Finished at</th><td>{{ leg.finish_datetime|default_if_none:"-" }}</td></tr>
     {% if leg.leg_status == 'FN' %}<tr><th>Tree</th><td><img src="{% url 'show_tree' leg.id %}" width="600"></td></tr>{%endif%}
 </table>
-<br/>
 {% endfor %}
 
 <a href="{% url 'run_list' %}">[Run List]</a>
