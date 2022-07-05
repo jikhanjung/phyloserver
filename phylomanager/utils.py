@@ -300,7 +300,7 @@ class PhyloDatafile():
                 #print('characters block')
                 self.parse_nexus_block(self.block_hash['CHARACTERS'])
                 #print('nchar, ntax', self.n_chars, self.n_taxa)
-            if self.block_hash['MRBAYES']:
+            if 'MRBAYES' in self.block_hash.keys():
                 #print("mr bayes block exists")
                 pass
         elif self.file_type == 'Phylip':

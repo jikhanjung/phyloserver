@@ -291,6 +291,6 @@ end;""".format( dfname=data_filename, nst=leg.mcmc_nst, nrates=leg.mcmc_nrates, 
     def __del__(self):
         print('Destructor called.')
         if self.runner:
-            print('runner deleted.')
+            print('runner finished.')
             self.runner.runner_status = "FN"    
             self.runner.save()
