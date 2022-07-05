@@ -30,7 +30,7 @@ class Command(BaseCommand):
             signal.signal(signal.SIGINT, self.quit_gracefully)   
             signal.signal(signal.SIGTERM, self.quit_gracefully)     
             signal.signal(signal.SIGBREAK, self.quit_gracefully)     
-            
+
         prev_runner = PhyloRunner.objects.all().order_by("-created_datetime")[0]
         if prev_runner.runner_status in ['ST','WK','SL']:
             return
@@ -289,6 +289,8 @@ end;""".format( dfname=data_filename, nst=leg.mcmc_nst, nrates=leg.mcmc_nrates, 
         return command_filepath
 
     def __del__(self):
-        print('Destructor called, runner deleted.')
-        self.runner.runner_status = "FN"    
-        self.runner.save()
+        print('Destructor called.')
+        if self.runner:
+            print('runner deleted.')
+            self.runner.runner_status = "FN"    
+            self.runner.save()
