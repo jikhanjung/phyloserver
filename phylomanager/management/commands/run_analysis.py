@@ -182,9 +182,14 @@ class Command(BaseCommand):
 
                         #print( run_argument_list )
                         p1 = subprocess.Popen( run_argument_list, cwd=leg_directory, stdout=subprocess.PIPE, stderr=stderr_fd)
+                        print( "p1 subprocess run", p1)
                         #p2 = subprocess.run(['python', 'manage.py', 'phylomonitor', package.package_name],cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd)
                         monitor_argument_list =['python', 'manage.py', 'phylomonitor', '--package_name', package.package_name, '--leg_id', str(leg.id) ]
+                        print("monitor argument", monitor_argument_list)
                         p2 = subprocess.run(monitor_argument_list,cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd, stderr=stderr_fd)
+                        print("p2 subprocess run", p2)
+
+                        
 
                         #print( run_argument_list )
                         #subprocess.run( run_argument_list, cwd=leg_directory, stdout=stdout_fd, stderr=stderr_fd)
@@ -192,12 +197,15 @@ class Command(BaseCommand):
 
                         stdout_fd.close()
                         stderr_fd.close()
+                        print("closed stdout, stderr")
 
                         # update leg status
                         leg.leg_status = 'FN'
                         leg.leg_completion_percentage = 100
                         leg.finish_datetime = timezone.now()
                         leg.save()
+
+                        print("leg done")
 
                         log.log_status = 'FN'
                         log.save()
