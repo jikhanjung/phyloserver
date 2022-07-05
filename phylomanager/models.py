@@ -152,7 +152,7 @@ class PhyloData(models.Model):
             self.datamatrix_json = json.dumps(self.formatted_data_list,indent=4)
         if self.nexus_command_hash:
             self.nexus_command_hash_json = json.dumps(self.nexus_command_hash,indent=4)
-        if self.block_hash and self.block_hash['MRBAYES']:
+        if self.block_hash and 'MRBAYES' in self.block_hash.keys():
             self.mrbayes_block = self.block_hash['MRBAYES']
 
     def loadfile(self,filepath):
