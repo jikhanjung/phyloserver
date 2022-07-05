@@ -26,6 +26,7 @@ urlpatterns = [
     #runnser
     path('runner_list/', views.runner_list, name='runner_list'),
     path('runner_detail/<int:runner_id>/', views.runner_detail, name='runner_detail'),
+    path('delete_runner/<int:pk>/', views.delete_runner, name='delete_runner'),
 
     # user
     path('user_info/', views.user_info, name='user_info'),

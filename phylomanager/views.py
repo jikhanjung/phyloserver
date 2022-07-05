@@ -460,3 +460,9 @@ def runner_detail(request, runner_id):
     #print("phylodata:", phylodata)
     return render(request, 'phylomanager/runner_detail.html', {'runner': runner, 'user_obj':user_obj})
 
+def delete_runner(request, pk):
+    user_obj = get_user_obj(request)
+
+    run = get_object_or_404(PhyloRunner, pk=pk)
+    run.delete()
+    return HttpResponseRedirect('/phylomanager/runner_list')
