@@ -1,7 +1,7 @@
 # Create your views here.
 #from django.http import HttpResponse
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import PhyloRun, PhyloPackage, PhyloModel, PhyloLeg
+from .models import PhyloRun, PhyloPackage, PhyloModel, PhyloLeg, PhyloRunner
 from django.template import loader
 from django.shortcuts import get_object_or_404, render
 from django.conf import settings
@@ -438,3 +438,25 @@ def user_register(request):
         form = PhyloUserRegisterForm()
 
     return render(request, 'phylomanager/user_changeform.html', {'form': form})
+
+def runner_list(request):
+    user_obj = get_user_obj(request)
+
+    runner_list = PhyloRunner.objects.order_by('-created_datetime')
+    paginator = Paginator(runner_list, 25) # Show 25 contacts per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'runner_list': runner_list,
+        'user_obj': user_obj,
+        'page_obj': page_obj,
+    }
+    return render(request, 'phylomanager/runner_list.html', context)
+
+def runner_detail(request, runner_id):
+    user_obj = get_user_obj(request)
+
+    runner = get_object_or_404(PhyloRunner, pk=runner_id)
+    #print("phylodata:", phylodata)
+    return render(request, 'phylomanager/runner_detail.html', {'runner': runner, 'user_obj':user_obj})
+

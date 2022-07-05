@@ -1,0 +1,32 @@
+{% extends "phylobase.html" %}
+{% block content %}
+<h4 class="bd-title p-2 bg-secondary text-light">Runner list</h4>
+<table class="table table-striped table-sm">
+    <thead>
+        <tr>
+            <th><div class="run_list_title">PID</div></th>
+            <th><div class="run_list_status">Status</div></th>
+            <th><div class="run_list_created">Created</div></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if runner_list %}
+        {% for runner in page_obj %}
+        <tr class="tr_link" onclick="javascript:window.location='{% url 'runner_detail' runner.id %}';">
+            <td align="center"><a href="{% url 'runner_detail' runner.id %}">{{ runner.procid }}</a></td>
+            <td align="center">{{runner.runner_status}}</td>
+            <td align="center">{{runner.created_datetime}}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+            <p>No runners are available.</p>
+        {% endif %}
+    </tbody>
+    <tfooter>
+        <tr><td colspan="3" align="left">
+            {% include "paginator.html" %}
+        </td><td colspan="2" align="right">
+        </td></tr>
+    </tfooter>
+</table>
+{% endblock %}

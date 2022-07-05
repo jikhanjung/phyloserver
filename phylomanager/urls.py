@@ -23,6 +23,10 @@ urlpatterns = [
     path('download_leg_result/<int:pk>/', views.download_leg_result, name='download_leg_result'),
     path('show_tree/<int:pk>/', views.show_tree, name='show_tree'),
 
+    #runnser
+    path('runner_list/', views.runner_list, name='runner_list'),
+    path('runner_detail/<int:runner_id>/', views.runner_detail, name='runner_detail'),
+
     # user
     path('user_info/', views.user_info, name='user_info'),
     path('user_form/', views.user_form, name='user_form'),

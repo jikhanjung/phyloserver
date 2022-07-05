@@ -1,0 +1,10 @@
+{% extends "phylobase.html" %}
+{% block content %}
+<h4 class="bd-title p-2 bg-secondary text-light">Run info</h4>
+<table class="table table-striped table-sm">
+    <tr><th width="150">Process ID</th><td>{{ runner.procid }}</td></tr>
+    <tr><th>Status</th><td> {{ runner.runner_status }}</td></tr>
+    <!--tr><th>Run directory</th><td> {{ run.run_directory }}</td></tr-->
+    <tr><th>Created at</th><td>{{ runner.created_datetime }}</td></tr>
+</table>
+{% endblock %}

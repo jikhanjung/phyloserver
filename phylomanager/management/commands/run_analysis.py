@@ -28,6 +28,9 @@ class Command(BaseCommand):
         #signal.signal(signal.SIGINT, self.quit_gracefully)   
         #signal.signal(signal.SIGTERM, self.quit_gracefully)     
         #signal.signal(signal.SIGBREAK, self.quit_gracefully)     
+        prev_runner = PhyloRunner.objects.all().order_by("-created_datetime")[0]
+        if prev_runner.runner_status in ['ST','WK','SL']:
+            return
 
         self.runner = PhyloRunner()
         self.runner.procid = os.getpid()
