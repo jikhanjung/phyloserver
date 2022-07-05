@@ -96,7 +96,7 @@ class Command(BaseCommand):
                         
                         temp_directory = None
                         temp_directory_name = ""
-                        if False: #package.package_name == 'MrBayes' and my_os == 'Linux':
+                        if package.package_name == 'MrBayes' and my_os == 'Linux':
                             ''' MrBayes doesn't run if datafile path is longer than 100chars. 
                                 So we use tempdir and copy all files after the analysis '''
 
@@ -192,7 +192,7 @@ class Command(BaseCommand):
                         log.log_status = 'FN'
                         log.save()
 
-                        if False: #original_leg_directory != "":
+                        if original_leg_directory != "":
                             #print("after leg done, original leg directory", original_leg_directory, os.path.isdir( original_leg_directory))
                             #print("after leg done, leg directory", leg_directory, os.path.isdir( leg_directory))
 
