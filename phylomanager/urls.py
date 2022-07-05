@@ -13,6 +13,7 @@ urlpatterns = [
 
     path('run_list/', views.run_list, name='run_list'),
     path('run_detail/<int:run_id>/', views.run_detail, name='run_detail'),
+    path('show_datamatrix/<int:run_id>/', views.show_datamatrix, name='show_datamatrix'),
     #path('data_detail/<int:run_id>/', views.run_detail, name='run_detail'),
     path('add_run_upload_file/', views.add_run_upload_file, name='add_run_upload_file'),
     path('add_run/', views.add_run, name='add_run'),

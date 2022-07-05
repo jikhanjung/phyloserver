@@ -23,17 +23,25 @@ from .utils import PhyloDatafile, PhyloTreefile
 from Bio import Phylo
 import matplotlib.pyplot as plt
 
+ITEMS_PER_PAGE = 20
+
+def get_user_obj( request ):
+    user_obj = request.user
+    if str(user_obj) == 'AnonymousUser':
+        return None
+    #print("user_obj:", user_obj)
+    user_obj.groupname_list = []
+    for g in request.user.groups.all():
+        user_obj.groupname_list.append(g.name)
+
+    return user_obj
+
+
 def index(request):
     return HttpResponseRedirect('run_list')
 
 def run_list(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     run_list = PhyloRun.objects.order_by('-created_datetime')
     paginator = Paginator(run_list, 25) # Show 25 contacts per page.
@@ -47,27 +55,16 @@ def run_list(request):
     return render(request, 'phylomanager/run_list.html', context)
 
 def run_detail(request, run_id):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     run = get_object_or_404(PhyloRun, pk=run_id)
     phylodata = run.phylodata
     #print("phylodata:", phylodata)
     return render(request, 'phylomanager/run_detail.html', {'run': run, 'phylodata': phylodata, 'user_obj':user_obj})
 
+
 def add_run_upload_file(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -97,14 +94,17 @@ def add_run_upload_file(request):
 
     return render(request, 'phylomanager/run_form_upload_file.html', {'run_form': run_form,'user_obj':user_obj})
 
+def show_datamatrix(request,run_id):
+    user_obj = get_user_obj(request)
+
+    run = get_object_or_404(PhyloRun, pk=run_id)
+    phylodata = run.phylodata
+
+    return render(request, 'phylomanager/show_datamatrix.html', {'phylodata': phylodata,'user_obj':user_obj})
+
+
 def add_run(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     data_json = []
     if request.method == 'POST':
@@ -143,13 +143,7 @@ def add_run(request):
     return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'leg_formset':leg_formset,'data_json':dumps(data_json),'user_obj':user_obj})
 
 def edit_run(request,pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     #print("edit run")
     data_json = []
@@ -200,13 +194,7 @@ def edit_run(request,pk):
     return render(request, 'phylomanager/run_form.html', {'run_form': run_form,'phylodata':phylodata,'leg_formset':leg_formset,'data_json':dumps(data_json),'user_obj':user_obj})
 
 def delete_run(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     run = get_object_or_404(PhyloRun, pk=pk)
     run.delete()
@@ -229,25 +217,13 @@ def package_list(request):
     return render(request, 'phylomanager/package_list.html', context)
 
 def package_detail(request, package_id):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
     
     package = get_object_or_404(PhyloPackage, pk=package_id)
     return render(request, 'phylomanager/package_detail.html', {'package': package, 'user_obj':user_obj})
 
 def add_package(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
@@ -263,13 +239,7 @@ def add_package(request):
     return render(request, 'phylomanager/package_form.html', {'package_form': package_form, 'user_obj':user_obj})
 
 def edit_package(request, pk):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     package = get_object_or_404(PhyloPackage, pk=pk)
 
@@ -374,13 +344,7 @@ def download_leg_result(request,pk):
 
 
 def server_status(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
 
     my_system = {}
     my_system['machine'] = platform.machine()
@@ -424,13 +388,8 @@ def user_logout(request):
     return redirect(request.META.get('HTTP_REFERER'))
 
 def password(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        user_obj = None
+    user_obj = get_user_obj(request)
+
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
@@ -447,24 +406,14 @@ def password(request):
     })    
 
 def user_info(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        return redirect('/phylomanager/')
+    user_obj = get_user_obj(request)
+
     #print(user_obj.username)
     return render(request, 'phylomanager/user_info.html', {'user_obj': user_obj} )
 
 def user_form(request):
-    if request.user.is_authenticated:
-        user_obj = request.user
-        user_obj.groupname_list = []
-        for g in request.user.groups.all():
-            user_obj.groupname_list.append(g.name)
-    else:
-        return redirect('/phylomanager/')
+    user_obj = get_user_obj(request)
+
     if request.method == 'POST':
         form = PhyloUserChangeForm(data=request.POST, instance=request.user)
         if form.is_valid():

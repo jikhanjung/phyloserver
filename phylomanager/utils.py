@@ -255,6 +255,8 @@ class PhyloDatafile():
         self.data_hash = {}
         self.formatted_data_hash = {}
         self.formatted_data_list = []
+        self.n_chars = 0
+        self.n_taxa = 0
 
     def loadfile(self,a_filepath):
         filepath,filename = os.path.split(a_filepath)
@@ -288,9 +290,16 @@ class PhyloDatafile():
         if self.file_type == 'Nexus':
             #print("nexus file")
             self.parse_nexus_file()
-            if self.block_hash['DATA']:
-                self.parse_nexus_data_block(self.block_hash['DATA'])
-                #self.nexus_command_hash = self.phylo_matrix.command_hash
+            if 'DATA' in self.block_hash.keys():
+                self.parse_nexus_block(self.block_hash['DATA'])
+            if 'TAXA' in self.block_hash.keys():
+                #print('taxa block')
+                self.parse_nexus_block(self.block_hash['TAXA'])
+                #print('nchar, ntax', self.n_chars, self.n_taxa)
+            if 'CHARACTERS' in self.block_hash.keys():
+                #print('characters block')
+                self.parse_nexus_block(self.block_hash['CHARACTERS'])
+                #print('nchar, ntax', self.n_chars, self.n_taxa)
             if self.block_hash['MRBAYES']:
                 #print("mr bayes block exists")
                 pass
@@ -333,15 +342,15 @@ class PhyloDatafile():
                 curr_block['text'].append(line)
         return #block_list
     
-    def parse_nexus_data_block(self,line_list):
+    def parse_nexus_block(self,line_list):
         in_matrix = False
         for line in line_list:
             #print(line)
             matrix_begin = re.match("\s*matrix\s*",line,flags=re.IGNORECASE)
             if matrix_begin:
-                self.taxa_list = []
-                self.data_list = []
-                self.data_hash = {}
+                #self.taxa_list = []
+                #self.data_list = []
+                #self.data_hash = {}
                 #self.nexus_command_hash = {}
                 in_matrix = True
             elif in_matrix:
@@ -349,7 +358,8 @@ class PhyloDatafile():
                 if matrix_match:
                     species_name = matrix_match.group(1)
                     data_line = matrix_match.group(2)
-                    self.taxa_list.append(species_name)
+                    if species_name not in self.taxa_list:
+                        self.taxa_list.append(species_name)
                     self.data_list.append(data_line)
                     self.data_hash[species_name] = data_line
             else:
@@ -361,7 +371,8 @@ class PhyloDatafile():
                     variable_string = command_match.group(2)
                     variable_list = re.findall("(\w+)\s*=\s*(\S+)",variable_string)
                     #print(command,variable_list)
-                    self.nexus_command_hash[command] = {}
+                    if command not in self.nexus_command_hash.keys():
+                        self.nexus_command_hash[command] = {}
                     for variable in variable_list:
                         self.nexus_command_hash[command][variable[0]] = variable[1]
                     #print(self.nexus_command_hash)
@@ -371,10 +382,13 @@ class PhyloDatafile():
             if matrix_end:
                 in_matrix = False
             #print(self.nexus_command_hash)
-        ntax = int(self.nexus_command_hash['DIMENSIONS']['NTAX'])
-        nchar = int(self.nexus_command_hash['DIMENSIONS']['NCHAR'])
-        self.n_taxa = ntax
-        self.n_chars = nchar
+        if 'DIMENSIONS' in self.nexus_command_hash.keys():
+            if 'NTAX' in self.nexus_command_hash['DIMENSIONS']:
+                ntax = int(self.nexus_command_hash['DIMENSIONS']['NTAX'])
+                self.n_taxa = ntax
+            if 'NCHAR' in self.nexus_command_hash['DIMENSIONS']:
+                nchar = int(self.nexus_command_hash['DIMENSIONS']['NCHAR'])
+                self.n_chars = nchar
         #print("number of taxa", ntax, len(self.taxa_list))
         #print("number of char", nchar)
         self.format_datamatrix()

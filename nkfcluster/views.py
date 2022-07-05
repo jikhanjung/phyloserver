@@ -748,6 +748,63 @@ def download_cluster(request):
 
     return render(request, 'nkfcluster/occ_cluster.html', {'cluster_data': cluster_data,'user_obj':user_obj,'column_list':column_list})
 
+def calculate_cluster(request): 
+    user_obj = get_user_obj(request)
+
+    #data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
+
+    data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
+    stratunit_choices = []
+    for choice in STRATUNIT_CHOICES:
+        val, disp = choice
+        stratunit_choices.append( {'value':val,'display': disp})
+    
+    fossilgroup_choices = []
+    for choice in GROUP_CHOICES:
+        val, disp = choice
+        fossilgroup_choices.append( {'value':val,'display': disp})
+
+
+    cluster_data = [['strat_unit'],['fossil_group'],['species_name']]
+    for col_name in column_list[4:]:
+        cluster_data.append([col_name])
+
+    
+    for row in data_list:
+        occ_data = [row[0]]
+        occ_data.extend(row[2:])
+        #print("occ_data len", len(occ_data))
+        for idx in range(len(occ_data)):
+            cell_value = "0"
+            if occ_data[idx] == "O":
+                cell_value = "1"
+            elif occ_data[idx] == "":
+                cell_value = "0"
+            else:
+                cell_value = occ_data[idx]
+            cluster_data[idx].append(cell_value)
+
+    import datetime
+    today = datetime.datetime.now()
+    date_str = today.strftime("%Y%m%d_%H%M%S")
+    buffer = io.BytesIO()
+
+    filename = 'cluster_data_{}.xlsx'.format(date_str)
+    doc = xlsxwriter.Workbook(buffer)
+    worksheet = doc.add_worksheet()
+    row_index = 0
+    column_index = 0
+
+    for row_idx in range(len(cluster_data)):
+        for col_idx in range(len(cluster_data[0])):
+            worksheet.write(col_idx,row_idx,cluster_data[row_idx][col_idx])
+
+    doc.close()
+    buffer.seek(0)
+
+    return FileResponse(buffer, as_attachment=True, filename=filename)
+
+
 def pbdb_list(request):
     user_obj = get_user_obj(request)
     #order_by = request.GET.get('order_by', 'year')

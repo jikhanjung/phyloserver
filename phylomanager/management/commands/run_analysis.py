@@ -192,6 +192,15 @@ class Command(BaseCommand):
                         log.log_status = 'FN'
                         log.save()
 
+                        if original_leg_directory != "":
+                            #print("after leg done, original leg directory", original_leg_directory, os.path.isdir( original_leg_directory))
+                            #print("after leg done, leg directory", leg_directory, os.path.isdir( leg_directory))
+
+                            shutil.copytree(leg_directory, original_leg_directory)
+                            leg.leg_directory = original_leg_directory
+                            leg.save()
+
+
                         '''Tree file Processing'''
                         if package.package_name == 'IQTree':
                             tree_filename = os.path.join( leg.leg_directory, filename + ".phy.treefile" )
@@ -236,14 +245,6 @@ class Command(BaseCommand):
                         #print(tree_filename)
                         tree_imagefile = os.path.join( leg.leg_directory, "concensus_tree.svg" )
                         plt.savefig(tree_imagefile, format='svg')
-
-                        if original_leg_directory != "":
-                            #print("after leg done, original leg directory", original_leg_directory, os.path.isdir( original_leg_directory))
-                            #print("after leg done, leg directory", leg_directory, os.path.isdir( leg_directory))
-
-                            shutil.copytree(leg_directory, original_leg_directory)
-                            leg.leg_directory = original_leg_directory
-                            leg.save()
 
                         
                     #print("\n")
