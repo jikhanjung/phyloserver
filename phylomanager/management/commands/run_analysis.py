@@ -120,6 +120,7 @@ class Command(BaseCommand):
 
 
                         # update leg status
+                        print("leg status update")
                         leg.leg_status = 'IP'
                         leg.start_datetime = timezone.now()
                         leg.leg_directory = leg_directory
@@ -137,6 +138,7 @@ class Command(BaseCommand):
                             fileext = '.nex'
                             datamatrix_str = phylo_data.as_nexus_format()
 
+                        print("writing data file")
                         data_filename = filename + fileext
                         data_file_location = os.path.join( leg_directory, data_filename )
                         data_fd = open(data_file_location,mode='w')
@@ -169,14 +171,16 @@ class Command(BaseCommand):
                         elif package.package_name == 'MrBayes':
                             command_filename = self.create_mrbayes_command_file( data_filename, leg_directory, leg )
                             run_argument_list = [package.run_path, command_filename]
-                            #print( run_argument_list )
+                        
+                        print( "argument list", run_argument_list )
 
                         stdout_filename = os.path.join( leg_directory, "output.log" )
                         stdout_fd = open(stdout_filename, "w")
                         stderr_filename = os.path.join( leg_directory, "error.log" )
                         stderr_fd = open(stderr_filename, "w")
+                        print( "redirect file descriptors open")
 
-                        print( run_argument_list )
+                        #print( run_argument_list )
                         p1 = subprocess.Popen( run_argument_list, cwd=leg_directory, stdout=subprocess.PIPE, stderr=stderr_fd)
                         #p2 = subprocess.run(['python', 'manage.py', 'phylomonitor', package.package_name],cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd)
                         monitor_argument_list =['python', 'manage.py', 'phylomonitor', '--package_name', package.package_name, '--leg_id', str(leg.id) ]
