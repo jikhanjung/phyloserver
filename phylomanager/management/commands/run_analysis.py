@@ -33,7 +33,15 @@ class Command(BaseCommand):
 
         prev_runner = PhyloRunner.objects.all().order_by("-created_datetime")[0]
         if prev_runner.runner_status in ['ST','WK','SL']:
-            return
+            print("prev_runner:", prev_runner.runner_status)
+            # see if such process is still running
+            if os.path.exists("/proc/"+str(prev_runner.procid)):
+                # if running, then just return and exit
+                return
+            else:
+                # otherwise set prev_runner as finished and run myself
+                prev_runner.runner_status = 'FN'
+                prev_runner.save()
 
         self.runner = PhyloRunner()
         self.runner.procid = os.getpid()
