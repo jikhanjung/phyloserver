@@ -45,12 +45,30 @@
             </div>
         </td></tr>
         <tr><td>
+            <div>
+                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="simpson">Simpson's
+                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="jaccard">Jaccard's
+                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="sorenson">Sorenson's
+            </div>
             <table id="cluster_data" class="table">
             </table>
         </td></tr>
     </tbody>
 </table>
 <script>
+function handleClick(myRadio) {
+    //alert('Old value: ' + currentValue);
+    clear_cluster();
+    if( myRadio.value == 'simpson' ){
+        show_simpson();
+    }else if( myRadio.value == 'jaccard' ){
+        show_jaccard();
+    }else if( myRadio.value == 'sorenson' ){
+        show_sorenson();
+    }
+    //alert('New value: ' + myRadio.value);
+    //currentValue = myRadio.value;
+}
 function get_simpsons_index(data_a, data_b){
     //document.write(data_a,"<br/>");
     //document.write(data_b,"<br/>");
@@ -99,65 +117,89 @@ function get_sorenson_index(data_a, data_b){
     }
     return (parseFloat(common*2) / parseFloat(count_a+count_b));
 }
+function clear_cluster() {
+    var table = document.getElementById("cluster_data");
+    table.innerHTML = '';
+    var canvas = document.getElementById("cluster_canvas");
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);       
+}
 
 var json_data = JSON.parse("{{data_json|escapejs}}");
 var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
 var keys = Object.keys(json_data);
 //document.write(keys);
-var table = document.getElementById("cluster_data");
-var row = table.insertRow();
-col = row.insertCell();
-indices = [ 'Simpson', 'Jaccard','Sørenson'];
-for(var i=0;i<3;i++){
-    for( var idx2=19;idx2<21;idx2++){
-        col = row.insertCell();
-        col.innerHTML = keys[idx2] + "(" + indices[i]+")";
-    }
-}
-for( var idx=0;idx<19;idx++){
-    //document.write("idx:",idx);
-    //document.write(keys[idx],idx,"<br/>");
-    //document.write(keys[idx],"<br/>");
+function show_simpson() {
+    var table = document.getElementById("cluster_data");
     var row = table.insertRow();
     col = row.insertCell();
-    col.innerHTML = keys[idx];
     for( var idx2=19;idx2<21;idx2++){
+        col = row.insertCell();
+        col.innerHTML = keys[idx2];
+    }
+    for( var idx=0;idx<19;idx++){
+        var row = table.insertRow();
+        col = row.insertCell();
+        col.innerHTML = keys[idx];
+        for( var idx2=19;idx2<21;idx2++){
+            col = row.insertCell();
+            if( idx != idx2 ) {
+                var val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+                col.innerHTML = Math.round( val * 100 ) / 100.0;
+            }   
+        }
+    }
+}
+function show_jaccard() {
+    var table = document.getElementById("cluster_data");
+    var row = table.insertRow();
+    col = row.insertCell();
+    for( var idx2=0;idx2<21;idx2++){
+        col = row.insertCell();
+        col.innerHTML = keys[idx2];
+    }
+    for( var idx=0;idx<21;idx++){
+        var row = table.insertRow();
+        var col = row.insertCell();
+        col.innerHTML = keys[idx];
         //document.write("idx2:",idx2);
         //document.write(keys[idx2],idx2,"<br/>");
-        
         //document.write(keys[idx2],"<br/>");
-        col = row.insertCell();
-        if( idx != idx2 ) {
-            var val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
-            //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-            col.innerHTML = Math.round( val * 100 ) / 100.0;
-        }   
+        for( var idx2=0;idx2<21;idx2++){
+            col = row.insertCell();
+            if( idx != idx2 ) {
+                var val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+                col.innerHTML = Math.round( val * 100 ) / 100.0;
+            }   
+        }
     }
-    for( var idx2=19;idx2<21;idx2++){
+}
+function show_sorenson() {
+    var table = document.getElementById("cluster_data");
+    var row = table.insertRow();
+    col = row.insertCell();
+    for( var idx2=0;idx2<21;idx2++){
+        col = row.insertCell();
+        col.innerHTML = keys[idx2];
+    }
+    for( var idx=0;idx<21;idx++){
+        var row = table.insertRow();
+        var col = row.insertCell();
+        col.innerHTML = keys[idx];
         //document.write("idx2:",idx2);
         //document.write(keys[idx2],idx2,"<br/>");
-        
         //document.write(keys[idx2],"<br/>");
-        col = row.insertCell();
-        if( idx != idx2 ) {
-            var val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
-            //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-            col.innerHTML = Math.round( val * 100 ) / 100.0;
-        }   
+        for( var idx2=0;idx2<21;idx2++){
+            col = row.insertCell();
+            if( idx != idx2 ) {
+                var val = get_sorenson_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+                col.innerHTML = Math.round( val * 100 ) / 100.0;
+            }   
+        }
     }
-    for( var idx2=19;idx2<21;idx2++){
-        //document.write("idx2:",idx2);
-        //document.write(keys[idx2],idx2,"<br/>");
-        
-        //document.write(keys[idx2],"<br/>");
-        col = row.insertCell();
-        if( idx != idx2 ) {
-            var val = get_sorenson_index(json_data[keys[idx]],json_data[keys[idx2]]);
-            //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-            col.innerHTML = Math.round( val * 100 ) / 100.0;
-        }   
-    }
-
 }
 
 </script>
