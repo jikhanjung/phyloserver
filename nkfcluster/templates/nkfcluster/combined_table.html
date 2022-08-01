@@ -6,7 +6,8 @@
     <tr><td colspan="{{column_list|length }}" align="left">
         <div class="row">
             <div class="col">
-                <a href="{% url 'download_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}&exclude_china_only_taxa={{exclude_china_only_taxa}}">[Download data]</a>
+                <a href="{% url 'download_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}&exclude_china_only_taxa={{exclude_china_only_taxa}}">[Download data]</a><br/>
+                <a href="{% url 'show_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}&exclude_china_only_taxa={{exclude_china_only_taxa}}">[Show cluster]</a>
             </div>
             <div class="col">
                 <form method="GET" action="{% url 'show_combined_table'%}">
