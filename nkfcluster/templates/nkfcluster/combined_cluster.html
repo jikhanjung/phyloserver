@@ -52,6 +52,8 @@
             </div>
             <table id="cluster_data" class="table">
             </table>
+            <table id="cluster_data2" class="table">
+            </table>
         </td></tr>
     </tbody>
 </table>
@@ -128,8 +130,13 @@ function clear_cluster() {
 var json_data = JSON.parse("{{data_json|escapejs}}");
 var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
 var keys = Object.keys(json_data);
+var data_matrix = [];
+var data_list = [];
+
 //document.write(keys);
 function show_simpson() {
+    data_matrix = [];
+    data_list = [];
     var table = document.getElementById("cluster_data");
     var row = table.insertRow();
     col = row.insertCell();
@@ -138,6 +145,7 @@ function show_simpson() {
         col.innerHTML = keys[idx2];
     }
     for( var idx=0;idx<19;idx++){
+        var data_row = [];
         var row = table.insertRow();
         col = row.insertCell();
         col.innerHTML = keys[idx];
@@ -146,37 +154,162 @@ function show_simpson() {
             if( idx != idx2 ) {
                 var val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-                col.innerHTML = Math.round( val * 100 ) / 100.0;
-            }   
+                var round_val = Math.round( val * 100 ) / 100.0;
+                col.innerHTML = round_val
+                data_row[data_row.length] = round_val;
+            }  else {
+                data_row[data_row.length] = '-';
+            }
         }
+        data_matrix[data_matrix.length] = data_row;
     }
+    console.log(data_matrix);
 }
 function show_jaccard() {
+    data_matrix = [];
+    data_list = [];
     var table = document.getElementById("cluster_data");
     var row = table.insertRow();
     col = row.insertCell();
-    for( var idx2=0;idx2<21;idx2++){
+    for( var idx2=0;idx2<keys.length;idx2++){
         col = row.insertCell();
         col.innerHTML = keys[idx2];
     }
-    for( var idx=0;idx<21;idx++){
+    for( var idx=0;idx<keys.length;idx++){
+        var data_row = [];
         var row = table.insertRow();
         var col = row.insertCell();
         col.innerHTML = keys[idx];
         //document.write("idx2:",idx2);
         //document.write(keys[idx2],idx2,"<br/>");
         //document.write(keys[idx2],"<br/>");
-        for( var idx2=0;idx2<21;idx2++){
+        for( var idx2=0;idx2<keys.length;idx2++){
             col = row.insertCell();
             if( idx != idx2 ) {
                 var val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-                col.innerHTML = Math.round( val * 100 ) / 100.0;
+                var round_val = Math.round( val * 100 ) / 100.0;
+                col.innerHTML = round_val;
+                data_row[data_row.length] = round_val;
+                //data_list[data_list.length] = [ idx, idx2, round_val ];
+            }  else {
+                data_row[data_row.length] = '-';
             }   
+        }
+        data_matrix[data_matrix.length] = data_row;
+    }
+    console.log(data_matrix);
+
+    const [ new_data_matrix, new_keys, new_tree_hash ] = upgma_step(data_matrix, keys);
+    data_matrix = new_data_matrix;
+    keys = new_keys;
+    while( keys.length > 1 ) {
+        const [ new_data_matrix, new_keys, new_tree_hash ] = upgma_step(data_matrix, keys);
+        data_matrix = new_data_matrix;
+        keys = new_keys;
+    }
+
+    // matrix generation done
+    console.log(data_matrix);
+    matrix_to_table(data_matrix, keys, 'cluster_data2');
+
+    // now cluster data using UPGMA
+    // find max cell
+}
+
+function matrix_to_table( a_data_matrix, a_key_list, a_table_id ) {
+    var table = document.getElementById(a_table_id)
+    var row = table.insertRow();
+    var col = row.insertCell();
+    for( var idx=0;idx<a_key_list.length;idx++){
+        var col = row.insertCell();
+        col.innerHTML = a_key_list[idx];
+    }
+
+    for( var idx=0;idx<a_data_matrix.length;idx++){
+        var row = table.insertRow();
+        var col = row.insertCell();
+        col.innerHTML = a_key_list[idx];
+        for( var idx2=0;idx2<a_data_matrix.length;idx2++){
+            var col = row.insertCell();
+            col.innerHTML = a_data_matrix[idx][idx2];
         }
     }
 }
+
+function upgma_step( a_data_matrix, a_key_list ){
+    var max_val = 0;
+    var merge_idx1, merge_idx2;
+    var tree_hash = {};
+    for( var idx = 0; idx < a_key_list.length; idx++ ) {
+        for( var idx2 = 0; idx2 < a_key_list.length; idx2++ ) {
+            if( a_data_matrix[idx][idx2] == '-' ) {
+                continue;
+            }
+            if( a_data_matrix[idx][idx2] > max_val ) {
+                max_val = a_data_matrix[idx][idx2];
+                if( idx < idx2 ) {
+                    merge_idx1 = idx;
+                    merge_idx2 = idx2;
+                } else {
+                    merge_idx1 = idx2;
+                    merge_idx2 = idx;
+                }
+            }
+        }
+    }
+    console.log("max val:", max_val, "indices:", merge_idx_list);
+    //merge idx1 and idx2 row/col;
+    var merge_idx_list = [ merge_idx1, merge_idx2 ];
+    var new_data_matrix = [];
+    var new_key_list = [];
+    for( var idx = 0; idx < a_key_list.length; idx++ ) {
+        if( idx == merge_idx1 ) {
+            new_key_list[new_key_list.length] = "(" + a_key_list[merge_idx1] + ":" + ( 1 - max_val ) + "," + a_key_list[merge_idx2] + ":" + ( 1 - max_val ) + ")";
+        } else if( idx == merge_idx2 ) {
+            continue;
+        } else {
+            new_key_list[new_key_list.length] = a_key_list[idx];
+        }
+    }
+
+    for( var idx = 0; idx < a_key_list.length; idx++ ) {
+        var new_data_row = [];
+        if( idx == merge_idx1 ) {
+            for( var idx2 = 0; idx2 < a_key_list.length; idx2++ ) {
+                if( idx2 == merge_idx1 ) {
+                    new_data_row[new_data_row.length] = '-'
+                } else if( idx2 == merge_idx2 ) {
+                    continue;
+                } else {
+                    new_data_row[new_data_row.length] = ( data_matrix[idx][idx2] + data_matrix[merge_idx2][idx2] ) / 2.0;
+                }
+            }
+        } else if( idx == merge_idx2 ) {
+            continue;
+        } else {
+            for( var idx2 = 0; idx2 < a_key_list.length; idx2++ ) {
+                if( idx2 == merge_idx1 ) {
+                    console.log(idx, idx2, merge_idx_list);
+                    if( idx == merge_idx1 || idx == merge_idx2 ) {
+                        new_data_row[new_data_row.length] = '-';
+                    } else {
+                        new_data_row[new_data_row.length] = ( data_matrix[idx][merge_idx1] + data_matrix[idx][merge_idx2] ) / 2.0;
+                    }
+                } else if( idx2 == merge_idx2 ) {
+                    continue;
+                } else {
+                    new_data_row[new_data_row.length] = data_matrix[idx][idx2];
+                }
+            }
+        }
+        new_data_matrix[new_data_matrix.length] = new_data_row;
+    }
+    return [ new_data_matrix, new_key_list, tree_hash ];
+}
 function show_sorenson() {
+    data_matrix = [];
+    data_list = [];
     var table = document.getElementById("cluster_data");
     var row = table.insertRow();
     col = row.insertCell();
@@ -185,6 +318,7 @@ function show_sorenson() {
         col.innerHTML = keys[idx2];
     }
     for( var idx=0;idx<21;idx++){
+        var data_row = [];
         var row = table.insertRow();
         var col = row.insertCell();
         col.innerHTML = keys[idx];
@@ -195,11 +329,16 @@ function show_sorenson() {
             col = row.insertCell();
             if( idx != idx2 ) {
                 var val = get_sorenson_index(json_data[keys[idx]],json_data[keys[idx2]]);
-                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-                col.innerHTML = Math.round( val * 100 ) / 100.0;
+                var round_val = Math.round( val * 100 ) / 100.0;
+                col.innerHTML = round_val;
+                data_row[data_row.length] = round_val;
+            }  else {
+                data_row[data_row.length] = '-';
             }   
         }
+        data_matrix[data_matrix.length] = data_row;
     }
+    console.log(data_matrix);
 }
 
 </script>
