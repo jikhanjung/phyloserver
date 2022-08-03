@@ -39,7 +39,7 @@
     <tbody>
         <tr><td>
             <div>
-                <canvas id="cluster_canvas">
+                <canvas id="cluster_canvas" width="1300" height="800">
 
                 </canvas>
             </div>
@@ -58,6 +58,26 @@
     </tbody>
 </table>
 <script>
+class TreeNode {
+	constructor( name ) {
+        this.name = name;
+        this.children = [];
+        this.node_count = 0;
+        this.position = 1;
+        this.leaf = true;
+    }
+    appendChild( node, position ) {
+        if( node.leaf ) {
+            this.node_count += 1;
+        } else {
+            this.node_count += node.node_count;
+        }        
+        this.position = position;
+        var branch_length = node.position - this.position;
+        this.children[this.children.length] = { 'node': node, 'branch_length': branch_length };
+    }
+}
+
 function handleClick(myRadio) {
     //alert('Old value: ' + currentValue);
     clear_cluster();
@@ -132,6 +152,8 @@ var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
 var keys = Object.keys(json_data);
 var data_matrix = [];
 var data_list = [];
+//var canvas = document.getElementById("canvas");
+//var context = canvas.getContext("2d");
 
 //document.write(keys);
 function show_simpson() {
@@ -199,22 +221,94 @@ function show_jaccard() {
         data_matrix[data_matrix.length] = data_row;
     }
     console.log(data_matrix);
-
-    const [ new_data_matrix, new_keys, new_tree_hash ] = upgma_step(data_matrix, keys);
-    data_matrix = new_data_matrix;
-    keys = new_keys;
-    while( keys.length > 1 ) {
-        const [ new_data_matrix, new_keys, new_tree_hash ] = upgma_step(data_matrix, keys);
-        data_matrix = new_data_matrix;
-        keys = new_keys;
+    var node_list = [];
+    for( var idx = 0 ; idx < keys.length ; idx++ ) {
+        var node = new TreeNode( keys[idx] );
+        node_list[node_list.length] = node;
     }
 
+    while( keys.length > 1 ) {
+        const [ new_data_matrix, new_keys, new_node_list ] = upgma_step(data_matrix, keys, node_list);
+        data_matrix = new_data_matrix;
+        keys = new_keys;
+        node_list = new_node_list;
+        console.log(keys);
+    }
+
+    draw_result( node_list );
+    //console.log("node:", node_list[0]);
+
     // matrix generation done
-    console.log(data_matrix);
-    matrix_to_table(data_matrix, keys, 'cluster_data2');
+    //console.log(data_matrix);
+    //console.log(node_list);
+    //matrix_to_table(data_matrix, keys, 'cluster_data2');
 
     // now cluster data using UPGMA
     // find max cell
+}
+
+function draw_result( node_list ) {
+    var node = node_list[0];
+    //console.log("node:", node);
+    draw_node( node, 0, node.node_count, node.node_count );
+}
+function draw_node( node, yfrom, yto, ytotal) {
+
+    console.log("name:",node.name, "node count:",node.node_count, "position:", node.position, "children:", node.children.length, "yfrom",yfrom,"yto",yto,"ytotal",ytotal );
+    node_count = node.node_count;
+    yfrom2 = yfrom;
+    if( node.leaf ) {
+        console.log( node.position, yfrom, node.name);
+        draw_text( node.position + 0.01, (yfrom+0.2)/ ytotal, node.name );
+    } else {
+        for( var idx=0;idx<node.children.length;idx++){
+            var n = node.children[idx]['node'];
+            yto2 = yfrom2 + n.node_count;
+            if( n.leaf ) {
+                ypos2 = ( ( yfrom2 + yto2 ) / 2.0 ) / ytotal;
+                ypos1 = ( ( yfrom + yto ) / 2.0 ) / ytotal;
+            } else {
+                ypos2 = ( ( yfrom2 + yto2 -1) / 2.0 ) / ytotal;
+                ypos1 = ( ( yfrom + yto ) / 2.0 ) / ytotal;
+            }
+            draw_line( node.position, ypos1, node.position, ypos2 );
+            draw_line( node.position, ypos2, n.position, ypos2 )
+            //draw_text( n.position, ypos2, ypos2*ytotal + "(" + yfrom2+","+yto2+")");
+            //console.log(n);
+            //console.log(n.node_count, n.position, n.children.length);
+            draw_node(n, yfrom2, yto2, ytotal);
+            yfrom2 = yto2+1;
+        }
+    }
+}
+
+function draw_line( x1,y1,x2,y2 ) {
+    var canvas = document.getElementById("cluster_canvas");
+    var context = canvas.getContext("2d");
+    cwidth = canvas.width;
+    cheight = canvas.height;
+    x1 = x1 * 0.8 * cwidth + 0.1 * cwidth;
+    y1 = y1 * 0.8 * cheight + 0.1 * cheight;
+    x2 = x2 * 0.8 * cwidth + 0.1 * cwidth;
+    y2 = y2 * 0.8 * cheight + 0.1 * cheight;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(x1,y1);
+    context.lineTo(x2,y2);
+    context.strokeStyle='rgba(0,0,0,1)';
+    context.stroke();
+    context.closePath();
+}
+
+function draw_text( x1,y1,text ) {
+    var canvas = document.getElementById("cluster_canvas");
+    var context = canvas.getContext("2d");
+    cwidth = canvas.width;
+    cheight = canvas.height;
+    x1 = x1 * 0.8 * cwidth + 0.1 * cwidth;
+    y1 = y1 * 0.8 * cheight + 0.1 * cheight;
+    context.font = "20px Impact";    
+    context.fillText( text, x1, y1 );    
 }
 
 function matrix_to_table( a_data_matrix, a_key_list, a_table_id ) {
@@ -237,7 +331,7 @@ function matrix_to_table( a_data_matrix, a_key_list, a_table_id ) {
     }
 }
 
-function upgma_step( a_data_matrix, a_key_list ){
+function upgma_step( a_data_matrix, a_key_list, a_node_list ){
     var max_val = 0;
     var merge_idx1, merge_idx2;
     var tree_hash = {};
@@ -246,7 +340,7 @@ function upgma_step( a_data_matrix, a_key_list ){
             if( a_data_matrix[idx][idx2] == '-' ) {
                 continue;
             }
-            if( a_data_matrix[idx][idx2] > max_val ) {
+            if( a_data_matrix[idx][idx2] >= max_val ) {
                 max_val = a_data_matrix[idx][idx2];
                 if( idx < idx2 ) {
                     merge_idx1 = idx;
@@ -258,18 +352,27 @@ function upgma_step( a_data_matrix, a_key_list ){
             }
         }
     }
-    console.log("max val:", max_val, "indices:", merge_idx_list);
     //merge idx1 and idx2 row/col;
     var merge_idx_list = [ merge_idx1, merge_idx2 ];
+    console.log("max val:", max_val, "indices:", merge_idx_list);
     var new_data_matrix = [];
     var new_key_list = [];
+    var new_node_list = [];
     for( var idx = 0; idx < a_key_list.length; idx++ ) {
         if( idx == merge_idx1 ) {
-            new_key_list[new_key_list.length] = "(" + a_key_list[merge_idx1] + ":" + ( 1 - max_val ) + "," + a_key_list[merge_idx2] + ":" + ( 1 - max_val ) + ")";
+            var new_key = a_key_list[merge_idx1] + ":" + a_key_list[merge_idx2];
+            var new_node_name = "("+a_key_list[merge_idx1] + "," + a_key_list[merge_idx2] +")";
+            new_key_list[new_key_list.length] = new_node_name;
+            var new_node = new TreeNode( new_node_name );
+            new_node.leaf = false;
+            new_node.appendChild( a_node_list[merge_idx1], max_val );
+            new_node.appendChild( a_node_list[merge_idx2], max_val );
+            new_node_list[new_node_list.length] = new_node;
         } else if( idx == merge_idx2 ) {
             continue;
         } else {
             new_key_list[new_key_list.length] = a_key_list[idx];
+            new_node_list[new_node_list.length] = a_node_list[idx];
         }
     }
 
@@ -305,7 +408,7 @@ function upgma_step( a_data_matrix, a_key_list ){
         }
         new_data_matrix[new_data_matrix.length] = new_data_row;
     }
-    return [ new_data_matrix, new_key_list, tree_hash ];
+    return [ new_data_matrix, new_key_list, new_node_list ];
 }
 function show_sorenson() {
     data_matrix = [];
