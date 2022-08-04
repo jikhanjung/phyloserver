@@ -6,14 +6,15 @@
     <tr><td>
         <div class="row">
             <div class="col">
-                <a href="{% url 'download_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}&exclude_china_only_taxa={{exclude_china_only_taxa}}">[Download data]</a><br/>
-                <a href="{% url 'show_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}&exclude_china_only_taxa={{exclude_china_only_taxa}}">[Show cluster]</a>
+                <a href="{% url 'download_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}&exclude_china_only_taxa={{exclude_china_only_taxa}}&exclude_no_data_locality={{exclude_no_data_locality}}">[Download data]</a><br/>
+                <a href="{% url 'show_combined_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.chronounit}}&exclude_china_only_taxa={{exclude_china_only_taxa}}&exclude_no_data_locality={{exclude_no_data_locality}}">[Show cluster]</a>
             </div>
             <div class="col">
                 <form method="GET" action="{% url 'show_combined_table'%}">
                 {% csrf_token %}
                 <div style="background-color:lightgray; width:500px">
-                    <span style="display: inline-block;"><input type="checkbox" name="exclude_china_only_taxa" value="1" {%if exclude_china_only_taxa %}checked{%endif%}>Exclude China only taxa</span>
+                    <span style="display: inline-block;"><input type="checkbox" name="exclude_china_only_taxa" value="1" {%if exclude_china_only_taxa == '1' %}checked{%endif%}>Exclude China only taxa</span>
+                    <span style="display: inline-block;"><input type="checkbox" name="exclude_no_data_locality" value="1" {%if exclude_no_data_locality == '1' %}checked{%endif%}>Exclude no data locality</span>
                 </div>
                 <div style="background-color:white; width:500px">
                     ChronoUnit:
@@ -149,7 +150,7 @@ function clear_cluster() {
 
 var json_data = JSON.parse("{{data_json|escapejs}}");
 var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
-var keys = Object.keys(json_data);
+var original_keys = Object.keys(json_data);
 var data_matrix = [];
 var data_list = [];
 //var canvas = document.getElementById("canvas");
@@ -188,8 +189,11 @@ function show_simpson() {
     console.log(data_matrix);
 }
 function show_jaccard() {
-    data_matrix = [];
-    data_list = [];
+    var data_matrix = [];
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show jaccard");
+    console.log("key list:", keys);
     var table = document.getElementById("cluster_data");
     var row = table.insertRow();
     col = row.insertCell();
@@ -220,7 +224,7 @@ function show_jaccard() {
         }
         data_matrix[data_matrix.length] = data_row;
     }
-    console.log(data_matrix);
+    //console.log(data_matrix);
     var node_list = [];
     for( var idx = 0 ; idx < keys.length ; idx++ ) {
         var node = new TreeNode( keys[idx] );
@@ -232,7 +236,7 @@ function show_jaccard() {
         data_matrix = new_data_matrix;
         keys = new_keys;
         node_list = new_node_list;
-        console.log(keys);
+        console.log("keys len", keys.length);
     }
 
     draw_result( node_list );
@@ -254,7 +258,7 @@ function draw_result( node_list ) {
 }
 function draw_node( node, yfrom, yto, ytotal) {
 
-    console.log("name:",node.name, "node count:",node.node_count, "position:", node.position, "children:", node.children.length, "yfrom",yfrom,"yto",yto,"ytotal",ytotal );
+    //console.log("name:",node.name, "node count:",node.node_count, "position:", node.position, "children:", node.children.length, "yfrom",yfrom,"yto",yto,"ytotal",ytotal );
     node_count = node.node_count;
     yfrom2 = yfrom;
     if( node.leaf ) {
@@ -354,7 +358,7 @@ function upgma_step( a_data_matrix, a_key_list, a_node_list ){
     }
     //merge idx1 and idx2 row/col;
     var merge_idx_list = [ merge_idx1, merge_idx2 ];
-    console.log("max val:", max_val, "indices:", merge_idx_list);
+    //console.log("max val:", max_val, "indices:", merge_idx_list);
     var new_data_matrix = [];
     var new_key_list = [];
     var new_node_list = [];
@@ -385,7 +389,7 @@ function upgma_step( a_data_matrix, a_key_list, a_node_list ){
                 } else if( idx2 == merge_idx2 ) {
                     continue;
                 } else {
-                    new_data_row[new_data_row.length] = ( data_matrix[idx][idx2] + data_matrix[merge_idx2][idx2] ) / 2.0;
+                    new_data_row[new_data_row.length] = ( a_data_matrix[idx][idx2] + a_data_matrix[merge_idx2][idx2] ) / 2.0;
                 }
             }
         } else if( idx == merge_idx2 ) {
@@ -397,12 +401,12 @@ function upgma_step( a_data_matrix, a_key_list, a_node_list ){
                     if( idx == merge_idx1 || idx == merge_idx2 ) {
                         new_data_row[new_data_row.length] = '-';
                     } else {
-                        new_data_row[new_data_row.length] = ( data_matrix[idx][merge_idx1] + data_matrix[idx][merge_idx2] ) / 2.0;
+                        new_data_row[new_data_row.length] = ( a_data_matrix[idx][merge_idx1] + a_data_matrix[idx][merge_idx2] ) / 2.0;
                     }
                 } else if( idx2 == merge_idx2 ) {
                     continue;
                 } else {
-                    new_data_row[new_data_row.length] = data_matrix[idx][idx2];
+                    new_data_row[new_data_row.length] = a_data_matrix[idx][idx2];
                 }
             }
         }
@@ -411,8 +415,9 @@ function upgma_step( a_data_matrix, a_key_list, a_node_list ){
     return [ new_data_matrix, new_key_list, new_node_list ];
 }
 function show_sorenson() {
-    data_matrix = [];
-    data_list = [];
+    var data_matrix = [];
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
     var table = document.getElementById("cluster_data");
     var row = table.insertRow();
     col = row.insertCell();
@@ -442,6 +447,24 @@ function show_sorenson() {
         data_matrix[data_matrix.length] = data_row;
     }
     console.log(data_matrix);
+
+    var node_list = [];
+    for( var idx = 0 ; idx < keys.length ; idx++ ) {
+        var node = new TreeNode( keys[idx] );
+        node_list[node_list.length] = node;
+    }
+
+    while( keys.length > 1 ) {
+        const [ new_data_matrix, new_keys, new_node_list ] = upgma_step(data_matrix, keys, node_list);
+        data_matrix = new_data_matrix;
+        keys = new_keys;
+        node_list = new_node_list;
+        //console.log(keys);
+    }
+
+    draw_result( node_list );
+
+
 }
 
 </script>
