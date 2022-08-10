@@ -41,13 +41,14 @@
         <tr><td>
             <div>
                 <canvas id="cluster_canvas" width="1300" height="800">
-
                 </canvas>
             </div>
+            <div id="plot_div" style="width:1200px;height:1200px;"></div>
         </td></tr>
         <tr><td>
             <div>
-                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="simpson">Simpson's
+                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="simpson_cluster">Simpson's Cluster
+                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="simpson_bivariate">Simpson's Bivariate
                 <input type="radio" name="similarity_index" onclick="handleClick(this);" value="jaccard">Jaccard's
                 <input type="radio" name="similarity_index" onclick="handleClick(this);" value="sorenson">Sorenson's
             </div>
@@ -58,6 +59,7 @@
         </td></tr>
     </tbody>
 </table>
+<script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
 <script>
 class TreeNode {
 	constructor( name ) {
@@ -82,8 +84,10 @@ class TreeNode {
 function handleClick(myRadio) {
     //alert('Old value: ' + currentValue);
     clear_cluster();
-    if( myRadio.value == 'simpson' ){
-        show_simpson();
+    if( myRadio.value == 'simpson_cluster' ){
+        show_simpson_cluster();
+    }else if( myRadio.value == 'simpson_bivariate' ){
+        show_simpson_bivariate();
     }else if( myRadio.value == 'jaccard' ){
         show_jaccard();
     }else if( myRadio.value == 'sorenson' ){
@@ -146,6 +150,11 @@ function clear_cluster() {
     var canvas = document.getElementById("cluster_canvas");
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);       
+
+    var TESTER = document.getElementById('plot_div');
+    TESTER.style.display="none";
+    var canvas = document.getElementById("cluster_canvas");
+    canvas.style.display="block";
 }
 
 var json_data = JSON.parse("{{data_json|escapejs}}");
@@ -153,13 +162,43 @@ var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
 var original_keys = Object.keys(json_data);
 var data_matrix = [];
 var data_list = [];
+var presence_count_list = [];
+if( true ) {
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    for( var idx=0;idx<keys.length;idx++){
+        var data = json_data[keys[idx]];
+        count = 0;
+        for(var idx2=0;idx2<data.length;idx2++){
+            if( data[idx2] == 1 ) {
+                count += 1;
+            }
+        }
+        presence_count_list[presence_count_list.length] = count;
+    }
+    console.log("presence_count:", presence_count_list);
+}
+
 //var canvas = document.getElementById("canvas");
 //var context = canvas.getContext("2d");
 
 //document.write(keys);
-function show_simpson() {
-    data_matrix = [];
-    data_list = [];
+function get_circle_size(a_idx, a_presence_count_list){
+    console.log(a_presence_count_list);
+    var max_val = Math.max(...a_presence_count_list);
+    var min_val = Math.min(...a_presence_count_list);
+    var val_range = max_val - min_val;
+    var min_size = 10;
+    var max_size = 40;
+    var return_size = min_size + ( ( max_size - min_size ) / val_range ) * presence_count_list[a_idx];
+    console.log(min_val, max_val, min_size, max_size, val_range, a_presence_count_list[a_idx], return_size);
+    return return_size;
+}
+function show_simpson_bivariate() {
+    var data_matrix = [];
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show simpson bivariate");
+    console.log("key list:", keys);
     var table = document.getElementById("cluster_data");
     var row = table.insertRow();
     col = row.insertCell();
@@ -187,7 +226,123 @@ function show_simpson() {
         data_matrix[data_matrix.length] = data_row;
     }
     console.log(data_matrix);
+    plot_data = [];
+    for( idx=0;idx<data_matrix.length;idx++){
+        var data_row = data_matrix[idx];
+        var trace = { 
+            x: [data_row[0]], 
+            y: [data_row[1]],
+            mode:'markers', 
+            name: keys[idx]+"("+presence_count_list[idx]+")",
+            marker: {
+                color:'' + parseInt(Math.random() * 0xffffff).toString(16),
+                symbol:'circle',
+                size: get_circle_size(idx,presence_count_list.slice(0,-2))
+            }
+        };
+        plot_data[plot_data.length] = trace;
+    }
+
+    var layout = {
+        title:'Bivariate, simpsons',
+        width: 600,
+        height: 600,
+        paper_bgcolor: 'rgb(254, 247, 234)',
+        plot_bgcolor: 'rgb(254, 247, 234)',
+        hovermode: 'closest',
+        xaxis: {
+            showgrid: false,
+            showline: true,
+            linecolor: 'rgb(102, 102, 102)',
+            titlefont: {
+                font: { color: 'rgb(204, 204, 204)'}
+            },
+            tickfont: {
+                font: { color: 'rgb(102, 102, 102)'}
+            },
+            autotick: false,
+            dtick: 10,
+            ticks: 'outside',
+            tickcolor: 'rgb(102, 102, 102)'
+        },
+        margin: {
+            l: 140,
+            r: 40,
+            b: 50,
+            t: 80
+        },
+        legend: {
+            font: { size: 10,},
+            yanchor: 'middle',
+            xanchor: 'right'
+        },
+    };
+
+    var TESTER = document.getElementById('plot_div');
+    TESTER.style.display="block";
+    var canvas = document.getElementById("cluster_canvas");
+    canvas.style.display="none";
+	Plotly.newPlot( TESTER, plot_data, );
+    
+    console.log(plot_data);
 }
+
+function show_simpson_cluster() {
+    var data_matrix = [];
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show simpson cluster");
+    console.log("key list:", keys);
+
+    var table = document.getElementById("cluster_data");
+    var row = table.insertRow();
+    col = row.insertCell();
+    for( var idx2=0;idx2<keys.length;idx2++){
+        col = row.insertCell();
+        col.innerHTML = keys[idx2];
+    }
+    for( var idx=0;idx<keys.length;idx++){
+        var data_row = [];
+        var row = table.insertRow();
+        col = row.insertCell();
+        col.innerHTML = keys[idx];
+        for( var idx2=0;idx2<keys.length;idx2++){
+            col = row.insertCell();
+            if( idx != idx2 ) {
+                var val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+                var round_val = Math.round( val * 100 ) / 100.0;
+                col.innerHTML = round_val
+                data_row[data_row.length] = round_val;
+            }  else {
+                data_row[data_row.length] = '-';
+            }
+        }
+        data_matrix[data_matrix.length] = data_row;
+    }
+    console.log(data_matrix);
+
+    //console.log(data_matrix);
+    var node_list = [];
+    for( var idx = 0 ; idx < keys.length ; idx++ ) {
+        var node = new TreeNode( keys[idx] );
+        node_list[node_list.length] = node;
+    }
+
+    while( keys.length > 1 ) {
+        const [ new_data_matrix, new_keys, new_node_list ] = upgma_step(data_matrix, keys, node_list);
+        data_matrix = new_data_matrix;
+        keys = new_keys;
+        node_list = new_node_list;
+        console.log("keys len", keys.length);
+    }
+
+    draw_result( node_list );
+    //console.log("node:", node_list[0]);
+
+}
+
+
 function show_jaccard() {
     var data_matrix = [];
     var data_list = [];
