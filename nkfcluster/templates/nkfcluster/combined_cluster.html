@@ -156,6 +156,8 @@ function clear_cluster() {
     TESTER.style.display="none";
     var canvas = document.getElementById("cluster_canvas");
     canvas.style.display="block";
+    var img = document.getElementById("jpg-export");
+    img.style.display="none";
 }
 
 var json_data = JSON.parse("{{data_json|escapejs}}");
@@ -284,7 +286,8 @@ function show_simpson_bivariate() {
     var TESTER = document.getElementById('plot_div');
     TESTER.style.display="none";
     var canvas = document.getElementById("cluster_canvas");
-    canvas.style.display="none";
+    canvas.style.display="block";
+    img_jpg.style.display="block";
 	Plotly.newPlot( TESTER, plot_data, ).then(
     function(gd)
      {
