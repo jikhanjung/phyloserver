@@ -284,9 +284,9 @@ function show_simpson_bivariate() {
     };
     var img_jpg= document.getElementById('jpg-export');
     var TESTER = document.getElementById('plot_div');
-    TESTER.style.display="none";
+    TESTER.style.display="block";
     var canvas = document.getElementById("cluster_canvas");
-    canvas.style.display="block";
+    canvas.style.display="none";
     img_jpg.style.display="block";
 	Plotly.newPlot( TESTER, plot_data, ).then(
     function(gd)
