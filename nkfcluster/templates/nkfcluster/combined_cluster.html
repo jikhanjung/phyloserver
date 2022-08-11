@@ -40,18 +40,19 @@
     <tbody>
         <tr><td>
             <div>
-                <canvas id="cluster_canvas" width="1300" height="800">
-                </canvas>
-            </div>
-            <div id="plot_div" style="width:1200px;height:1200px;"></div>
-        </td></tr>
-        <tr><td>
-            <div>
                 <input type="radio" name="similarity_index" onclick="handleClick(this);" value="simpson_cluster">Simpson's Cluster
                 <input type="radio" name="similarity_index" onclick="handleClick(this);" value="simpson_bivariate">Simpson's Bivariate
                 <input type="radio" name="similarity_index" onclick="handleClick(this);" value="jaccard">Jaccard's
                 <input type="radio" name="similarity_index" onclick="handleClick(this);" value="sorenson">Sorenson's
             </div>
+        </td></tr>
+        <tr><td>
+            <div>
+                <canvas id="cluster_canvas" width="1300" height="800">
+                </canvas>
+            </div>
+            <div id="plot_div" style="width:1200px;height:1200px;"></div>
+            <img id="jpg-export"></img>
             <table id="cluster_data" class="table">
             </table>
             <table id="cluster_data2" class="table">
@@ -232,8 +233,10 @@ function show_simpson_bivariate() {
         var trace = { 
             x: [data_row[0]], 
             y: [data_row[1]],
-            mode:'markers', 
+            mode:'markers+text', 
             name: keys[idx]+"("+presence_count_list[idx]+")",
+            text: [keys[idx]+"("+presence_count_list[idx]+")"],
+            textposition: ['bottom center','top center','left','right'][parseInt(Math.random()*4)],
             marker: {
                 color:'' + parseInt(Math.random() * 0xffffff).toString(16),
                 symbol:'circle',
@@ -277,12 +280,23 @@ function show_simpson_bivariate() {
             xanchor: 'right'
         },
     };
-
+    var img_jpg= document.getElementById('jpg-export');
     var TESTER = document.getElementById('plot_div');
-    TESTER.style.display="block";
+    TESTER.style.display="none";
     var canvas = document.getElementById("cluster_canvas");
     canvas.style.display="none";
-	Plotly.newPlot( TESTER, plot_data, );
+	Plotly.newPlot( TESTER, plot_data, ).then(
+    function(gd)
+     {
+      Plotly.toImage(gd,{format:'svg',height:1200,width:1200})
+         .then(
+             function(url)
+         {
+             img_jpg.setAttribute("src", url);
+         }
+         )
+    });
+    ;
     
     console.log(plot_data);
 }
