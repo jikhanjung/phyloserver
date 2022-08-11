@@ -39,11 +39,20 @@
     </td></tr></thead>
     <tbody>
         <tr><td>
-            <div>
-                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="simpson_cluster">Simpson's Cluster
-                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="simpson_bivariate">Simpson's Bivariate
-                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="jaccard">Jaccard's
-                <input type="radio" name="similarity_index" onclick="handleClick(this);" value="sorenson">Sorenson's
+            <div class="row">
+                <div class="col-sm-2">
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="simpson">Simpson's<br/>
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="jaccard">Jaccard's<br/>
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="sorenson">Sorenson's
+                </div>
+                <div class="col-sm-2">
+                    <input type="radio" id="analysis_method" name="analysis_method" onclick="set_analysis_method(this);" value="cluster">Cluster<br/>
+                    <input type="radio" id="analysis_method" name="analysis_method" onclick="set_analysis_method(this);" value="bivariate">Bivariate
+                </div>
+                <div class="col-sm-2">
+                    <input type="button" onclick="show_result()" value="Show"><br/>
+                    <input type="button" onclick="download()" value="Download">
+                </div>
             </div>
         </td></tr>
         <tr><td>
@@ -82,20 +91,62 @@ class TreeNode {
     }
 }
 
-function handleClick(myRadio) {
-    //alert('Old value: ' + currentValue);
-    clear_cluster();
-    if( myRadio.value == 'simpson_cluster' ){
-        show_simpson_cluster();
-    }else if( myRadio.value == 'simpson_bivariate' ){
-        show_simpson_bivariate();
-    }else if( myRadio.value == 'jaccard' ){
-        show_jaccard();
-    }else if( myRadio.value == 'sorenson' ){
-        show_sorenson();
+
+var json_data = JSON.parse("{{data_json|escapejs}}");
+var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
+var original_keys = Object.keys(json_data);
+var data_matrix = [];
+var data_list = [];
+var presence_count_list = [];
+var analysis_method = 'cluster';
+var similarity_index = 'jaccard';
+
+if( true ) {
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    for( var idx=0;idx<keys.length;idx++){
+        var data = json_data[keys[idx]];
+        count = 0;
+        for(var idx2=0;idx2<data.length;idx2++){
+            if( data[idx2] == 1 ) {
+                count += 1;
+            }
+        }
+        presence_count_list[presence_count_list.length] = count;
     }
-    //alert('New value: ' + myRadio.value);
-    //currentValue = myRadio.value;
+    console.log("presence_count:", presence_count_list);
+}
+
+function set_similarity_index(myRadio) {
+    //alert('Old value: ' + currentValue);
+    similarity_index = myRadio.value;
+}
+function set_analysis_method(myRadio) {
+    analysis_method = myRadio.value;
+}
+function show_result() {
+    clear_cluster();
+    console.log("similarity_index:", similarity_index);
+    console.log("analysis_method:", analysis_method);
+    if( similarity_index == 'simpson' ) {
+        if( analysis_method == 'cluster' ) {
+            show_simpson_cluster();
+        } else if( analysis_method == 'bivariate' ) {
+            show_simpson_bivariate();
+        }
+    } else if( similarity_index == 'jaccard' ) {
+        if( analysis_method == 'cluster' ) {
+            show_jaccard_cluster();
+        } else if( analysis_method == 'bivariate' ) {
+            show_jaccard_bivariate();
+        }
+    } else if( similarity_index == 'sorenson' ) {
+        if( analysis_method == 'cluster' ) {
+            show_sorenson_cluster();
+        } else if( analysis_method == 'bivariate' ) {
+            show_sorenson_bivariate();
+        }
+    }
+
 }
 function get_simpsons_index(data_a, data_b){
     //document.write(data_a,"<br/>");
@@ -160,26 +211,6 @@ function clear_cluster() {
     img.style.display="none";
 }
 
-var json_data = JSON.parse("{{data_json|escapejs}}");
-var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
-var original_keys = Object.keys(json_data);
-var data_matrix = [];
-var data_list = [];
-var presence_count_list = [];
-if( true ) {
-    var keys = JSON.parse(JSON.stringify(original_keys));
-    for( var idx=0;idx<keys.length;idx++){
-        var data = json_data[keys[idx]];
-        count = 0;
-        for(var idx2=0;idx2<data.length;idx2++){
-            if( data[idx2] == 1 ) {
-                count += 1;
-            }
-        }
-        presence_count_list[presence_count_list.length] = count;
-    }
-    console.log("presence_count:", presence_count_list);
-}
 
 //var canvas = document.getElementById("canvas");
 //var context = canvas.getContext("2d");
@@ -238,7 +269,7 @@ function show_simpson_bivariate() {
             mode:'markers+text', 
             name: keys[idx]+"("+presence_count_list[idx]+")",
             text: [keys[idx]+"("+presence_count_list[idx]+")"],
-            textposition: ['bottom center','top center','left','right'][parseInt(Math.random()*4)],
+            textposition: ['bottom center','top center','left','right', 'top left', 'top right', 'bottom left', 'bottom right'][parseInt(Math.random()*8)],
             marker: {
                 color:'' + parseInt(Math.random() * 0xffffff).toString(16),
                 symbol:'circle',
@@ -299,9 +330,75 @@ function show_simpson_bivariate() {
          }
          )
     });
-    ;
-    
     console.log(plot_data);
+}
+
+function generate_cluster_matrix(a_similarity_index) {
+    for( var idx=0;idx<keys.length;idx++){
+        var data_row = [];
+        for( var idx2=0;idx2<keys.length;idx2++){
+            if( idx != idx2 ) {
+                var val;
+                if( a_similarity_index == 'simpson' ) {
+                    val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                } else if( a_similarity_index == 'jaccard' ) {
+                    val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                } else if( a_similarity_index == 'sorenson' ) {
+                    val = get_sorensons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                }
+                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+                var round_val = Math.round( val * 100 ) / 100.0;
+                data_row[data_row.length] = round_val;
+            }  else {
+                data_row[data_row.length] = '-';
+            }
+        }
+        data_matrix[data_matrix.length] = data_row;
+    }
+    return data_matrix;
+}
+
+function cluster_matrix_to_table(a_keys,a_datamatrix) {
+    var table = document.getElementById("cluster_data");
+    var row = table.insertRow();
+    col = row.insertCell();
+    for( var idx2=0;idx2<a_keys.length;idx2++){
+        col = row.insertCell();
+        col.innerHTML = a_keys[idx2];
+    }
+    for( var idx=0;idx<a_keys.length;idx++){
+        var row = table.insertRow();
+        col = row.insertCell();
+        col.innerHTML = a_keys[idx];
+        for( var idx2=0;idx2<a_keys.length;idx2++){
+            col = row.insertCell();
+            if( idx != idx2 ) {
+                var val = a_datamatrix[idx][idx2];
+                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+                var round_val = Math.round( val * 100 ) / 100.0;
+                col.innerHTML = round_val
+            }
+        }
+    }
+}
+
+function perform_upgma(a_keys, a_data_matrix) {
+    //console.log(data_matrix);
+    var node_list = [];
+    for( var idx = 0 ; idx < a_keys.length ; idx++ ) {
+        var node = new TreeNode( a_keys[idx] );
+        node_list[node_list.length] = node;
+    }
+
+    while( a_keys.length > 1 ) {
+        const [ new_data_matrix, new_keys, new_node_list ] = upgma_step(a_data_matrix, a_keys, node_list);
+        a_data_matrix = new_data_matrix;
+        a_keys = new_keys;
+        node_list = new_node_list;
+        console.log("keys len", a_keys.length);
+    }
+
+
 }
 
 function show_simpson_cluster() {
@@ -311,22 +408,39 @@ function show_simpson_cluster() {
     console.log("show simpson cluster");
     console.log("key list:", keys);
 
+    var data_matrix = generate_cluster_matrix('simpson');
+    cluster_matrix_to_table(keys,data_matrix);
+
+    console.log(data_matrix);
+
+    var node_list = perform_upgma(data_matrix);
+
+    draw_result( node_list );
+    //console.log("node:", node_list[0]);
+}
+
+function show_jaccard_bivariate() {
+    var data_matrix = [];
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show jaccard bivariate");
+    console.log("key list:", keys);
     var table = document.getElementById("cluster_data");
     var row = table.insertRow();
     col = row.insertCell();
-    for( var idx2=0;idx2<keys.length;idx2++){
+    for( var idx2=19;idx2<21;idx2++){
         col = row.insertCell();
         col.innerHTML = keys[idx2];
     }
-    for( var idx=0;idx<keys.length;idx++){
+    for( var idx=0;idx<19;idx++){
         var data_row = [];
         var row = table.insertRow();
         col = row.insertCell();
         col.innerHTML = keys[idx];
-        for( var idx2=0;idx2<keys.length;idx2++){
+        for( var idx2=19;idx2<21;idx2++){
             col = row.insertCell();
             if( idx != idx2 ) {
-                var val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                var val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
                 var round_val = Math.round( val * 100 ) / 100.0;
                 col.innerHTML = round_val
@@ -338,29 +452,82 @@ function show_simpson_cluster() {
         data_matrix[data_matrix.length] = data_row;
     }
     console.log(data_matrix);
-
-    //console.log(data_matrix);
-    var node_list = [];
-    for( var idx = 0 ; idx < keys.length ; idx++ ) {
-        var node = new TreeNode( keys[idx] );
-        node_list[node_list.length] = node;
+    plot_data = [];
+    for( idx=0;idx<data_matrix.length;idx++){
+        var data_row = data_matrix[idx];
+        var trace = { 
+            x: [data_row[0]], 
+            y: [data_row[1]],
+            mode:'markers+text', 
+            name: keys[idx]+"("+presence_count_list[idx]+")",
+            text: [keys[idx]+"("+presence_count_list[idx]+")"],
+            textposition: ['bottom center','top center','left','right', 'top left', 'top right', 'bottom left', 'bottom right'][parseInt(Math.random()*8)],
+            marker: {
+                color:'' + parseInt(Math.random() * 0xffffff).toString(16),
+                symbol:'circle',
+                size: get_circle_size(idx,presence_count_list.slice(0,-2))
+            }
+        };
+        plot_data[plot_data.length] = trace;
     }
 
-    while( keys.length > 1 ) {
-        const [ new_data_matrix, new_keys, new_node_list ] = upgma_step(data_matrix, keys, node_list);
-        data_matrix = new_data_matrix;
-        keys = new_keys;
-        node_list = new_node_list;
-        console.log("keys len", keys.length);
-    }
-
-    draw_result( node_list );
-    //console.log("node:", node_list[0]);
-
+    var layout = {
+        title:'Bivariate, Jaccard',
+        width: 600,
+        height: 600,
+        paper_bgcolor: 'rgb(254, 247, 234)',
+        plot_bgcolor: 'rgb(254, 247, 234)',
+        hovermode: 'closest',
+        xaxis: {
+            showgrid: false,
+            showline: true,
+            linecolor: 'rgb(102, 102, 102)',
+            titlefont: {
+                font: { color: 'rgb(204, 204, 204)'}
+            },
+            tickfont: {
+                font: { color: 'rgb(102, 102, 102)'}
+            },
+            autotick: false,
+            dtick: 10,
+            ticks: 'outside',
+            tickcolor: 'rgb(102, 102, 102)'
+        },
+        margin: {
+            l: 140,
+            r: 40,
+            b: 50,
+            t: 80
+        },
+        legend: {
+            font: { size: 10,},
+            yanchor: 'middle',
+            xanchor: 'right'
+        },
+    };
+    var img_jpg= document.getElementById('jpg-export');
+    var TESTER = document.getElementById('plot_div');
+    TESTER.style.display="block";
+    var canvas = document.getElementById("cluster_canvas");
+    canvas.style.display="none";
+    img_jpg.style.display="block";
+	Plotly.newPlot( TESTER, plot_data, ).then(
+    function(gd)
+     {
+      Plotly.toImage(gd,{format:'svg',height:1200,width:1200})
+         .then(
+             function(url)
+         {
+             img_jpg.setAttribute("src", url);
+         }
+         )
+    });
+    ;
+    
+    console.log(plot_data);
 }
 
-
-function show_jaccard() {
+function show_jaccard_cluster() {
     var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
@@ -586,7 +753,117 @@ function upgma_step( a_data_matrix, a_key_list, a_node_list ){
     }
     return [ new_data_matrix, new_key_list, new_node_list ];
 }
-function show_sorenson() {
+
+
+function show_sorenson_bivariate() {
+    var data_matrix = [];
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show sorenson bivariate");
+    console.log("key list:", keys);
+    var table = document.getElementById("cluster_data");
+    var row = table.insertRow();
+    col = row.insertCell();
+    for( var idx2=19;idx2<21;idx2++){
+        col = row.insertCell();
+        col.innerHTML = keys[idx2];
+    }
+    for( var idx=0;idx<19;idx++){
+        var data_row = [];
+        var row = table.insertRow();
+        col = row.insertCell();
+        col.innerHTML = keys[idx];
+        for( var idx2=19;idx2<21;idx2++){
+            col = row.insertCell();
+            if( idx != idx2 ) {
+                var val = get_sorenson_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+                var round_val = Math.round( val * 100 ) / 100.0;
+                col.innerHTML = round_val
+                data_row[data_row.length] = round_val;
+            }  else {
+                data_row[data_row.length] = '-';
+            }
+        }
+        data_matrix[data_matrix.length] = data_row;
+    }
+    console.log(data_matrix);
+    plot_data = [];
+    for( idx=0;idx<data_matrix.length;idx++){
+        var data_row = data_matrix[idx];
+        var trace = { 
+            x: [data_row[0]], 
+            y: [data_row[1]],
+            mode:'markers+text', 
+            name: keys[idx]+"("+presence_count_list[idx]+")",
+            text: [keys[idx]+"("+presence_count_list[idx]+")"],
+            textposition: ['bottom center','top center','left','right', 'top left', 'top right', 'bottom left', 'bottom right'][parseInt(Math.random()*8)],
+            marker: {
+                color:'' + parseInt(Math.random() * 0xffffff).toString(16),
+                symbol:'circle',
+                size: get_circle_size(idx,presence_count_list.slice(0,-2))
+            }
+        };
+        plot_data[plot_data.length] = trace;
+    }
+
+    var layout = {
+        title:'Bivariate, Sorenson',
+        width: 600,
+        height: 600,
+        paper_bgcolor: 'rgb(254, 247, 234)',
+        plot_bgcolor: 'rgb(254, 247, 234)',
+        hovermode: 'closest',
+        xaxis: {
+            showgrid: false,
+            showline: true,
+            linecolor: 'rgb(102, 102, 102)',
+            titlefont: {
+                font: { color: 'rgb(204, 204, 204)'}
+            },
+            tickfont: {
+                font: { color: 'rgb(102, 102, 102)'}
+            },
+            autotick: false,
+            dtick: 10,
+            ticks: 'outside',
+            tickcolor: 'rgb(102, 102, 102)'
+        },
+        margin: {
+            l: 140,
+            r: 40,
+            b: 50,
+            t: 80
+        },
+        legend: {
+            font: { size: 10,},
+            yanchor: 'middle',
+            xanchor: 'right'
+        },
+    };
+    var img_jpg= document.getElementById('jpg-export');
+    var TESTER = document.getElementById('plot_div');
+    TESTER.style.display="block";
+    var canvas = document.getElementById("cluster_canvas");
+    canvas.style.display="none";
+    img_jpg.style.display="block";
+	Plotly.newPlot( TESTER, plot_data, ).then(
+    function(gd)
+     {
+      Plotly.toImage(gd,{format:'svg',height:1200,width:1200})
+         .then(
+             function(url)
+         {
+             img_jpg.setAttribute("src", url);
+         }
+         )
+    });
+    ;
+    
+    console.log(plot_data);
+}
+
+function show_sorenson_cluster() {
     var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
