@@ -51,7 +51,6 @@
                 </div>
                 <div class="col-sm-2">
                     <input type="button" onclick="show_result()" value="Show"><br/>
-                    <input type="button" onclick="download()" value="Download">
                 </div>
             </div>
         </td></tr>
@@ -146,6 +145,8 @@ function show_result() {
             show_sorenson_bivariate();
         }
     }
+}
+function download() {
 
 }
 function get_simpsons_index(data_a, data_b){
@@ -182,7 +183,7 @@ function get_jaccards_index(data_a, data_b){
     return (parseFloat(common) / parseFloat(count_a+count_b-common));
 }
 
-function get_sorenson_index(data_a, data_b){
+function get_sorensons_index(data_a, data_b){
     //document.write(data_a,"<br/>");
     //document.write(data_b,"<br/>");
     count_a = 0; count_b = 0; common = 0;
@@ -217,58 +218,70 @@ function clear_cluster() {
 
 //document.write(keys);
 function get_circle_size(a_idx, a_presence_count_list){
-    console.log(a_presence_count_list);
+    //console.log(a_presence_count_list);
     var max_val = Math.max(...a_presence_count_list);
     var min_val = Math.min(...a_presence_count_list);
     var val_range = max_val - min_val;
     var min_size = 10;
     var max_size = 40;
     var return_size = min_size + ( ( max_size - min_size ) / val_range ) * presence_count_list[a_idx];
-    console.log(min_val, max_val, min_size, max_size, val_range, a_presence_count_list[a_idx], return_size);
+    //console.log(min_val, max_val, min_size, max_size, val_range, a_presence_count_list[a_idx], return_size);
     return return_size;
 }
+
 function show_simpson_bivariate() {
-    var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
     console.log("show simpson bivariate");
     console.log("key list:", keys);
-    var table = document.getElementById("cluster_data");
-    var row = table.insertRow();
-    col = row.insertCell();
-    for( var idx2=19;idx2<21;idx2++){
-        col = row.insertCell();
-        col.innerHTML = keys[idx2];
-    }
-    for( var idx=0;idx<19;idx++){
-        var data_row = [];
-        var row = table.insertRow();
-        col = row.insertCell();
-        col.innerHTML = keys[idx];
-        for( var idx2=19;idx2<21;idx2++){
-            col = row.insertCell();
-            if( idx != idx2 ) {
-                var val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
-                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-                var round_val = Math.round( val * 100 ) / 100.0;
-                col.innerHTML = round_val
-                data_row[data_row.length] = round_val;
-            }  else {
-                data_row[data_row.length] = '-';
-            }
-        }
-        data_matrix[data_matrix.length] = data_row;
-    }
-    console.log(data_matrix);
-    plot_data = [];
-    for( idx=0;idx<data_matrix.length;idx++){
-        var data_row = data_matrix[idx];
+
+    var data_matrix = generate_bivariate_matrix('simpson');
+    console.log("simpson's bivariate datamatrix:", data_matrix);
+
+    bivariate_matrix_to_table(keys,data_matrix);
+
+    plot_bivariate(keys,data_matrix,'simpson');
+}
+
+function show_jaccard_bivariate() {
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show jaccard bivariate");
+    console.log("key list:", keys);
+
+    var data_matrix = generate_bivariate_matrix('jaccard');
+    console.log("jaccard's bivariate datamatrix:", data_matrix);
+
+    bivariate_matrix_to_table(keys,data_matrix);
+
+    plot_bivariate(keys,data_matrix,'jaccard');
+}
+
+
+function show_sorenson_bivariate() {
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show sorenson bivariate");
+    console.log("key list:", keys);
+
+    var data_matrix = generate_bivariate_matrix('sorenson');
+    console.log("sorenson's bivariate datamatrix:", data_matrix);
+
+    bivariate_matrix_to_table(keys,data_matrix);
+
+    plot_bivariate(keys,data_matrix,'sorenson');
+}
+
+function plot_bivariate(a_keys,a_data_matrix,a_similarity_index) {
+    var plot_data = [];
+    for( idx=0;idx<a_data_matrix.length;idx++){
+        var data_row = a_data_matrix[idx];
         var trace = { 
             x: [data_row[0]], 
             y: [data_row[1]],
             mode:'markers+text', 
-            name: keys[idx]+"("+presence_count_list[idx]+")",
-            text: [keys[idx]+"("+presence_count_list[idx]+")"],
+            name: a_keys[idx]+"("+presence_count_list[idx]+")",
+            text: [a_keys[idx]+"("+presence_count_list[idx]+")"],
             textposition: ['bottom center','top center','left','right', 'top left', 'top right', 'bottom left', 'bottom right'][parseInt(Math.random()*8)],
             marker: {
                 color:'' + parseInt(Math.random() * 0xffffff).toString(16),
@@ -280,7 +293,7 @@ function show_simpson_bivariate() {
     }
 
     var layout = {
-        title:'Bivariate, simpsons',
+        title:'Bivariate, ' + a_similarity_index,
         width: 600,
         height: 600,
         paper_bgcolor: 'rgb(254, 247, 234)',
@@ -313,13 +326,21 @@ function show_simpson_bivariate() {
             xanchor: 'right'
         },
     };
+    var other_options =    { toImageButtonOptions: {
+        filename: 'image_filename',
+        width: 800,
+        height: 600,
+        format: 'svg'
+    }};
     var img_jpg= document.getElementById('jpg-export');
     var TESTER = document.getElementById('plot_div');
     TESTER.style.display="block";
     var canvas = document.getElementById("cluster_canvas");
     canvas.style.display="none";
-    img_jpg.style.display="block";
-	Plotly.newPlot( TESTER, plot_data, ).then(
+    img_jpg.style.display="none";
+	Plotly.newPlot( TESTER, plot_data, {}, other_options)
+    /*
+    .then(
     function(gd)
      {
       Plotly.toImage(gd,{format:'svg',height:1200,width:1200})
@@ -329,11 +350,12 @@ function show_simpson_bivariate() {
              img_jpg.setAttribute("src", url);
          }
          )
-    });
+    });*/
     console.log(plot_data);
 }
 
 function generate_cluster_matrix(a_similarity_index) {
+    var l_data_matrix = []
     for( var idx=0;idx<keys.length;idx++){
         var data_row = [];
         for( var idx2=0;idx2<keys.length;idx2++){
@@ -353,9 +375,33 @@ function generate_cluster_matrix(a_similarity_index) {
                 data_row[data_row.length] = '-';
             }
         }
-        data_matrix[data_matrix.length] = data_row;
+        l_data_matrix[l_data_matrix.length] = data_row;
     }
-    return data_matrix;
+    return l_data_matrix;
+}
+
+function generate_bivariate_matrix(a_similarity_index) {
+    var l_data_matrix = []
+    for( var idx=0;idx<keys.length - 2;idx++){
+        var data_row = [];
+        for( var idx2=19;idx2<keys.length;idx2++){
+            if( idx != idx2 ) {
+                var val;
+                if( a_similarity_index == 'simpson' ) {
+                    val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                } else if( a_similarity_index == 'jaccard' ) {
+                    val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                } else if( a_similarity_index == 'sorenson' ) {
+                    val = get_sorensons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                }
+                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+                var round_val = Math.round( val * 100 ) / 100.0;
+                data_row[data_row.length] = round_val;
+            }
+        }
+        l_data_matrix[l_data_matrix.length] = data_row;
+    }
+    return l_data_matrix;
 }
 
 function cluster_matrix_to_table(a_keys,a_datamatrix) {
@@ -382,6 +428,31 @@ function cluster_matrix_to_table(a_keys,a_datamatrix) {
     }
 }
 
+function bivariate_matrix_to_table(a_keys,a_datamatrix) {
+    var table = document.getElementById("cluster_data");
+    var row = table.insertRow();
+    col = row.insertCell();
+    for( var idx2=a_keys.length-2;idx2<a_keys.length;idx2++){
+        col = row.insertCell();
+        col.innerHTML = a_keys[idx2];
+    }
+    //console.log("keys:", a_keys);
+    //console.log("datamatrix:", a_datamatrix);
+    for( var idx=0;idx<a_keys.length-2;idx++){
+        var row = table.insertRow();
+        col = row.insertCell();
+        col.innerHTML = a_keys[idx];
+        for( var idx2=0;idx2<2;idx2++){
+            col = row.insertCell();
+            var val = a_datamatrix[idx][idx2];
+            //console.log(idx + " vs " + idx2 + ": " +  val + "<br/>");
+            var round_val = Math.round( val * 100 ) / 100.0;
+            col.innerHTML = round_val
+        }
+    }
+}
+
+
 function perform_upgma(a_keys, a_data_matrix) {
     //console.log(data_matrix);
     var node_list = [];
@@ -397,8 +468,7 @@ function perform_upgma(a_keys, a_data_matrix) {
         node_list = new_node_list;
         console.log("keys len", a_keys.length);
     }
-
-
+    return node_list;
 }
 
 function show_simpson_cluster() {
@@ -409,185 +479,47 @@ function show_simpson_cluster() {
     console.log("key list:", keys);
 
     var data_matrix = generate_cluster_matrix('simpson');
-    cluster_matrix_to_table(keys,data_matrix);
-
     console.log(data_matrix);
 
-    var node_list = perform_upgma(data_matrix);
-
+    cluster_matrix_to_table(keys,data_matrix);
+    var node_list = perform_upgma(keys, data_matrix);
+    console.log(node_list);
     draw_result( node_list );
     //console.log("node:", node_list[0]);
-}
-
-function show_jaccard_bivariate() {
-    var data_matrix = [];
-    var data_list = [];
-    var keys = JSON.parse(JSON.stringify(original_keys));
-    console.log("show jaccard bivariate");
-    console.log("key list:", keys);
-    var table = document.getElementById("cluster_data");
-    var row = table.insertRow();
-    col = row.insertCell();
-    for( var idx2=19;idx2<21;idx2++){
-        col = row.insertCell();
-        col.innerHTML = keys[idx2];
-    }
-    for( var idx=0;idx<19;idx++){
-        var data_row = [];
-        var row = table.insertRow();
-        col = row.insertCell();
-        col.innerHTML = keys[idx];
-        for( var idx2=19;idx2<21;idx2++){
-            col = row.insertCell();
-            if( idx != idx2 ) {
-                var val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
-                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-                var round_val = Math.round( val * 100 ) / 100.0;
-                col.innerHTML = round_val
-                data_row[data_row.length] = round_val;
-            }  else {
-                data_row[data_row.length] = '-';
-            }
-        }
-        data_matrix[data_matrix.length] = data_row;
-    }
-    console.log(data_matrix);
-    plot_data = [];
-    for( idx=0;idx<data_matrix.length;idx++){
-        var data_row = data_matrix[idx];
-        var trace = { 
-            x: [data_row[0]], 
-            y: [data_row[1]],
-            mode:'markers+text', 
-            name: keys[idx]+"("+presence_count_list[idx]+")",
-            text: [keys[idx]+"("+presence_count_list[idx]+")"],
-            textposition: ['bottom center','top center','left','right', 'top left', 'top right', 'bottom left', 'bottom right'][parseInt(Math.random()*8)],
-            marker: {
-                color:'' + parseInt(Math.random() * 0xffffff).toString(16),
-                symbol:'circle',
-                size: get_circle_size(idx,presence_count_list.slice(0,-2))
-            }
-        };
-        plot_data[plot_data.length] = trace;
-    }
-
-    var layout = {
-        title:'Bivariate, Jaccard',
-        width: 600,
-        height: 600,
-        paper_bgcolor: 'rgb(254, 247, 234)',
-        plot_bgcolor: 'rgb(254, 247, 234)',
-        hovermode: 'closest',
-        xaxis: {
-            showgrid: false,
-            showline: true,
-            linecolor: 'rgb(102, 102, 102)',
-            titlefont: {
-                font: { color: 'rgb(204, 204, 204)'}
-            },
-            tickfont: {
-                font: { color: 'rgb(102, 102, 102)'}
-            },
-            autotick: false,
-            dtick: 10,
-            ticks: 'outside',
-            tickcolor: 'rgb(102, 102, 102)'
-        },
-        margin: {
-            l: 140,
-            r: 40,
-            b: 50,
-            t: 80
-        },
-        legend: {
-            font: { size: 10,},
-            yanchor: 'middle',
-            xanchor: 'right'
-        },
-    };
-    var img_jpg= document.getElementById('jpg-export');
-    var TESTER = document.getElementById('plot_div');
-    TESTER.style.display="block";
-    var canvas = document.getElementById("cluster_canvas");
-    canvas.style.display="none";
-    img_jpg.style.display="block";
-	Plotly.newPlot( TESTER, plot_data, ).then(
-    function(gd)
-     {
-      Plotly.toImage(gd,{format:'svg',height:1200,width:1200})
-         .then(
-             function(url)
-         {
-             img_jpg.setAttribute("src", url);
-         }
-         )
-    });
-    ;
-    
-    console.log(plot_data);
 }
 
 function show_jaccard_cluster() {
     var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
-    console.log("show jaccard");
+    console.log("show jaccard cluster");
     console.log("key list:", keys);
-    var table = document.getElementById("cluster_data");
-    var row = table.insertRow();
-    col = row.insertCell();
-    for( var idx2=0;idx2<keys.length;idx2++){
-        col = row.insertCell();
-        col.innerHTML = keys[idx2];
-    }
-    for( var idx=0;idx<keys.length;idx++){
-        var data_row = [];
-        var row = table.insertRow();
-        var col = row.insertCell();
-        col.innerHTML = keys[idx];
-        //document.write("idx2:",idx2);
-        //document.write(keys[idx2],idx2,"<br/>");
-        //document.write(keys[idx2],"<br/>");
-        for( var idx2=0;idx2<keys.length;idx2++){
-            col = row.insertCell();
-            if( idx != idx2 ) {
-                var val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
-                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-                var round_val = Math.round( val * 100 ) / 100.0;
-                col.innerHTML = round_val;
-                data_row[data_row.length] = round_val;
-                //data_list[data_list.length] = [ idx, idx2, round_val ];
-            }  else {
-                data_row[data_row.length] = '-';
-            }   
-        }
-        data_matrix[data_matrix.length] = data_row;
-    }
-    //console.log(data_matrix);
-    var node_list = [];
-    for( var idx = 0 ; idx < keys.length ; idx++ ) {
-        var node = new TreeNode( keys[idx] );
-        node_list[node_list.length] = node;
-    }
 
-    while( keys.length > 1 ) {
-        const [ new_data_matrix, new_keys, new_node_list ] = upgma_step(data_matrix, keys, node_list);
-        data_matrix = new_data_matrix;
-        keys = new_keys;
-        node_list = new_node_list;
-        console.log("keys len", keys.length);
-    }
+    var data_matrix = generate_cluster_matrix('jaccard');
+    console.log(data_matrix);
 
+    cluster_matrix_to_table(keys,data_matrix);
+    var node_list = perform_upgma(keys, data_matrix);
+    console.log(node_list);
     draw_result( node_list );
     //console.log("node:", node_list[0]);
+}
 
-    // matrix generation done
-    //console.log(data_matrix);
-    //console.log(node_list);
-    //matrix_to_table(data_matrix, keys, 'cluster_data2');
+function show_sorenson_cluster() {
+    var data_matrix = [];
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show sorenson cluster");
+    console.log("key list:", keys);
 
-    // now cluster data using UPGMA
-    // find max cell
+    var data_matrix = generate_cluster_matrix('sorenson');
+    console.log(data_matrix);
+
+    cluster_matrix_to_table(keys,data_matrix);
+    var node_list = perform_upgma(keys, data_matrix);
+    console.log(node_list);
+    draw_result( node_list );
+    //console.log("node:", node_list[0]);
 }
 
 function draw_result( node_list ) {
@@ -753,168 +685,13 @@ function upgma_step( a_data_matrix, a_key_list, a_node_list ){
     }
     return [ new_data_matrix, new_key_list, new_node_list ];
 }
-
-
-function show_sorenson_bivariate() {
-    var data_matrix = [];
-    var data_list = [];
-    var keys = JSON.parse(JSON.stringify(original_keys));
-    console.log("show sorenson bivariate");
-    console.log("key list:", keys);
-    var table = document.getElementById("cluster_data");
-    var row = table.insertRow();
-    col = row.insertCell();
-    for( var idx2=19;idx2<21;idx2++){
-        col = row.insertCell();
-        col.innerHTML = keys[idx2];
-    }
-    for( var idx=0;idx<19;idx++){
-        var data_row = [];
-        var row = table.insertRow();
-        col = row.insertCell();
-        col.innerHTML = keys[idx];
-        for( var idx2=19;idx2<21;idx2++){
-            col = row.insertCell();
-            if( idx != idx2 ) {
-                var val = get_sorenson_index(json_data[keys[idx]],json_data[keys[idx2]]);
-                //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
-                var round_val = Math.round( val * 100 ) / 100.0;
-                col.innerHTML = round_val
-                data_row[data_row.length] = round_val;
-            }  else {
-                data_row[data_row.length] = '-';
-            }
-        }
-        data_matrix[data_matrix.length] = data_row;
-    }
-    console.log(data_matrix);
-    plot_data = [];
-    for( idx=0;idx<data_matrix.length;idx++){
-        var data_row = data_matrix[idx];
-        var trace = { 
-            x: [data_row[0]], 
-            y: [data_row[1]],
-            mode:'markers+text', 
-            name: keys[idx]+"("+presence_count_list[idx]+")",
-            text: [keys[idx]+"("+presence_count_list[idx]+")"],
-            textposition: ['bottom center','top center','left','right', 'top left', 'top right', 'bottom left', 'bottom right'][parseInt(Math.random()*8)],
-            marker: {
-                color:'' + parseInt(Math.random() * 0xffffff).toString(16),
-                symbol:'circle',
-                size: get_circle_size(idx,presence_count_list.slice(0,-2))
-            }
-        };
-        plot_data[plot_data.length] = trace;
-    }
-
-    var layout = {
-        title:'Bivariate, Sorenson',
-        width: 600,
-        height: 600,
-        paper_bgcolor: 'rgb(254, 247, 234)',
-        plot_bgcolor: 'rgb(254, 247, 234)',
-        hovermode: 'closest',
-        xaxis: {
-            showgrid: false,
-            showline: true,
-            linecolor: 'rgb(102, 102, 102)',
-            titlefont: {
-                font: { color: 'rgb(204, 204, 204)'}
-            },
-            tickfont: {
-                font: { color: 'rgb(102, 102, 102)'}
-            },
-            autotick: false,
-            dtick: 10,
-            ticks: 'outside',
-            tickcolor: 'rgb(102, 102, 102)'
-        },
-        margin: {
-            l: 140,
-            r: 40,
-            b: 50,
-            t: 80
-        },
-        legend: {
-            font: { size: 10,},
-            yanchor: 'middle',
-            xanchor: 'right'
-        },
-    };
-    var img_jpg= document.getElementById('jpg-export');
-    var TESTER = document.getElementById('plot_div');
-    TESTER.style.display="block";
-    var canvas = document.getElementById("cluster_canvas");
-    canvas.style.display="none";
-    img_jpg.style.display="block";
-	Plotly.newPlot( TESTER, plot_data, ).then(
-    function(gd)
-     {
-      Plotly.toImage(gd,{format:'svg',height:1200,width:1200})
-         .then(
-             function(url)
-         {
-             img_jpg.setAttribute("src", url);
-         }
-         )
-    });
-    ;
-    
-    console.log(plot_data);
-}
-
-function show_sorenson_cluster() {
-    var data_matrix = [];
-    var data_list = [];
-    var keys = JSON.parse(JSON.stringify(original_keys));
-    var table = document.getElementById("cluster_data");
-    var row = table.insertRow();
-    col = row.insertCell();
-    for( var idx2=0;idx2<21;idx2++){
-        col = row.insertCell();
-        col.innerHTML = keys[idx2];
-    }
-    for( var idx=0;idx<21;idx++){
-        var data_row = [];
-        var row = table.insertRow();
-        var col = row.insertCell();
-        col.innerHTML = keys[idx];
-        //document.write("idx2:",idx2);
-        //document.write(keys[idx2],idx2,"<br/>");
-        //document.write(keys[idx2],"<br/>");
-        for( var idx2=0;idx2<21;idx2++){
-            col = row.insertCell();
-            if( idx != idx2 ) {
-                var val = get_sorenson_index(json_data[keys[idx]],json_data[keys[idx2]]);
-                var round_val = Math.round( val * 100 ) / 100.0;
-                col.innerHTML = round_val;
-                data_row[data_row.length] = round_val;
-            }  else {
-                data_row[data_row.length] = '-';
-            }   
-        }
-        data_matrix[data_matrix.length] = data_row;
-    }
-    console.log(data_matrix);
-
-    var node_list = [];
-    for( var idx = 0 ; idx < keys.length ; idx++ ) {
-        var node = new TreeNode( keys[idx] );
-        node_list[node_list.length] = node;
-    }
-
-    while( keys.length > 1 ) {
-        const [ new_data_matrix, new_keys, new_node_list ] = upgma_step(data_matrix, keys, node_list);
-        data_matrix = new_data_matrix;
-        keys = new_keys;
-        node_list = new_node_list;
-        //console.log(keys);
-    }
-
-    draw_result( node_list );
-
-
-}
-
+/*
+Plotly.downloadImage({
+    filename: 'customNamedImage',
+    format: 'png', //also can use 'jpeg', 'webp', 'svg'
+    height: 500,
+    width: 500
+});
+*/
 </script>
 {% endblock %}
