@@ -328,8 +328,8 @@ function plot_bivariate(a_keys,a_data_matrix,a_similarity_index) {
     };
     var other_options =    { toImageButtonOptions: {
         filename: 'image_filename',
-        width: 800,
-        height: 600,
+        width: 1200,
+        height: 1200,
         format: 'svg'
     }};
     var img_jpg= document.getElementById('jpg-export');
@@ -475,15 +475,15 @@ function show_simpson_cluster() {
     var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
-    console.log("show simpson cluster");
-    console.log("key list:", keys);
+    //console.log("show simpson cluster");
+    //console.log("key list:", keys);
 
     var data_matrix = generate_cluster_matrix('simpson');
-    console.log(data_matrix);
+    //console.log(data_matrix);
 
     cluster_matrix_to_table(keys,data_matrix);
     var node_list = perform_upgma(keys, data_matrix);
-    console.log(node_list);
+    //console.log(node_list);
     draw_result( node_list );
     //console.log("node:", node_list[0]);
 }
@@ -492,15 +492,15 @@ function show_jaccard_cluster() {
     var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
-    console.log("show jaccard cluster");
-    console.log("key list:", keys);
+    //console.log("show jaccard cluster");
+    //console.log("key list:", keys);
 
     var data_matrix = generate_cluster_matrix('jaccard');
-    console.log(data_matrix);
+    //console.log(data_matrix);
 
     cluster_matrix_to_table(keys,data_matrix);
     var node_list = perform_upgma(keys, data_matrix);
-    console.log(node_list);
+    //console.log(node_list);
     draw_result( node_list );
     //console.log("node:", node_list[0]);
 }
@@ -509,15 +509,15 @@ function show_sorenson_cluster() {
     var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
-    console.log("show sorenson cluster");
-    console.log("key list:", keys);
+    //console.log("show sorenson cluster");
+    //console.log("key list:", keys);
 
     var data_matrix = generate_cluster_matrix('sorenson');
-    console.log(data_matrix);
+    //console.log(data_matrix);
 
     cluster_matrix_to_table(keys,data_matrix);
     var node_list = perform_upgma(keys, data_matrix);
-    console.log(node_list);
+    //console.log(node_list);
     draw_result( node_list );
     //console.log("node:", node_list[0]);
 }
