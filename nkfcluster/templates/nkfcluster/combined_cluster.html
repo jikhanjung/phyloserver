@@ -68,6 +68,7 @@
         </td></tr>
     </tbody>
 </table>
+<div id="detail_data_div" class="border" onclick="this.style.display='none';"><table id="detail_data_table" class="table text-center"></table></div>
 <script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
 <script>
 class TreeNode {
@@ -93,14 +94,21 @@ class TreeNode {
 
 var json_data = JSON.parse("{{data_json|escapejs}}");
 var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
+//console.log(json_data);
+//console.log(taxa_list);
 var original_keys = Object.keys(json_data);
 var data_matrix = [];
 var data_list = [];
 var presence_count_list = [];
 var analysis_method = 'cluster';
 var similarity_index = 'jaccard';
+var current_clientX = 0;
+var current_clientY = 0;
+var current_pageX = 0;
+var current_pageY = 0;
 
 if( true ) {
+
     var keys = JSON.parse(JSON.stringify(original_keys));
     for( var idx=0;idx<keys.length;idx++){
         var data = json_data[keys[idx]];
@@ -113,7 +121,17 @@ if( true ) {
         presence_count_list[presence_count_list.length] = count;
     }
     console.log("presence_count:", presence_count_list);
+    
 }
+function mousemove(event){
+    //console.log("pageX: ",event.pageX,     "pageY: ", event.pageY,     "clientX: ", event.clientX,     "clientY:", event.clientY)
+    current_clientX = event.clientX;
+    current_clientY = event.clientY;
+    current_pageX = event.pageX;
+    current_pageY = event.pageY;
+}
+
+window.addEventListener('mousemove', mousemove);
 
 function set_similarity_index(myRadio) {
     //alert('Old value: ' + currentValue);
@@ -146,9 +164,7 @@ function show_result() {
         }
     }
 }
-function download() {
 
-}
 function get_simpsons_index(data_a, data_b){
     //document.write(data_a,"<br/>");
     //document.write(data_b,"<br/>");
@@ -200,6 +216,8 @@ function get_sorensons_index(data_a, data_b){
 function clear_cluster() {
     var table = document.getElementById("cluster_data");
     table.innerHTML = '';
+    var detail_table = document.getElementById("detail_data_table");
+    detail_table.innerHTML = '';
     var canvas = document.getElementById("cluster_canvas");
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);       
@@ -428,6 +446,37 @@ function cluster_matrix_to_table(a_keys,a_datamatrix) {
     }
 }
 
+function show_detail_data(idx1,idx2){
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    var table = document.getElementById("detail_data_table");
+    table.innerHTML = '';
+    var div = document.getElementById("detail_data_div");
+    if( div.style.display == 'none'){
+        div.style.display = 'block';
+    } else {
+        div.style.display = 'none';
+    }
+    div.style = "position:absolute; left:"+current_pageX+"px; top:"+current_pageY+"px; background-color:white;";        
+    var row = table.insertRow();
+    col = row.insertCell();
+    col = row.insertCell();
+    col.innerHTML = keys[idx1];
+    col = row.insertCell();
+    col.innerHTML = keys[idx2];
+    //var json_data = JSON.parse("{{data_json|escapejs}}");
+    //var taxa_list = JSON.parse("{{taxa_json|escapejs}}");
+    for(var idx=0;idx<taxa_list.length;idx++){
+        if( json_data[keys[idx1]][idx] == 0 && json_data[keys[idx2]][idx] == 0 ) continue; 
+        var row = table.insertRow();
+        col = row.insertCell();
+        col.innerHTML = taxa_list[idx];
+        col = row.insertCell();
+        col.innerHTML = json_data[keys[idx1]][idx];
+        col = row.insertCell();
+        col.innerHTML = json_data[keys[idx2]][idx];
+    }
+}
+
 function bivariate_matrix_to_table(a_keys,a_datamatrix) {
     var table = document.getElementById("cluster_data");
     var row = table.insertRow();
@@ -444,14 +493,23 @@ function bivariate_matrix_to_table(a_keys,a_datamatrix) {
         col.innerHTML = a_keys[idx];
         for( var idx2=0;idx2<2;idx2++){
             col = row.insertCell();
+            loc_key1 = a_keys[idx];
+            loc_key2 = a_keys[a_keys.length-2+idx2];
             var val = a_datamatrix[idx][idx2];
             //console.log(idx + " vs " + idx2 + ": " +  val + "<br/>");
+
             var round_val = Math.round( val * 100 ) / 100.0;
-            col.innerHTML = round_val
+            var val_node = document.createTextNode("" + round_val);
+            var a_elem = document.createElement("a");
+            var idx_val = a_keys.length-2+idx2;
+            a_elem.setAttribute("href","javascript:show_detail_data("+idx+","+idx_val+");");
+            //a_elem.setAttribute("onmouseclick","show_data(event,"+idx+","+idx_val+");");
+            a_elem.appendChild(val_node);
+            //col.innerHTML = round_val;
+            col.appendChild(a_elem);
         }
     }
 }
-
 
 function perform_upgma(a_keys, a_data_matrix) {
     //console.log(data_matrix);
