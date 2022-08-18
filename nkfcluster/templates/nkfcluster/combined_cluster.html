@@ -440,7 +440,17 @@ function cluster_matrix_to_table(a_keys,a_datamatrix) {
                 var val = a_datamatrix[idx][idx2];
                 //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
                 var round_val = Math.round( val * 100 ) / 100.0;
-                col.innerHTML = round_val
+
+                var val_node = document.createTextNode("" + round_val);
+                var a_elem = document.createElement("a");
+                a_elem.setAttribute("href","javascript:show_detail_data("+idx+","+idx2+");");
+                //a_elem.setAttribute("onmouseclick","show_data(event,"+idx+","+idx_val+");");
+                a_elem.appendChild(val_node);
+                //col.innerHTML = round_val;
+                col.appendChild(a_elem);
+
+
+                //col.innerHTML = round_val
             }
         }
     }
