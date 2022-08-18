@@ -282,7 +282,7 @@ function plot_bivariate(a_keys,a_data_matrix,a_similarity_index) {
             mode:'markers+text', 
             name: a_keys[idx]+"("+presence_count_list[idx]+")",
             text: [a_keys[idx]+"("+presence_count_list[idx]+")"],
-            textposition: ['bottom center','top center','left','right', 'top left', 'top right', 'bottom left', 'bottom right'][parseInt(Math.random()*8)],
+            textposition: ['bottom center','top center','left','right'][parseInt(Math.random()*4)],
             marker: {
                 color:'' + parseInt(Math.random() * 0xffffff).toString(16),
                 symbol:'circle',
