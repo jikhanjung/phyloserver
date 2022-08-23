@@ -31,6 +31,7 @@
             <th><div>Revised name</div></th>
             <th><div>Location</div></th>
             <th><div>Source</div></th></tr>
+            <th><div>Source(Eng.)</div></th></tr>
         {% for occ in page_obj %}
         <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail' occ.id %}';">
             <td align="center">{{ occ.get_strat_unit_display|default_if_none:'' }}</td>
@@ -41,6 +42,7 @@
             <td align="center">{{ occ.revised_species_name|default_if_none:'' }}</td>
             <td align="center">{{ occ.get_location_display }}</td>
             <td align="center">{{ occ.source }}</td>
+            <td align="center">{{ occ.source_eng }}</td>
         </tr>
         {% endfor %}
     {% else %}
