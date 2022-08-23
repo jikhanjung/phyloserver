@@ -12,6 +12,7 @@
     <tr><th>Revised Genus name</th><td> {{ occ.revised_genus_name|default_if_none:'' }}</td></tr>
     <tr><th>Location</th><td>{{ occ.get_location_display }}</td></tr>
     <tr><th>Source</th><td>{{ occ.source }}</td></tr>
+    <tr><th>Source(Eng)</th><td>{{ occ.source_eng }}</td></tr>
 </table>
 <a href="{% url 'occ_list' %}">[Occurrence List]</a>
 <a href="{% url 'edit_occurrence' occ.id %}">[Edit]</a>

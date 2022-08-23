@@ -49,6 +49,7 @@ class Command(BaseCommand):
                     loc1 = loc2.parent
                     occ.locality_lvl1 = loc1.name
             occ.source = nkocc.source
+            occ.source_eng = nkocc.source_eng
             if nkocc.chronounit:
                 count += 1
                 occ.chrono_lvl2 = nkocc.chronounit.name
