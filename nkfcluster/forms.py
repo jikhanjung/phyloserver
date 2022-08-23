@@ -10,7 +10,7 @@ from django.conf import settings
 class NkfOccurrenceForm(ModelForm):
     class Meta:
         model = NkfOccurrence
-        fields = ['strat_unit', 'chronounit', 'lithology','group','species_name','revised_species_name','location','source']
+        fields = ['strat_unit', 'chronounit', 'lithology','group','species_name','revised_species_name','location','source','source_eng']
 
 class NkfOccurrenceForm1(ModelForm):
     class Meta:
