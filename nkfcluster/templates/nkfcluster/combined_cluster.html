@@ -44,14 +44,15 @@
                     <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="simpson">Simpson's<br/>
                     <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="jaccard">Jaccard's<br/>
                     <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="sorenson">Sorenson's<br/>
-                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="raupcrick">Raup-Crick's
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="raupcrick">Raup-Crick's<br/>
+                    <input type="text" id="raup_crick_replicate" name="raup_crick_replicate" style="display:none" value="1000">
                 </div>
                 <div class="col-sm-2">
                     <input type="radio" id="analysis_method" name="analysis_method" onclick="set_analysis_method(this);" value="cluster">Cluster<br/>
                     <input type="radio" id="analysis_method" name="analysis_method" onclick="set_analysis_method(this);" value="bivariate">Bivariate
                 </div>
                 <div class="col-sm-2">
-                    <input type="button" onclick="show_result()" value="Show"><br/>
+                    <input type="button" onclick="show_result()" id="show_result" value="Show"><br/>
                 </div>
             </div>
         </td></tr>
@@ -137,11 +138,23 @@ window.addEventListener('mousemove', mousemove);
 function set_similarity_index(myRadio) {
     //alert('Old value: ' + currentValue);
     similarity_index = myRadio.value;
+    if( similarity_index == 'raupcrick' ) {
+        document.getElementById('raup_crick_replicate').style.display='block';
+        console.log(document.getElementById('raup_crick_replicate').value);
+    } else {
+        document.getElementById('raup_crick_replicate').style.display='none';
+    }
 }
 function set_analysis_method(myRadio) {
     analysis_method = myRadio.value;
 }
 function show_result() {
+    var elem = document.getElementById('show_result');
+    var cursor_style = elem.style.cursor;
+    console.log('elem cursor:', cursor_style );
+    elem.style.cursor = 'wait';
+    document.body.style.cursor = 'wait';
+
     clear_cluster();
     console.log("similarity_index:", similarity_index);
     console.log("analysis_method:", analysis_method);
@@ -170,6 +183,8 @@ function show_result() {
             show_raup_crick_bivariate();
         }
     }
+    elem.style.cursor = cursor_style;
+    document.body.style.cursor = 'auto';
 }
 
 function get_simpsons_index(data_a, data_b){
@@ -224,6 +239,8 @@ function get_sorensons_index(data_a, data_b){
 function get_raup_crick_index(data_a, data_b){
     //document.write(data_a,"<br/>");
     //document.write(data_b,"<br/>");
+    var rep_number = parseInt(document.getElementById('raup_crick_replicate').value);
+    console.log(rep_number);
     count_a = 0; count_b = 0; common_count = 0; total_species_count = data_a.length;
 
     for(var idx=0;idx<data_a.length;idx++){
@@ -236,7 +253,7 @@ function get_raup_crick_index(data_a, data_b){
     }
 
     
-    rep_number = 1000;
+    //rep_number = 10000;
     const result_array = new Array(rep_number).fill(0);
     for( var rep_count=0; rep_count<rep_number; rep_count++ ) { 
         var a_species_list = [];
