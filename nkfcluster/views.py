@@ -1176,8 +1176,23 @@ def show_combined_cluster(request):
         data_hash[locality] = data
     data_json = json.dumps(data_hash)
     taxa_json = json.dumps(taxa_list)
+    context = {
+        'data_list': data_list,
+        'user_obj':user_obj,
+        'column_list':column_list,
+        'genus_species_select':genus_species_select,
+        'locality_level':locality_level,
+        'chronounit_choices':chronounit_choices,
+        'selected_chronounit':selected_chronounit,
+        'urlparameter':urlparameter,
+        'exclude_china_only_taxa':exclude_china_only_taxa,
+        'exclude_no_data_locality':exclude_no_data_locality,
+        'locality_list':locality_list,
+        'data_json':data_json,
+        'taxa_json':taxa_json
+    }
     #return FileResponse(buffer, as_attachment=True, filename=filename)
-    return render(request, 'nkfcluster/combined_cluster.html', {'data_list': data_list,'user_obj':user_obj,'column_list':column_list,'genus_species_select':genus_species_select,'locality_level':locality_level,'chronounit_choices':chronounit_choices,'selected_chronounit':selected_chronounit,'urlparameter':urlparameter,'exclude_china_only_taxa':exclude_china_only_taxa,'locality_list':locality_list,'data_json':data_json,'taxa_json':taxa_json})
+    return render(request, 'nkfcluster/combined_cluster.html', context)
 
 
 
