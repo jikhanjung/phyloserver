@@ -41,10 +41,11 @@
         <tr><td>
             <div class="row">
                 <div class="col-sm-2">
-                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="simpson">Simpson's<br/>
-                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="jaccard">Jaccard's<br/>
-                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="sorenson">Sorenson's<br/>
-                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="raupcrick">Raup-Crick's<br/>
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="simpson">Simpson<br/>
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="jaccard">Jaccard<br/>
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="sorensen">Sørensen-Dice<br/>
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="ochiai">Ochiai-Otsuka<br/>
+                    <input type="radio" id="similarity_index" name="similarity_index" onclick="set_similarity_index(this);" value="raupcrick">Raup-Crick<br/>
                     <input type="text" id="raup_crick_replicate" name="raup_crick_replicate" style="display:none" value="1000">
                 </div>
                 <div class="col-sm-2">
@@ -170,11 +171,17 @@ function show_result() {
         } else if( analysis_method == 'bivariate' ) {
             show_jaccard_bivariate();
         }
-    } else if( similarity_index == 'sorenson' ) {
+    } else if( similarity_index == 'sorensen' ) {
         if( analysis_method == 'cluster' ) {
-            show_sorenson_cluster();
+            show_sorensen_cluster();
         } else if( analysis_method == 'bivariate' ) {
-            show_sorenson_bivariate();
+            show_sorensen_bivariate();
+        }
+    } else if( similarity_index == 'ochiai' ) {
+        if( analysis_method == 'cluster' ) {
+            show_ochiai_cluster();
+        } else if( analysis_method == 'bivariate' ) {
+            show_ochiai_bivariate();
         }
     } else if( similarity_index == 'raupcrick' ) {
         if( analysis_method == 'cluster' ) {
@@ -221,7 +228,7 @@ function get_jaccards_index(data_a, data_b){
     return (parseFloat(common) / parseFloat(count_a+count_b-common));
 }
 
-function get_sorensons_index(data_a, data_b){
+function get_sorensens_index(data_a, data_b){
     //document.write(data_a,"<br/>");
     //document.write(data_b,"<br/>");
     count_a = 0; count_b = 0; common = 0;
@@ -235,6 +242,23 @@ function get_sorensons_index(data_a, data_b){
     }
     return (parseFloat(common*2) / parseFloat(count_a+count_b));
 }
+
+function get_ochiai_index(data_a, data_b){
+    //document.write(data_a,"<br/>");
+    //document.write(data_b,"<br/>");
+    count_a = 0; count_b = 0; common = 0;
+    for(var idx=0;idx<data_a.length;idx++){
+        if( data_a[idx] == 0 && data_b[idx] == 0 ) {
+            continue
+        }
+        if( data_a[idx] == 1 ) { count_a += 1; }
+        if( data_b[idx] == 1 ) { count_b += 1; }
+        if( data_a[idx] == 1 && data_b[idx] == 1 ) { common += 1; }
+    }
+    console.log("ochiai numbers:",count_a, count_b, common);
+    return (parseFloat(common) / parseFloat(Math.sqrt(count_a*count_b)));
+}
+
 
 function get_raup_crick_index(data_a, data_b){
     //document.write(data_a,"<br/>");
@@ -351,18 +375,32 @@ function show_jaccard_bivariate() {
 }
 
 
-function show_sorenson_bivariate() {
+function show_sorensen_bivariate() {
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
-    console.log("show sorenson bivariate");
+    console.log("show Sørensen bivariate");
     console.log("key list:", keys);
 
-    var data_matrix = generate_bivariate_matrix('sorenson');
-    console.log("sorenson's bivariate datamatrix:", data_matrix);
+    var data_matrix = generate_bivariate_matrix('sorensen');
+    console.log("Sørensen's bivariate datamatrix:", data_matrix);
 
     bivariate_matrix_to_table(keys,data_matrix);
 
-    plot_bivariate(keys,data_matrix,'sorenson');
+    plot_bivariate(keys,data_matrix,'sorensen');
+}
+
+function show_ochiai_bivariate() {
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    console.log("show Ochiai bivariate");
+    console.log("key list:", keys);
+
+    var data_matrix = generate_bivariate_matrix('ochiai');
+    console.log("Ochiai's bivariate datamatrix:", data_matrix);
+
+    bivariate_matrix_to_table(keys,data_matrix);
+
+    plot_bivariate(keys,data_matrix,'Ochiai');
 }
 
 
@@ -473,8 +511,10 @@ function generate_cluster_matrix(a_similarity_index) {
                     val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 } else if( a_similarity_index == 'jaccard' ) {
                     val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
-                } else if( a_similarity_index == 'sorenson' ) {
-                    val = get_sorensons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                } else if( a_similarity_index == 'sorensen' ) {
+                    val = get_sorensens_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                } else if( a_similarity_index == 'ochiai' ) {
+                    val = get_ochiai_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 } else if( a_similarity_index == 'raupcrick' ) {
                     val = get_raup_crick_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 }
@@ -501,8 +541,10 @@ function generate_bivariate_matrix(a_similarity_index) {
                     val = get_simpsons_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 } else if( a_similarity_index == 'jaccard' ) {
                     val = get_jaccards_index(json_data[keys[idx]],json_data[keys[idx2]]);
-                } else if( a_similarity_index == 'sorenson' ) {
-                    val = get_sorensons_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                } else if( a_similarity_index == 'sorensen' ) {
+                    val = get_sorensens_index(json_data[keys[idx]],json_data[keys[idx2]]);
+                } else if( a_similarity_index == 'ochiai' ) {
+                    val = get_ochiai_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 } else if( a_similarity_index == 'raupcrick' ) {
                     val = get_raup_crick_index(json_data[keys[idx]],json_data[keys[idx2]]);
                 }
@@ -665,14 +707,31 @@ function show_jaccard_cluster() {
     //console.log("node:", node_list[0]);
 }
 
-function show_sorenson_cluster() {
+function show_sorensen_cluster() {
     var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
-    //console.log("show sorenson cluster");
+    //console.log("show sorensen cluster");
     //console.log("key list:", keys);
 
-    var data_matrix = generate_cluster_matrix('sorenson');
+    var data_matrix = generate_cluster_matrix('sorensen');
+    //console.log(data_matrix);
+
+    cluster_matrix_to_table(keys,data_matrix);
+    var node_list = perform_upgma(keys, data_matrix);
+    //console.log(node_list);
+    draw_result( node_list );
+    //console.log("node:", node_list[0]);
+}
+
+function show_ochiai_cluster() {
+    var data_matrix = [];
+    var data_list = [];
+    var keys = JSON.parse(JSON.stringify(original_keys));
+    //console.log("show sorensen cluster");
+    //console.log("key list:", keys);
+
+    var data_matrix = generate_cluster_matrix('ochiai');
     //console.log(data_matrix);
 
     cluster_matrix_to_table(keys,data_matrix);
@@ -686,7 +745,7 @@ function show_raup_crick_cluster() {
     var data_matrix = [];
     var data_list = [];
     var keys = JSON.parse(JSON.stringify(original_keys));
-    //console.log("show sorenson cluster");
+    //console.log("show raupcrick cluster");
     //console.log("key list:", keys);
 
     var data_matrix = generate_cluster_matrix('raupcrick');
