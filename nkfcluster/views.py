@@ -15,6 +15,7 @@ import csv
 import datetime
 
 import json
+#import ecopy as ep
 
 # Create your views here.
 ITEMS_PER_PAGE = 20
@@ -1176,6 +1177,73 @@ def show_combined_cluster(request):
         data_hash[locality] = data
     data_json = json.dumps(data_hash)
     taxa_json = json.dumps(taxa_list)
+    context = {
+        'data_list': data_list,
+        'user_obj':user_obj,
+        'column_list':column_list,
+        'genus_species_select':genus_species_select,
+        'locality_level':locality_level,
+        'chronounit_choices':chronounit_choices,
+        'selected_chronounit':selected_chronounit,
+        'urlparameter':urlparameter,
+        'exclude_china_only_taxa':exclude_china_only_taxa,
+        'exclude_no_data_locality':exclude_no_data_locality,
+        'locality_list':locality_list,
+        'data_json':data_json,
+        'taxa_json':taxa_json
+    }
+    #return FileResponse(buffer, as_attachment=True, filename=filename)
+    return render(request, 'nkfcluster/combined_cluster.html', context)
+
+def show_combined_ordination(request): 
+    user_obj = get_user_obj( request )
+
+    #data_list, column_list, genus_species_select, locality_level = read_occurrence_data(request)
+    chrono_list = [ 'Terreneuvian','Series 2','Miaolingian','Furongian']
+    data_list, column_list, genus_species_select, locality_level, selected_chronounit,exclude_china_only_taxa,exclude_no_data_locality = read_combined_data(request)
+
+    chronounit_choices = chrono_list
+    chrono_parameter = '&'.join([ 'selected_chronounit=' + x for x in selected_chronounit ])
+    urlparameter = { 'chronounit': chrono_parameter}
+
+
+    #data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
+    chronounit_choices = chrono_list
+    
+    cluster_data = [['chrono_unit'],['species_name']]
+    for col_name in column_list[2:]:
+        cluster_data.append([col_name])
+
+    #print(column_list)
+    #print(data_list[0])
+    locality_list = column_list[2:]
+    data_hash = {}
+    taxa_list = []
+    sum = {}
+    for row in data_list:
+        taxa_list.append(row[1])
+    for idx, locality in enumerate(locality_list):
+        data = []
+        sum = 0
+        for row in data_list:
+            val = 0
+            if row[idx+2] == 'O':
+                val = 1
+                sum += 1
+            data.append(val)
+        #if sum > 0:
+        data_hash[locality] = data
+    data_json = json.dumps(data_hash)
+    taxa_json = json.dumps(taxa_list)
+
+
+    #dunes = ep.load_data('dune')
+    #dunes_T = ep.transform(dunes, 'wisconsin')
+    #dunes_D = ep.distance(dunes_T, 'bray')
+    #dunesMDS = ep.MDS(dunes_D, transform='monotone')
+
+
+
     context = {
         'data_list': data_list,
         'user_obj':user_obj,

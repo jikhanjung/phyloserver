@@ -63,6 +63,7 @@ urlpatterns = [
     path('show_combined_table/', views.show_combined_table, name='show_combined_table'),
     path('download_combined_cluster/', views.download_combined_cluster, name='download_combined_cluster'),
     path('show_combined_cluster/', views.show_combined_cluster, name='show_combined_cluster'),
+    path('show_combined_ordination/', views.show_combined_ordination, name='show_combined_ordination'),
 
     # chronostrat unit urls
     path('chronounit_list/', views.chronounit_list, name='chronounit_list'),
