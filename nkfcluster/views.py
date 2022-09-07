@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
 from .models import NkfOccurrence, NkfOccurrence2, NkfOccurrence3, NkfOccurrence4, NkfOccurrence5, NkfOccurrence6, NkfLocality, STRATUNIT_CHOICES, GROUP_CHOICES, PbdbOccurrence, TotalOccurrence, ChronoUnit
 from django.core.paginator import Paginator
-from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfOccurrenceForm5, NkfLocalityForm, ChronoUnitForm, PbdbOccurrenceForm
+from .forms import NkfOccurrenceForm, NkfOccurrenceForm2, NkfOccurrenceForm3, NkfOccurrenceForm4, NkfOccurrenceForm5, NkfOccurrenceForm6, NkfLocalityForm, ChronoUnitForm, PbdbOccurrenceForm
 from django.urls import reverse
 #from cStringIO import StringIO
 from django.db.models import Q
