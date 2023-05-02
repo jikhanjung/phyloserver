@@ -534,7 +534,7 @@ function generate_bivariate_matrix(a_similarity_index) {
     var l_data_matrix = []
     for( var idx=0;idx<keys.length - 2;idx++){
         var data_row = [];
-        for( var idx2=19;idx2<keys.length;idx2++){
+        for( var idx2=keys.length - 2;idx2<keys.length;idx2++){
             if( idx != idx2 ) {
                 var val;
                 if( a_similarity_index == 'simpson' ) {
