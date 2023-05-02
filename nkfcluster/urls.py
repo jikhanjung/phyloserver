@@ -50,6 +50,7 @@ urlpatterns = [
     path('add_locality/', views.add_locality, name='add_locality'),
     path('edit_locality/<int:pk>/', views.edit_locality, name='edit_locality'),
     path('delete_locality/<int:pk>/', views.delete_locality, name='delete_locality'),
+    path('locality_chart/', views.locality_chart, name='locality_chart'),
 
 
     path('pbdb_list/', views.pbdb_list, name='pbdb_list'),

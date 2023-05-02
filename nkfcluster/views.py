@@ -543,6 +543,21 @@ def locality_list(request):
     }
     return render(request, 'nkfcluster/locality_list.html', context)
 
+def locality_chart(request):
+    user_obj = get_user_obj(request)
+
+    locality_list = NkfLocality.objects.filter(parent=None).order_by('index')
+    print(locality_list)
+    for locality in locality_list:
+        print(locality, locality.children.all())
+        if locality.terminal_unit_count < 1:
+            locality.calculate_terminal_unit_count()
+    context = {
+        'locality_list': locality_list,
+        'user_obj': user_obj,
+    }
+    return render(request, 'nkfcluster/locality_chart.html', context)
+
 def locality_detail(request, pk):
     user_obj = get_user_obj(request)
 

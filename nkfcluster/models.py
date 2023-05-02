@@ -335,10 +335,28 @@ class NkfLocality(models.Model):
     index = models.IntegerField(blank=True,null=True)
     name = models.CharField(max_length=100,blank=True,null=True)
     level = models.IntegerField(blank=True,null=True)
+    terminal_unit_count = models.IntegerField(default=0)
     parent = models.ForeignKey('self',on_delete=models.CASCADE,blank=True,null=True,related_name='children')
 
     def __str__(self):
         return self.name
+
+    def calculate_terminal_unit_count(self):
+        import logging
+        logger = logging.getLogger(__name__)
+
+        terminal_unit_count = 0
+        if self.children.all():
+            for child in self.children.all():
+                terminal_unit_count += child.calculate_terminal_unit_count()
+        else:
+            terminal_unit_count = 1
+        self.terminal_unit_count = terminal_unit_count
+        print(self, self.terminal_unit_count)
+        logger.error('Something went wrong! '+str(self.id)+":"+str(terminal_unit_count))
+        self.save()
+        return terminal_unit_count
+
 
 CHINA_REGION_HASH ={
 "CN-Anhui-Chuxian":"SC",
