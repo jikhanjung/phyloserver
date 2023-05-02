@@ -1024,14 +1024,15 @@ def read_combined_data(request):
         locality_level = 3
     locality_level = int(locality_level)
     
+    additional_locality_list = ['NC','SC','BELT','Other']
     locality_list = NkfLocality.objects.filter(level=locality_level).order_by("parent_id","index")
     locality_name_list = [ loc.name for loc in locality_list ]
-    locality_name_list.extend( ['NC','SC','BELT','Other'])
+    locality_name_list.extend(additional_locality_list )
     print(locality_name_list)
 
     #print(selected_chronounit)
     occ_list = TotalOccurrence.objects.filter(chrono_lvl2__in=selected_chronounit,species_name__gt='').order_by('species_name','genus_name')
-    column_list = ["ChronoUnit",taxon_header]
+    column_list = [taxon_header]
     column_list.extend(locality_name_list)
 
     occ_hash = {}
@@ -1049,7 +1050,7 @@ def read_combined_data(request):
             taxon_name = occ.species_name
         if taxon_name != prev_taxon_name:
             if curr_row:
-                nk_data = curr_row[2:-4]
+                nk_data = curr_row[1:-len(additional_locality_list)]
                 nk_data_exist = False
                 for nk_cell in nk_data:
                     if nk_cell == 'O':
@@ -1058,7 +1059,7 @@ def read_combined_data(request):
                 if exclude_china_only_taxa != '1' or nk_data_exist:
                     data_list.append(curr_row)
             
-            curr_row = [ occ.chrono_lvl2, taxon_name ]
+            curr_row = [ taxon_name ]
             while len(curr_row) < len(column_list):
                 curr_row.append('')
         if locality_level == 1:
@@ -1079,14 +1080,14 @@ def read_combined_data(request):
     if exclude_no_data_locality:
         new_data_list = []
         for data_row in data_list:
-            new_data_row = data_row[0:2].copy()
-            for col_idx, colname in enumerate(column_list[2:]):
+            new_data_row = data_row[0:1].copy()
+            for col_idx, colname in enumerate(column_list[1:]):
                 if colname in data_exist_locality_list:
-                    new_data_row.append(data_row[col_idx+2])
+                    new_data_row.append(data_row[col_idx+1])
             new_data_list.append(new_data_row)
         data_list = new_data_list
-        new_column_list = column_list[0:2].copy()
-        for colname in column_list[2:]:
+        new_column_list = column_list[0:1].copy()
+        for colname in column_list[1:]:
             if colname in data_exist_locality_list:
                 new_column_list.append(colname)
         column_list = new_column_list
@@ -1116,8 +1117,8 @@ def download_combined_cluster(request):
     #data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
     chronounit_choices = chrono_list
     
-    cluster_data = [['chrono_unit'],['species_name']]
-    for col_name in column_list[2:]:
+    cluster_data = [['species_name']]
+    for col_name in column_list[1:]:
         cluster_data.append([col_name])
 
     
@@ -1169,24 +1170,24 @@ def show_combined_cluster(request):
     #data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
     chronounit_choices = chrono_list
     
-    cluster_data = [['chrono_unit'],['species_name']]
-    for col_name in column_list[2:]:
+    cluster_data = [['species_name']]
+    for col_name in column_list[1:]:
         cluster_data.append([col_name])
 
     #print(column_list)
     #print(data_list[0])
-    locality_list = column_list[2:]
+    locality_list = column_list[1:]
     data_hash = {}
     taxa_list = []
     sum = {}
     for row in data_list:
-        taxa_list.append(row[1])
+        taxa_list.append(row[0])
     for idx, locality in enumerate(locality_list):
         data = []
         sum = 0
         for row in data_list:
             val = 0
-            if row[idx+2] == 'O':
+            if row[idx+1] == 'O':
                 val = 1
                 sum += 1
             data.append(val)
@@ -1227,24 +1228,24 @@ def show_combined_ordination(request):
     #data_list, column_list, genus_species_select, locality_level, selected_stratunit, selected_fossilgroup = read_occurrence_data(request)
     chronounit_choices = chrono_list
     
-    cluster_data = [['chrono_unit'],['species_name']]
-    for col_name in column_list[2:]:
+    cluster_data = [['species_name']]
+    for col_name in column_list[1:]:
         cluster_data.append([col_name])
 
     #print(column_list)
     #print(data_list[0])
-    locality_list = column_list[2:]
+    locality_list = column_list[1:]
     data_hash = {}
     taxa_list = []
     sum = {}
     for row in data_list:
-        taxa_list.append(row[1])
+        taxa_list.append(row[0])
     for idx, locality in enumerate(locality_list):
         data = []
         sum = 0
         for row in data_list:
             val = 0
-            if row[idx+2] == 'O':
+            if row[idx+1] == 'O':
                 val = 1
                 sum += 1
             data.append(val)
