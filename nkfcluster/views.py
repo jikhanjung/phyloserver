@@ -1037,7 +1037,8 @@ def read_combined_data(request):
     curr_row = None
     data_list = []
     prev_taxon_name = ""
-    data_exist_locality_list = [];
+    data_exist_locality_list = []
+    #print( column_list )
     for occ in occ_list:
         #print(occ.id,occ.species_name,occ.chrono_lvl2,occ.locality_lvl3,occ.genus_name,occ.species_name)
         taxon_name = ""
@@ -1047,7 +1048,7 @@ def read_combined_data(request):
             taxon_name = occ.species_name
         if taxon_name != prev_taxon_name:
             if curr_row:
-                nk_data = curr_row[2:-5]
+                nk_data = curr_row[2:-4]
                 nk_data_exist = False
                 for nk_cell in nk_data:
                     if nk_cell == 'O':
