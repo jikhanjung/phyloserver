@@ -547,11 +547,12 @@ def locality_chart(request):
     user_obj = get_user_obj(request)
 
     locality_list = NkfLocality.objects.filter(parent=None).order_by('index')
-    print(locality_list)
+    #print(locality_list)
     for locality in locality_list:
-        print(locality, locality.children.all())
-        if locality.terminal_unit_count < 1:
-            locality.calculate_terminal_unit_count()
+        #print(locality, locality.children.all())
+        #if locality.terminal_unit_count < 1:
+        locality.calculate_terminal_unit_count()
+        locality.save()
     context = {
         'locality_list': locality_list,
         'user_obj': user_obj,
@@ -1023,10 +1024,10 @@ def read_combined_data(request):
         locality_level = 3
     locality_level = int(locality_level)
     
-    locality_list = NkfLocality.objects.filter(level=locality_level).order_by("index")
+    locality_list = NkfLocality.objects.filter(level=locality_level).order_by("parent_id","index")
     locality_name_list = [ loc.name for loc in locality_list ]
     locality_name_list.extend( ['NC','SC','BELT','Other'])
-    #print(locality_name_list)
+    print(locality_name_list)
 
     #print(selected_chronounit)
     occ_list = TotalOccurrence.objects.filter(chrono_lvl2__in=selected_chronounit,species_name__gt='').order_by('species_name','genus_name')

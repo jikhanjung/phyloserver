@@ -352,7 +352,7 @@ class NkfLocality(models.Model):
         else:
             terminal_unit_count = 1
         self.terminal_unit_count = terminal_unit_count
-        print(self, self.terminal_unit_count)
+        #print(self, self.terminal_unit_count)
         logger.error('Something went wrong! '+str(self.id)+":"+str(terminal_unit_count))
         self.save()
         return terminal_unit_count
