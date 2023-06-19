@@ -686,7 +686,7 @@ function show_simpson_cluster() {
     cluster_matrix_to_table(keys,data_matrix);
     var node_list = perform_upgma(keys, data_matrix);
     //console.log(node_list);
-    draw_result( node_list );
+    draw_result( node_list, "Simpson" );
     //console.log("node:", node_list[0]);
 }
 
@@ -703,7 +703,7 @@ function show_jaccard_cluster() {
     cluster_matrix_to_table(keys,data_matrix);
     var node_list = perform_upgma(keys, data_matrix);
     //console.log(node_list);
-    draw_result( node_list );
+    draw_result( node_list, "Jaccard" );
     //console.log("node:", node_list[0]);
 }
 
@@ -720,7 +720,7 @@ function show_sorensen_cluster() {
     cluster_matrix_to_table(keys,data_matrix);
     var node_list = perform_upgma(keys, data_matrix);
     //console.log(node_list);
-    draw_result( node_list );
+    draw_result( node_list, "Sorensen" );
     //console.log("node:", node_list[0]);
 }
 
@@ -737,7 +737,7 @@ function show_ochiai_cluster() {
     cluster_matrix_to_table(keys,data_matrix);
     var node_list = perform_upgma(keys, data_matrix);
     //console.log(node_list);
-    draw_result( node_list );
+    draw_result( node_list, "Ochiai" );
     //console.log("node:", node_list[0]);
 }
 
@@ -754,14 +754,15 @@ function show_raup_crick_cluster() {
     cluster_matrix_to_table(keys,data_matrix);
     var node_list = perform_upgma(keys, data_matrix);
     //console.log(node_list);
-    draw_result( node_list );
+    draw_result( node_list,"Raup-Crick" );
     //console.log("node:", node_list[0]);
 }
 
-function draw_result( node_list ) {
+function draw_result( node_list, similarity_title ) {
     var node = node_list[0];
     //console.log("node:", node);
     draw_node( node, 0, node.node_count, node.node_count );
+    draw_x_axis_with_ticks( similarity_title);
 }
 function draw_node( node, yfrom, yto, ytotal) {
 
@@ -793,15 +794,52 @@ function draw_node( node, yfrom, yto, ytotal) {
     }
 }
 
+var effective_canvas_width_ratio = 0.7;
+var effective_canvas_height_ratio = 0.7;
+var x_padding_ratio = 0.15;
+var y_padding_ratio = 0.15;
+
+function draw_x_axis_with_ticks( similarity_title ) {
+    var canvas = document.getElementById("cluster_canvas");
+    var context = canvas.getContext("2d");
+    cwidth = canvas.width;
+    cheight = canvas.height;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(x_padding_ratio * cwidth, (1-y_padding_ratio) * cheight);
+    context.lineTo((1-x_padding_ratio) * cwidth, (1-y_padding_ratio) * cheight);
+    context.strokeStyle='rgba(0,0,0,1)';
+    context.stroke();
+    context.beginPath();
+    context.moveTo(x_padding_ratio * cwidth, (1-y_padding_ratio) * cheight);
+    context.lineTo(x_padding_ratio * cwidth, (1-y_padding_ratio) * cheight + 10);
+    context.strokeStyle='rgba(0,0,0,1)';
+    context.stroke();
+    context.beginPath();
+    context.moveTo((1-x_padding_ratio) * cwidth, (1-y_padding_ratio) * cheight);
+    context.lineTo((1-x_padding_ratio) * cwidth, (1-y_padding_ratio) * cheight + 10);
+    context.strokeStyle='rgba(0,0,0,1)';
+    context.stroke();
+    // draw text for 0.0, 0.5, 1.0
+    context.font = "12px Arial";
+    context.fillText("0.0", x_padding_ratio * cwidth - 10, (1-y_padding_ratio) * cheight + 20);
+    context.fillText("0.5", (x_padding_ratio + effective_canvas_width_ratio/2) * cwidth - 10, (1-y_padding_ratio) * cheight + 20);
+    context.fillText("1.0", (1-x_padding_ratio) * cwidth - 10, (1-y_padding_ratio) * cheight + 20);
+    // draw axis title "Similarity"
+    context.font = "16px Arial";
+    context.fillText( similarity_title + " similarity", (x_padding_ratio + effective_canvas_width_ratio/2) * cwidth - 10, (1-y_padding_ratio) * cheight + 40);
+
+}
+
 function draw_line( x1,y1,x2,y2 ) {
     var canvas = document.getElementById("cluster_canvas");
     var context = canvas.getContext("2d");
     cwidth = canvas.width;
     cheight = canvas.height;
-    x1 = x1 * 0.8 * cwidth + 0.1 * cwidth;
-    y1 = y1 * 0.8 * cheight + 0.1 * cheight;
-    x2 = x2 * 0.8 * cwidth + 0.1 * cwidth;
-    y2 = y2 * 0.8 * cheight + 0.1 * cheight;
+    x1 = x1 * effective_canvas_width_ratio * cwidth + x_padding_ratio * cwidth;
+    y1 = y1 * effective_canvas_height_ratio * cheight + y_padding_ratio * cheight;
+    x2 = x2 * effective_canvas_width_ratio * cwidth + x_padding_ratio * cwidth;
+    y2 = y2 * effective_canvas_height_ratio * cheight + y_padding_ratio * cheight;
     context.lineWidth = 2;
     context.beginPath();
     context.moveTo(x1,y1);
@@ -816,9 +854,9 @@ function draw_text( x1,y1,text ) {
     var context = canvas.getContext("2d");
     cwidth = canvas.width;
     cheight = canvas.height;
-    x1 = x1 * 0.8 * cwidth + 0.1 * cwidth;
-    y1 = y1 * 0.8 * cheight + 0.1 * cheight;
-    context.font = "20px Impact";    
+    x1 = x1 * effective_canvas_width_ratio * cwidth + x_padding_ratio * cwidth;
+    y1 = y1 * effective_canvas_height_ratio * cheight + y_padding_ratio * cheight;
+    context.font = "18px Impact";    
     context.fillText( text, x1, y1 );    
 }
 
