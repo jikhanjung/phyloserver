@@ -21,9 +21,9 @@
             <th><div class="locality_list_parent">Parent</div></th></tr></tr>
         {% if locality_list %}   
         {% for locality in page_obj %}
-        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'locality_detail' locality.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'nkfcluster:locality_detail' locality.id %}';">
             <td align="center">{{ locality.index }}</td>
-            <td align="center"><a href="{% url 'locality_detail' locality.id %}">{{ locality.name }}</a></td>
+            <td align="center"><a href="{% url 'nkfcluster:locality_detail' locality.id %}">{{ locality.name }}</a></td>
             <td align="center">{{ locality.level }}</td>
             <td align="center">{{ locality.parent }}</td>
         </tr>
@@ -37,7 +37,7 @@
     <tr><td colspan="2" align="left">
         {% include "nkfpaginator.html" %}
     </td><td colspan="2" align="right">
-        <a href="{% url 'add_locality' %}">[Add Locality]</a>
+        <a href="{% url 'nkfcluster:add_locality' %}">[Add Locality]</a>
     </td></tr></tfooter></table>
 
 {% endblock %}

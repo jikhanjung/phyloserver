@@ -5,10 +5,10 @@
     <thead><tr><td colspan="{{column_list|length}}">
     <div class="row">
         <div class="col">
-            <a href="{% url 'download_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.fossilgroup}}&{{urlparameter.stratunit}}">[Download data]</a>
+            <a href="{% url 'nkfcluster:download_cluster' %}?locality_level={{locality_level}}&genus_species_select={{genus_species_select}}&{{urlparameter.fossilgroup}}&{{urlparameter.stratunit}}">[Download data]</a>
         </div>
         <div class="col text-end">
-            <form method="GET" action="{% url 'show_table'%}">
+            <form method="GET" action="{% url 'nkfcluster:show_table'%}">
                 {% csrf_token %}
                 <div style="background-color:lightgray; width:500px">
                     Stratigraphic unit:

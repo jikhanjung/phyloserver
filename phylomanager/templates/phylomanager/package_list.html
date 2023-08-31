@@ -4,11 +4,11 @@
 {% if package_list %}
     <ul>
     {% for p in package_list %}
-        <li><a href="{% url 'package_detail' p.pk %}">{{ p.package_name }}</a></li>
+        <li><a href="{% url 'phylomanager:package_detail' p.pk %}">{{ p.package_name }}</a></li>
     {% endfor %}
     </ul>
 {% else %}
     <p>No packages are available.</p>
 {% endif %}
-<a href="{% url 'add_package' %}">[Add Package]</a>
+<a href="{% url 'phylomanager:add_package' %}">[Add Package]</a>
 {% endblock %}

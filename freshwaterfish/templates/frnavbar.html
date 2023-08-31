@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-info my-3 p-3">
     <div class="container-fluid">
-      <a class="navbar-brand text-white" href="{% url 'occ_list' %}">Freshwater Fish</a>
+      <a class="navbar-brand text-white" href="{% url 'freshwaterfish:occ_list' %}">Freshwater Fish</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -11,27 +11,16 @@
               Freshwater Fish
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{% url 'occ_list' %}">전체목록</a></li>
+              <li><a class="dropdown-item" href="{% url 'freshwaterfish:occ_list' %}">전체목록</a></li>
             </ul>
           </li>
-          <!--li class="nav-item dropdown">
-            <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              관리
-            </a>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{% url 'locality_list' %}">Locality list</a></li>
-              <li><a class="dropdown-item" href="{% url 'locality_chart' %}">Locality chart</a></li>
-              <li><a class="dropdown-item" href="{% url 'chronounit_chart' %}">ChronoUnit</a></li>
-              <li><a class="dropdown-item" href="{% url 'management_command' %}">DB변환</a></li>
-            </ul>
-          </li-->
           <li class="nav-item dropdown">
             <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Others
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{% url 'run_list' %}">Phylomanager</a></li>
-              <!--li><a class="dropdown-item" href="{% url 'run_list' %}">NkfCluster</a></li-->
+              <li><a class="dropdown-item" href="{% url 'phylomanager:run_list' %}">Phylomanager</a></li>
+              <li><a class="dropdown-item" href="{% url 'nkfcluster:occ_list' %}">NkfCluster</a></li>
             </ul>
           </li>
         </ul>

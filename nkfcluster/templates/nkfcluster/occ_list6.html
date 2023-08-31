@@ -5,7 +5,7 @@
     <thead>
         <tr><td colspan="5" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
-    </td><td colspan="5" align="right"><form method="GET" action="{% url 'occ_list2'%}">
+    </td><td colspan="5" align="right"><form method="GET" action="{% url 'nkfcluster:occ_list2'%}">
         {% csrf_token %}
         <!--select name="filter2" id="filter2">
             <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
@@ -28,9 +28,9 @@
         </tr>
         {% if occ_list %}   
         {% for occ in page_obj %}
-        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail6' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'nkfcluster:occ_detail6' occ.id %}';">
             <td align="center">{{ occ.type }}</td>
-            <td align="center"><a href="{% url 'occ_detail6' occ.id %}">{{ occ.species }}</a></td>
+            <td align="center"><a href="{% url 'nkfcluster:occ_detail6' occ.id %}">{{ occ.species }}</a></td>
             <td align="center">{{ occ.preservation }}</td>
             <td align="center">{{ occ.preservation_eng }}</td>
             <td align="center">{{ occ.location }}</td>
@@ -49,7 +49,7 @@
         <tr><td colspan="5" align="left">
             {% include "nkfpaginator.html" %}
         </td><td colspan="5" align="right">
-            <!--a href="{% url 'add_occurrence' %}">[Add Occurrence]</a-->
+            <!--a href="{% url 'nkfcluster:add_occurrence' %}">[Add Occurrence]</a-->
         </td></tr>
     </tfooter>
 </table>

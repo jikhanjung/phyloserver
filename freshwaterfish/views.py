@@ -98,7 +98,7 @@ def edit_occurrence(request,pk):
             #print("run form valid")
             occ = occ_form.save(commit=False)
             #reference = form.save(commit=False)
-            occ.process_genus_name()
+            #occ.process_genus_name()
             occ.save()
             return HttpResponseRedirect('/freshwaterfish/occ_detail/'+str(occ.id))
         else:

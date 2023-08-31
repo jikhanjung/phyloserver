@@ -1,7 +1,7 @@
 {% for locality in locality_list %}
         <td class="align-middle text-center" rowspan="{{locality.terminal_unit_count}}"><!--colspan="{% if chronounit.children.all %}1{%else%}{{chronounit.level}}{%endif%}"-->
-        <a href="{% url 'locality_detail' locality.id %}">{{ locality.name }}</a>
-        <a class="btn btn-primary btn-sm" role="button" href="{% url 'edit_locality' locality.id %}">+</a>
+        <a href="{% url 'nkfcluster:locality_detail' locality.id %}">{{ locality.name }}</a>
+        <a class="btn btn-primary btn-sm" role="button" href="{% url 'nkfcluster:edit_locality' locality.id %}">+</a>
         </td>
         {% if locality.children.all %}
         {% include "nkfcluster/locality_chart_sub.html" with locality_list=locality.children.all %}

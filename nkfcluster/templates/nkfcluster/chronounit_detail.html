@@ -14,13 +14,13 @@
     <div class="row">
         <div class="col text-center">
             {% if user_obj %}
-                <a class="btn btn-primary" role="button" href="{% url 'chronounit_edit' chronounit.id %}">Edit</a>
-                <a class="btn btn-primary" role="button" href="{% url 'chronounit_delete' chronounit.id %}" onclick="return confirm('정말 삭제하시겠습니까?')">Delete</a>
+                <a class="btn btn-primary" role="button" href="{% url 'nkfcluster:chronounit_edit' chronounit.id %}">Edit</a>
+                <a class="btn btn-primary" role="button" href="{% url 'nkfcluster:chronounit_delete' chronounit.id %}" onclick="return confirm('정말 삭제하시겠습니까?')">Delete</a>
             {% else %}
                 <button class="btn btn-primary" role="button" href="#" disabled>Edit</button>
                 <button class="btn btn-primary" role="button" href="#" disabled>Delete</button>
             {% endif %}
-            <a class="btn btn-primary" role="button" href="{% url 'chronounit_list' %}">List</a>
+            <a class="btn btn-primary" role="button" href="{% url 'nkfcluster:chronounit_list' %}">List</a>
         </div>
     </div>
 </div>

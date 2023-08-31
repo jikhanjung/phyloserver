@@ -3,7 +3,7 @@
 <h4 class="bd-title p-2 bg-secondary text-light">Run info</h4>
 <table class="table table-striped table-sm">
     <tr><th width="150">Run title</th><td>{{ run.run_title }}</td></tr>
-    <tr><th>Data file</th><td> {{ run.datafile }} {% if phylodata %}<a href="{% url 'show_datamatrix' run.id%}" target="_blank">[Show Data]</a>{%endif%}</td></tr>
+    <tr><th>Data file</th><td> {{ run.datafile }} {% if phylodata %}<a href="{% url 'phylomanager:show_datamatrix' run.id%}" target="_blank">[Show Data]</a>{%endif%}</td></tr>
     <tr><th>Status</th><td> {{ run.get_run_status_display }}</td></tr>
     <!--tr><th>Run directory</th><td> {{ run.run_directory }}</td></tr-->
     <tr><th>Run by</th><td>{{ run.get_run_by }}</td></tr>
@@ -11,7 +11,7 @@
 <table class="table table-striped table-sm">
     <!--li>Created at: {{ run.created_datetime }}</li>
     <li>Modified at: {{ run.modified_datetime }}</li-->
-    {% if run.run_status == 'FN' %}<tr><th>Results</th><td><a href="{% url 'download_run_result' run.id %}">Download Result(s)</a></td></tr>{% endif %}
+    {% if run.run_status == 'FN' %}<tr><th>Results</th><td><a href="{% url 'phylomanager:download_run_result' run.id %}">Download Result(s)</a></td></tr>{% endif %}
 </table>
 
 <br/>
@@ -24,13 +24,13 @@
     {% if leg.leg_completion_percentage %}<tr><th>Progress</th><td>{{ leg.leg_completion_percentage }}%</td></tr>{%endif%}
     <tr><th>Started at</th><td>{{ leg.start_datetime|default_if_none:"-" }}</td></tr>
     <tr><th>Finished at</th><td>{{ leg.finish_datetime|default_if_none:"-" }}</td></tr>
-    {% if leg.leg_status == 'FN' %}<tr><th>Tree</th><td><img src="{% url 'show_tree' leg.id %}" width="600"></td></tr>{%endif%}
+    {% if leg.leg_status == 'FN' %}<tr><th>Tree</th><td><img src="{% url 'phylomanager:show_tree' leg.id %}" width="600"></td></tr>{%endif%}
 </table>
 {% endfor %}
 
-<a href="{% url 'run_list' %}">[Run List]</a>
-{% if run.run_status != 'FN' %}<a href="{% url 'edit_run' run.id %}">[Edit]</a>{%endif%}
-<a href="{% url 'delete_run' run.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
+<a href="{% url 'phylomanager:run_list' %}">[Run List]</a>
+{% if run.run_status != 'FN' %}<a href="{% url 'phylomanager:edit_run' run.id %}">[Edit]</a>{%endif%}
+<a href="{% url 'phylomanager:delete_run' run.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
 <script>
 var datamatrix_visible=false;
 function toggle_datamatrix(){

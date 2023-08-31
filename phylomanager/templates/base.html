@@ -18,7 +18,7 @@
             <a href="/phylomanager/run_list/">Run list</a><br/>
             <br/>
             <a href="/phylomanager/package_list/">Package list</a><br/>
-            <a href="{% url 'server_status' %}">Server status</a><br/>
+            <a href="{% url 'phylomanager:server_status' %}">Server status</a><br/>
         </div>
         <div class="switch_menu">
             <a href="/nkfcluster/">NK Fossils</a><br/>
@@ -36,7 +36,7 @@
                 <input type="password" size="10" name="password" required><br/>
                 <button type="submit">Login</button>                 
             </form>
-            <a href="{% url 'user_register' %}">Register</a>
+            <a href="{% url 'phylomanager:user_register' %}">Register</a>
         </div>
         {% endif %}
         {% endblock %}

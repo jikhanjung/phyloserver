@@ -28,9 +28,9 @@ from django.urls import re_path
 #router.register(r'dolfinrest', views.DolfinImageViewSet)    
 
 urlpatterns = [
-    path('phylomanager/', include('phylomanager.urls')),
-    path('nkfcluster/', include('nkfcluster.urls')),
-    path('freshwaterfish/', include('freshwaterfish.urls')),
+    path('phylomanager/', include(('phylomanager.urls','phylomanager'), namespace='phylomanager')),
+    path('nkfcluster/', include(('nkfcluster.urls','nkfcluster'), namespace='nkfcluster')),
+    path('freshwaterfish/', include(('freshwaterfish.urls','freshwaterfish'), namespace='freshwaterfish')),
     path('admin/', admin.site.urls),
     path("phylomanager/", include("django.contrib.auth.urls")), 
     #path('', include('snippets.urls')),

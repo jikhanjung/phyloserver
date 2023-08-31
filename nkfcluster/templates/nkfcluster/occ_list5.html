@@ -5,7 +5,7 @@
     <thead>
     <tr><td colspan="5" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
-    </td><td colspan="4" align="right"><form method="GET" action="{% url 'occ_list4'%}">
+    </td><td colspan="4" align="right"><form method="GET" action="{% url 'nkfcluster:occ_list4'%}">
         {% csrf_token %}
         <!--select name="filter2" id="filter2">
             <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
@@ -27,7 +27,7 @@
         </tr>
         {% if occ_list %}   
         {% for occ in page_obj %}
-        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail5' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'nkfcluster:occ_detail5' occ.id %}';">
             <td align="center">{{ occ.author_list }}</td>
             <td align="center">{{ occ.year }}</td>
             <td align="center">{{ occ.geologic_period }}</td>
@@ -47,7 +47,7 @@
         <tr><td colspan="5" align="left">
             {% include "nkfpaginator.html" %}
         </td><td colspan="4" align="right">
-            <!--a href="{% url 'add_occurrence' %}">[Add Occurrence]</a-->
+            <!--a href="{% url 'nkfcluster:add_occurrence' %}">[Add Occurrence]</a-->
         </td></tr>
     </tfooter>
 </table>

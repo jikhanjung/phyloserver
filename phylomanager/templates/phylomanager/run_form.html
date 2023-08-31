@@ -12,7 +12,7 @@
         {% else %}
         <tr><th>{{run_form.run_by.label}}</th><td>{{run_form.run_by}}</td></tr>
         {% endif %}
-        <tr><th>{{run_form.datafile.label}}</th><td><div class="row"><div class="col">{{run_form.datafile}}</div><div class="col">{% if phylodata %}<a href="{% url 'show_datamatrix' run_form.instance.id%}" target="_blank">[Show Data]</a>{%endif%}</div></div></td></tr>
+        <tr><th>{{run_form.datafile.label}}</th><td><div class="row"><div class="col">{{run_form.datafile}}</div><div class="col">{% if phylodata %}<a href="{% url 'phylomanager:show_datamatrix' run_form.instance.id%}" target="_blank">[Show Data]</a>{%endif%}</div></div></td></tr>
         <tr><th>{{run_form.datatype.label}}</th><td>{{run_form.datatype}}</td></tr>
         <!--tr><th>{{run_form.start_datetime.label}}</th><td>{{run_form.start_datetime.value}}</td></tr>
         <tr><th>{{run_form.finish_datetime.label}}</th><td>{{run_form.finish_datetime.value}}</td></tr-->

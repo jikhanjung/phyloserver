@@ -6,7 +6,7 @@
     <tr><td colspan="4" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
     </td><td colspan="4" align="right">
-        <form method="GET" action="{% url 'occ_list'%}">
+        <form method="GET" action="{% url 'nkfcluster:occ_list'%}">
             {% csrf_token %}
             <select name="filter2" id="filter2">
                 <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
@@ -33,12 +33,12 @@
             <th><div>Source</div></th></tr>
             <th><div>Source(Eng.)</div></th></tr>
         {% for occ in page_obj %}
-        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'nkfcluster:occ_detail' occ.id %}';">
             <td align="center">{{ occ.get_strat_unit_display|default_if_none:'' }}</td>
             <td align="center">{{ occ.chronounit|default_if_none:'' }}</td>
             <td align="center">{{ occ.get_lithology_display|default_if_none:'' }}</td>
             <td align="center">{{ occ.get_group_display }}</td>
-            <td align="center"><a href="{% url 'occ_detail' occ.id %}">{{ occ.species_name }}</a></td>
+            <td align="center"><a href="{% url 'nkfcluster:occ_detail' occ.id %}">{{ occ.species_name }}</a></td>
             <td align="center">{{ occ.revised_species_name|default_if_none:'' }}</td>
             <td align="center">{{ occ.get_location_display }}</td>
             <td align="center">{{ occ.source }}</td>
@@ -53,9 +53,9 @@
         <tr><td colspan="4" width="400" align="left">
             {% include "nkfpaginator.html" %}
         </td><td colspan="4" width="400" align="right">
-            <a href="{% url 'add_occurrence' %}">[Add Occurrence]</a>
-            <a href="{% url 'show_table' %}">[Show Table]</a>
-            <a href="{% url 'nkdata_download' %}">[Download]</a>
+            <a href="{% url 'nkfcluster:add_occurrence' %}">[Add Occurrence]</a>
+            <a href="{% url 'nkfcluster:show_table' %}">[Show Table]</a>
+            <a href="{% url 'nkfcluster:nkdata_download' %}">[Download]</a>
         </td></tr>
     </tfooter>
 </table>

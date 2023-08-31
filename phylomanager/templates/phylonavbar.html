@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-info my-3 p-3">
     <div class="container-fluid">
-      <a class="navbar-brand text-white" href="{% url 'run_list' %}">Phylogenetic Analysis</a>
+      <a class="navbar-brand text-white" href="{% url 'phylomanager:run_list' %}">Phylogenetic Analysis</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -11,18 +11,19 @@
               Run
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{% url 'run_list' %}">Run list</a></li>
-              <li><a class="dropdown-item" href="{% url 'package_list' %}">Package list</a></li>
-              <li><a class="dropdown-item" href="{% url 'server_status' %}">Server status</a></li>
-              <li><a class="dropdown-item" href="{% url 'runner_list' %}">Runner list</a></li>
+              <li><a class="dropdown-item" href="{% url 'phylomanager:run_list' %}">Run list</a></li>
+              <li><a class="dropdown-item" href="{% url 'phylomanager:package_list' %}">Package list</a></li>
+              <li><a class="dropdown-item" href="{% url 'phylomanager:server_status' %}">Server status</a></li>
+              <li><a class="dropdown-item" href="{% url 'phylomanager:runner_list' %}">Runner list</a></li>
             </ul>
           </li>
           <li class="nav-item dropdown">
             <a class="nav-link text-white dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              NK Fossil Cluster
+              Others
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="{% url 'occ_list' %}">북한화석DB</a></li>
+              <li><a class="dropdown-item" href="{% url 'nkfcluster:occ_list' %}">북한화석DB</a></li>
+              <li><a class="dropdown-item" href="{% url 'freshwaterfish:occ_list' %}">Freshwater fish</a></li>
             </ul>
           </li>
         </ul>

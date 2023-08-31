@@ -14,8 +14,8 @@
     <tbody>
         {% if run_list %}
         {% for run in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'run_detail' run.id %}';">
-            <td align="center"><a href="{% url 'run_detail' run.id %}">{{ run.run_title }}</a></td>
+        <tr class="tr_link" onclick="javascript:window.location='{% url 'phylomanager:run_detail' run.id %}';">
+            <td align="center"><a href="{% url 'phylomanager:run_detail' run.id %}">{{ run.run_title }}</a></td>
             <td align="center">{{ run.get_run_status_display }}</td>
             <td align="center">{{run.get_run_by}}</td>
             <td align="center">{{run.get_number_of_legs}}</td>
@@ -30,7 +30,7 @@
         <tr><td colspan="3" align="left">
             {% include "paginator.html" %}
         </td><td colspan="2" align="right">
-            <a href="{% url 'add_run_upload_file' %}">[Add Run]</a>
+            <a href="{% url 'phylomanager:add_run_upload_file' %}">[Add Run]</a>
         </td></tr>
     </tfooter>
 </table>

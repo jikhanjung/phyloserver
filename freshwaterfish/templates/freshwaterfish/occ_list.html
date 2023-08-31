@@ -6,7 +6,7 @@
         <tr><td colspan="6">
         {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
         </td><td colspan="6" align="right">
-            <form method="GET" action="{% url 'occ_list'%}">
+            <form method="GET" action="{% url 'freshwaterfish:occ_list'%}">
                 {% csrf_token %}
             <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:''}}"><button type="submit">검색</button>
                 </form>
@@ -29,12 +29,12 @@
             <th><div>Reference</div></th>
         </tr>
         {% for occ in page_obj %}
-        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'occ_detail' occ.id %}';">
+        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'freshwaterfish:occ_detail' occ.id %}';">
             <td>{{ occ.locality|default_if_none:'' }}</td>
             <td>{{ occ.country|default_if_none:'' }}</td>
             <td>{{ occ.clade|default_if_none:'' }}</td>
             <td>{{ occ.family|default_if_none:'' }}</td>
-            <td><a href="{% url 'occ_detail' occ.id %}"><i>{{ occ.genus }}</i></a></td>
+            <td><a href="{% url 'freshwaterfish:occ_detail' occ.id %}"><i>{{ occ.genus }}</i></a></td>
             <td>{{ occ.origin|default_if_none:'' }}</td>
             <td>{{ occ.epoch|default_if_none:'' }}</td>
             <td>{{ occ.age|default_if_none:'' }}</td>
@@ -52,7 +52,7 @@
         <tr><td colspan="6" width="400">
             {% include "frpaginator.html" %}
         </td><td colspan="6" width="400" align="right">
-            <a href="{% url 'add_occurrence' %}">[Add Occurrence]</a>
+            <a href="{% url 'freshwaterfish:add_occurrence' %}">[Add Occurrence]</a>
         </td></tr>
     </tfooter>
 </table>

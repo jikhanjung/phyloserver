@@ -16,8 +16,8 @@
     <tr><th>longitude</th><td>{{ occ.longitude }}</td></tr>
     <tr><th>source</th><td>{{ occ.source }}</td></tr>
 </table>
-<a href="{% url 'occ_list6' %}">[Occurrence List6]</a>
-<a href="{% url 'edit_occurrence6' occ.id %}">[Edit]</a>
-<a href="{% url 'delete_occurrence6' occ.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
+<a href="{% url 'nkfcluster:occ_list6' %}">[Occurrence List6]</a>
+<a href="{% url 'nkfcluster:edit_occurrence6' occ.id %}">[Edit]</a>
+<a href="{% url 'nkfcluster:delete_occurrence6' occ.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
 
 {% endblock %}

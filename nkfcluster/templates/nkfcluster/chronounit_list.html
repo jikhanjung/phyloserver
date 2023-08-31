@@ -13,7 +13,7 @@
                 {% if chronounit_list %}
                 {% for chronounit in page_obj %}
                 <tr>
-                    <td class="text-cenrer"><a href="{% url 'chronounit_list' chronounit.id %}">{{ chronounit.name }} {{ chronounit.get_level_display }}</a></td>
+                    <td class="text-cenrer"><a href="{% url 'nkfcluster:chronounit_list' chronounit.id %}">{{ chronounit.name }} {{ chronounit.get_level_display }}</a></td>
                 </tr>
                 {% endfor %}
                 {% else %}
@@ -27,7 +27,7 @@
                 <div class="container">
                     <div class="row">
                         <div class="col">{% include "paginator.html" %}</div>
-                        <div class="col text-end"><a class="btn btn-primary btn-sm" role="button" href="{% url 'chronounit_add'%}">Add</a></div>
+                        <div class="col text-end"><a class="btn btn-primary btn-sm" role="button" href="{% url 'nkfcluster:chronounit_add'%}">Add</a></div>
                     </div>
                 </div>
                 </td></tr>

@@ -18,8 +18,8 @@
     <tr><th>Formation</th><td>{{ occ.formation|default_if_none:'' }}</td></tr>
     <tr>
         <td colspan="2" align="right">
-            <a href="{% url 'pbdb_list' %}">[PBDB List]</a>
-            <a href="{% url 'edit_pbdb' occ.id %}">[Edit]</a>
+            <a href="{% url 'nkfcluster:pbdb_list' %}">[PBDB List]</a>
+            <a href="{% url 'nkfcluster:edit_pbdb' occ.id %}">[Edit]</a>
         </td>
     </tr>
 </table>

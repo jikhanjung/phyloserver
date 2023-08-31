@@ -7,6 +7,6 @@
     <!--tr><th>Run directory</th><td> {{ run.run_directory }}</td></tr-->
     <tr><th>Created at</th><td>{{ runner.created_datetime }}</td></tr>
 </table>
-<a href="{% url 'delete_runner' runner.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
+<a href="{% url 'phylomanager:delete_runner' runner.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
 
 {% endblock %}

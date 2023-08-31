@@ -9,7 +9,7 @@
     <li>Package type: {{ package.get_package_type_display }}</li>
     <li>Run path: {{ package.run_path }}</li>
 </ul>
-<a href="{% url 'package_list' %}">[Package List]</a>
-<a href="{% url 'edit_package' package.id %}">[Edit]</a>
-<a href="{% url 'delete_package' package.id %}" onclick="javascript:return confirm('Are you sure?')">[Delete]</a>
+<a href="{% url 'phylomanager:package_list' %}">[Package List]</a>
+<a href="{% url 'phylomanager:edit_package' package.id %}">[Edit]</a>
+<a href="{% url 'phylomanager:delete_package' package.id %}" onclick="javascript:return confirm('Are you sure?')">[Delete]</a>
 {% endblock %}

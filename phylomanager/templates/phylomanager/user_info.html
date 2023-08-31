@@ -8,7 +8,7 @@
     <tr><th>그룹</th><td>{% for gn in user_obj.groupname_list %}{{gn}} {%endfor%}</td></tr>
     </table>
 </ul>
-<a href="{% url 'user_form'%}">[사용자정보 변경]</a>
-<a href="{% url 'password'%}">[패스워드 변경]</a>
-<a href="{% url 'user_logout'%}">[로그아웃]</a>
+<a href="{% url 'phylomanager:user_form'%}">[사용자정보 변경]</a>
+<a href="{% url 'phylomanager:password'%}">[패스워드 변경]</a>
+<a href="{% url 'phylomanager:user_logout'%}">[로그아웃]</a>
 {% endblock %}

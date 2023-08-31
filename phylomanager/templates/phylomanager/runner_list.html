@@ -12,8 +12,8 @@
     <tbody>
         {% if runner_list %}
         {% for runner in page_obj %}
-        <tr class="tr_link" onclick="javascript:window.location='{% url 'runner_detail' runner.id %}';">
-            <td align="center"><a href="{% url 'runner_detail' runner.id %}">{{ runner.procid }}</a></td>
+        <tr class="tr_link" onclick="javascript:window.location='{% url 'phylomanager:runner_detail' runner.id %}';">
+            <td align="center"><a href="{% url 'phylomanager:runner_detail' runner.id %}">{{ runner.procid }}</a></td>
             <td align="center">{{runner.runner_status}}</td>
             <td align="center">{{runner.created_datetime}}</td>
         </tr>

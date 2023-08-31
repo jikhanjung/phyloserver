@@ -7,8 +7,8 @@
     <tr><th>Level</th><td> {{ locality.level }}</td></tr>
     <tr><th>Parent</th><td> {{ locality.parent }}</td></tr>
 </table>
-<a href="{% url 'locality_list' %}">[Locality List]</a>
-<a href="{% url 'edit_locality' locality.id %}">[Edit]</a>
-<a href="{% url 'delete_locality' locality.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
+<a href="{% url 'nkfcluster:locality_list' %}">[Locality List]</a>
+<a href="{% url 'nkfcluster:edit_locality' locality.id %}">[Edit]</a>
+<a href="{% url 'nkfcluster:delete_locality' locality.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
 
 {% endblock %}

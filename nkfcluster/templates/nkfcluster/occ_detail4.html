@@ -22,8 +22,8 @@
     <tr><th>Listed species</th><td>{{ occ.listed_species }}</td></tr>
     <tr><th>Note</th><td>{{ occ.note }}</td></tr>
 </table>
-<a href="{% url 'occ_list4' %}">[Occurrence List4]</a>
-<a href="{% url 'edit_occurrence4' occ.id %}">[Edit]</a>
-<a href="{% url 'delete_occurrence4' occ.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
+<a href="{% url 'nkfcluster:occ_list4' %}">[Occurrence List4]</a>
+<a href="{% url 'nkfcluster:edit_occurrence4' occ.id %}">[Edit]</a>
+<a href="{% url 'nkfcluster:delete_occurrence4' occ.id %}" onclick="javascript:confirm('Are you sure?')">[Delete]</a>
 
 {% endblock %}
