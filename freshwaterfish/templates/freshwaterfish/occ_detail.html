@@ -6,7 +6,7 @@
     <tr><th>Country</th><td> {{ occ.country|default_if_none:''}}</td></tr>
     <tr><th>Order/Clade</th><td> {{ occ.clade|default_if_none:'' }}</td></tr>
     <tr><th>Family</th><td> {{ occ.family|default_if_none:'' }}</td></tr>
-    <tr><th>Genus</th><td> {{ occ.genus|default_if_none:'' }}</td></tr>
+    <tr><th>Genus</th><td><i>{{ occ.genus|default_if_none:'' }}</i></td></tr>
     <tr><th>Origin</th><td> {{ occ.origin|default_if_none:'' }}</td></tr>
     <tr><th>Epoch</th><td> {{ occ.epoch|default_if_none:'' }}</td></tr>
     <tr><th>Age</th><td> {{ occ.age|default_if_none:'' }}</td></tr>
