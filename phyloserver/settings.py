@@ -39,6 +39,7 @@ ALLOWED_HOSTS = ['172.16.116.98','127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'freshwaterfish.apps.FreshwaterfishConfig',
     'phylomanager.apps.PhylomanagerConfig',
     'nkfcluster.apps.NkfclusterConfig',
     'django.contrib.admin',

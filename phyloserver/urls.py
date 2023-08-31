@@ -30,6 +30,7 @@ from django.urls import re_path
 urlpatterns = [
     path('phylomanager/', include('phylomanager.urls')),
     path('nkfcluster/', include('nkfcluster.urls')),
+    path('freshwaterfish/', include('freshwaterfish.urls')),
     path('admin/', admin.site.urls),
     path("phylomanager/", include("django.contrib.auth.urls")), 
     #path('', include('snippets.urls')),
