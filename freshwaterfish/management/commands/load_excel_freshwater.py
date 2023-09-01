@@ -1,6 +1,6 @@
 from multiprocessing.spawn import prepare
 from unittest import runner
-from freshwaterfish.models import FrOccurrence
+from freshwaterfish.models import FrOccurrence, ENVIRONMENT_CHOICES
 from django.core.management.base import BaseCommand
 import subprocess
 from django.conf import settings
@@ -40,5 +40,15 @@ class Command(BaseCommand):
                 occ.environment = row['environment']
                 occ.continent = row['continent']
                 occ.period = row['period']
+
+                for choice in ENVIRONMENT_CHOICES:
+                    val, disp = choice
+                    if disp.lower() == str(row['environment']).lower():
+                        occ.environment_code = val
+                        break
+                if str(row['environment']).lower() == 'channal'.lower():
+                    occ.environment_code = '02'
+
+                occ.update_chronounit()
                 occ.save()
                 print("occ:", occ)
