@@ -9,4 +9,5 @@ urlpatterns = [
     path('add_occurrence/', views.add_occurrence, name='add_occurrence'),
     path('edit_occurrence/<int:pk>/', views.edit_occurrence, name='edit_occurrence'),
     path('delete_occurrence/<int:pk>/', views.delete_occurrence, name='delete_occurrence'),
+    path('occ_chart/', views.occ_chart, name='occ_chart'),
 ]

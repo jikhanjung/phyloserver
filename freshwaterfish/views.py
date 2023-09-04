@@ -4,6 +4,8 @@ from .models import FrOccurrence
 from .forms import FrOccurrenceForm
 from django.db.models import Q
 from django.core.paginator import Paginator
+from nkfcluster.models import ChronoUnit
+import json
 
 ITEMS_PER_PAGE = 20
 
@@ -64,7 +66,6 @@ def occ_detail(request, occ_id):
 def add_occurrence(request):
     user_obj = get_user_obj(request)
 
-    data_json = []
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
         occ_form = FrOccurrenceForm(request.POST,request.FILES)
@@ -117,3 +118,23 @@ def delete_occurrence(request, pk):
     occ = get_object_or_404(FrOccurrence, pk=pk)
     occ.delete()
     return HttpResponseRedirect('/freshwaterfish/occ_list')
+
+def occ_chart(request):
+    user_obj = get_user_obj(request)
+
+    x_axis = request.POST.get('x_axis')
+    y_axis = request.POST.get('y_axis')
+
+    #chrono_data = 
+    chrono_query = ChronoUnit.objects.all().order_by('-begin')
+    chrono_data = []
+    for chrono in chrono_query:
+        chrono_data.append( { 'name': chrono.name, 'id': chrono.id, 'level': chrono.level, 'begin': chrono.begin, 'end': chrono.end } )
+    occ_query = FrOccurrence.objects.all().order_by('genus')
+    occ_data = []
+    for occ in occ_query:
+        occ_data.append( { 'id': occ.id, 'genus': occ.genus, 'locality': occ.locality, 'country': occ.country, 'clade': occ.clade, 'family': occ.family,
+                           'origin': occ.origin, 'epoch_code': occ.epoch_code.id, 'period_code': occ.period_code.id,
+                            'environment': occ.environment, 'continent': occ.continent } ) 
+
+    return render(request, 'freshwaterfish/occ_chart.html', {'user_obj':user_obj, 'x_axis':x_axis, 'y_axis':y_axis, 'chrono_data':json.dumps(chrono_data), 'occ_data':json.dumps(occ_data)})

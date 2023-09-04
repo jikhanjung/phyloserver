@@ -1,0 +1,181 @@
+{% extends "frbase.html" %}
+{% block content %}
+<h4 class="bd-title p-2 bg-secondary text-light">Occurrence Detail</h4>
+<table class="table table-striped table-sm">
+    <thead>
+        <tr><td>
+            <div class="row">
+                <form method="POST" action="{% url 'freshwaterfish:occ_chart'%}">
+                {% csrf_token %}
+                <div class="col">
+                    X Axis:<select name="x_axis" id="x_axis">
+                        <option value="3" {% if x_axis == "3" %}selected{%endif%}>Period</option>
+                        <option value="2" {% if x_axis == "2" %}selected{%endif%}>Epoch</option>
+                        <option value="1" {% if x_axis == "1" %}selected{%endif%}>Age</option>
+                    </select>
+                    Y Axis:<select name="y_axis" id="y_axis">
+                        <option value="count" {% if y_axis == "count" %}selected{%endif%}>Total Count</option>
+                        <option value="env" {% if y_axis == "env" %}selected{%endif%}>By Environment</option>
+                        <option value="origin" {% if y_axis == "origin" %}selected{%endif%}>By Origin</option>
+                        <option value="country" {% if y_axis == "country" %}selected{%endif%}>By Country</option>
+                        <option value="continent" {% if y_axis == "continent" %}selected{%endif%}>By Continent</option>
+                    </select>        
+                    <button type="submit">보기</button></span>
+                </div>
+                </form>
+            </div>
+        </td></tr>
+    </thead>
+</table>
+<table id="data_matrix_table" class="table">
+</table>
+<a href="{% url 'freshwaterfish:occ_list' %}">[Occurrence List]</a>
+<script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
+<script>
+
+var occ_data = JSON.parse("{{occ_data|escapejs}}");
+var chrono_data = JSON.parse("{{chrono_data|escapejs}}");
+var sel_x_axis = document.getElementById("x_axis");
+var sel_y_axis = document.getElementById("y_axis");
+var x_axis = sel_x_axis.value;
+var y_axis = sel_y_axis.value;
+// check if x_axis if undefined
+if( x_axis == undefined ) {
+    x_axis = '3';
+}
+//console.log("x_axis", x_axis);
+//console.log("option:", sel_x_axis.options[sel_x_axis.selectedIndex])
+var x_axis_text = sel_x_axis.options[sel_x_axis.selectedIndex].text;
+var chrono_list = [];
+var data_matrix = [];
+var data_count = [];
+var y_key_list = [];
+var x_key_list = [];
+var chrono_id_list = [];
+
+for( var i = 0 ; i < occ_data.length; i++ ) {
+    var y_key = '';
+    if( y_axis == 'env' ) {
+        y_key = occ_data[i]['environment'];
+    } else if( y_axis == 'origin' ) {
+        y_key = occ_data[i]['origin'];
+    } else if( y_axis == 'country' ) {
+        y_key = occ_data[i]['country'];
+    } else if( y_axis == 'continent' ) {
+        y_key = occ_data[i]['continent'];
+    }
+
+    if( y_key_list.indexOf(y_key) >= 0 ) {
+        // do nothing
+    } else {
+        y_key_list.push(y_key);
+    }
+
+    var occ_chrono_id = '';
+    if( x_axis == '3' ) {
+        occ_chrono_id = occ_data[i]['period_code'];
+    } else if( x_axis == '2' ) {
+        occ_chrono_id = occ_data[i]['epoch_code'];
+    } else if( x_axis == '1' ) {
+        occ_chrono_id = occ_data[i]['age_code'];
+    }
+
+    if( chrono_id_list.indexOf(occ_chrono_id) >= 0) {
+        // do nothing
+    } else {
+        chrono_id_list.push(occ_chrono_id);
+    }
+}
+
+for( var i = 0 ; i < chrono_data.length ; i++ ) {
+    if( chrono_data[i]['level']  == x_axis && chrono_id_list.indexOf(chrono_data[i]['id']) >= 0) {
+        chrono_list.push(chrono_data[i]);
+        x_key_list.push(chrono_data[i]['name']);
+        data_count.push(0);
+        data_matrix.push(Array(y_key_list.length).fill(0));
+    }
+}
+
+data_matrix = data_matrix.map(function(x) {
+    for( var i = 0 ; i < y_key_list.length ; i++ ) {
+        x[y_key_list[i]] = 0;
+    }
+    return x;
+}); 
+
+for( var i = 0 ; i < occ_data.length; i++ ) {
+    var occ_chrono_id = '';
+    if( x_axis == '3' ) {
+        occ_chrono_id = occ_data[i]['period_code'];
+    } else if( x_axis == '2' ) {
+        occ_chrono_id = occ_data[i]['epoch_code'];
+    } else if( x_axis == '1' ) {
+        occ_chrono_id = occ_data[i]['age_code'];
+    }
+
+    for( var j = 0 ; j < chrono_list.length ; j++ ) {
+        if( occ_chrono_id == chrono_list[j]['id']) {
+            x_idx = j;
+            break;
+        }
+    }
+
+    data_count[x_idx] += 1;
+    var y_key = '';
+    if( y_axis == 'env' ) {
+        y_key = occ_data[i]['environment'];
+    } else if( y_axis == 'origin' ) {
+        y_key = occ_data[i]['origin'];
+    } else if( y_axis == 'country' ) {
+        y_key = occ_data[i]['country'];
+    } else if( y_axis == 'continent' ) {
+        y_key = occ_data[i]['continent'];
+    }
+
+    var y_idx = y_key_list.indexOf(y_key);
+
+    data_matrix[x_idx][y_idx] += 1;
+}
+
+// remove if no count
+for( var i = data_matrix.length - 1 ; i >= 0 ; i-- ) {
+    if( data_matrix[i]['count'] == 0 ) {
+        data_matrix.splice(i, 1);
+        chrono_list.splice(i, 1);
+    }
+}
+
+data_matrix_to_table(x_key_list,y_key_list,data_matrix);
+
+function data_matrix_to_table(a_x_keys,a_y_keys,a_data_matrix) {
+    var table = document.getElementById("data_matrix_table");
+    var row = table.insertRow();
+    col = row.insertCell();
+    for( var idx2=0;idx2<a_x_keys.length;idx2++){
+        col = row.insertCell();
+        col.innerHTML = a_x_keys[idx2];
+    }
+    for( var idx=0;idx<a_y_keys.length;idx++){
+        var row = table.insertRow();
+        col = row.insertCell();
+        col.innerHTML = a_y_keys[idx];
+        for( var idx2=0;idx2<a_x_keys.length;idx2++){
+            col = row.insertCell();
+            var val = a_data_matrix[idx2][idx];
+            //document.write(idx + " vs " + idx2 + ": " +  val + "<br/>");
+            //var round_val = Math.round( val * 100 ) / 100.0;
+
+            var val_node = document.createTextNode("" + val);
+            col.appendChild(val_node);
+            //col.innerHTML = round_val
+        }
+    }
+}
+
+console.log("data_matrix", data_matrix);
+console.log("y_key_list", y_key_list);
+console.log("x_key_list", x_key_list);
+//console.log("occ_data", occ_data);
+//console.log("chrono_data", chrono_data);
+</script>
+{% endblock %}
