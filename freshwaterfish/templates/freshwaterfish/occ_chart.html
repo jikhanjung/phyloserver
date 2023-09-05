@@ -5,28 +5,34 @@
     <thead>
         <tr><td>
             <div class="row">
-                <form method="POST" action="{% url 'freshwaterfish:occ_chart'%}">
-                {% csrf_token %}
                 <div class="col">
                     X Axis:<select name="x_axis" id="x_axis">
-                        <option value="3" {% if x_axis == "3" %}selected{%endif%}>Period</option>
-                        <option value="2" {% if x_axis == "2" %}selected{%endif%}>Epoch</option>
-                        <option value="1" {% if x_axis == "1" %}selected{%endif%}>Age</option>
+                        <option value="3">Period</option>
+                        <option value="2">Epoch</option>
+                        <option value="1">Age</option>
+                        <option value="environment">Environment</option>
+                        <option value="origin">Origin</option>
+                        <option value="country">Country</option>
+                        <option value="continent">Continent</option>
+                    </select>
+                    X Label:<select name="x_scale" id="x_scale">
+                        <option value="by_age">By Age</option>
+                        <option value="by_name">By Name</option>
                     </select>
                     Y Axis:<select name="y_axis" id="y_axis">
-                        <option value="count" {% if y_axis == "count" %}selected{%endif%}>Total Count</option>
-                        <option value="env" {% if y_axis == "env" %}selected{%endif%}>By Environment</option>
-                        <option value="origin" {% if y_axis == "origin" %}selected{%endif%}>By Origin</option>
-                        <option value="country" {% if y_axis == "country" %}selected{%endif%}>By Country</option>
-                        <option value="continent" {% if y_axis == "continent" %}selected{%endif%}>By Continent</option>
+                        <option value="count">Total Count</option>
+                        <option value="environment">By Environment</option>
+                        <option value="origin">By Origin</option>
+                        <option value="country">By Country</option>
+                        <option value="continent">By Continent</option>
                     </select>        
-                    <button type="submit">보기</button></span>
+                    <button onclick="javascript:draw_chart()">보기</button></span>
                 </div>
-                </form>
             </div>
         </td></tr>
     </thead>
 </table>
+<div id="myDiv"></div>
 <table id="data_matrix_table" class="table">
 </table>
 <a href="{% url 'freshwaterfish:occ_list' %}">[Occurrence List]</a>
@@ -36,119 +42,198 @@
 var occ_data = JSON.parse("{{occ_data|escapejs}}");
 var chrono_data = JSON.parse("{{chrono_data|escapejs}}");
 var sel_x_axis = document.getElementById("x_axis");
+var sel_x_scale = document.getElementById("x_scale");
 var sel_y_axis = document.getElementById("y_axis");
-var x_axis = sel_x_axis.value;
-var y_axis = sel_y_axis.value;
-// check if x_axis if undefined
-if( x_axis == undefined ) {
-    x_axis = '3';
-}
-//console.log("x_axis", x_axis);
-//console.log("option:", sel_x_axis.options[sel_x_axis.selectedIndex])
-var x_axis_text = sel_x_axis.options[sel_x_axis.selectedIndex].text;
-var chrono_list = [];
-var data_matrix = [];
-var data_count = [];
-var y_key_list = [];
-var x_key_list = [];
-var chrono_id_list = [];
-
-for( var i = 0 ; i < occ_data.length; i++ ) {
-    var y_key = '';
-    if( y_axis == 'env' ) {
-        y_key = occ_data[i]['environment'];
-    } else if( y_axis == 'origin' ) {
-        y_key = occ_data[i]['origin'];
-    } else if( y_axis == 'country' ) {
-        y_key = occ_data[i]['country'];
-    } else if( y_axis == 'continent' ) {
-        y_key = occ_data[i]['continent'];
-    }
-
-    if( y_key_list.indexOf(y_key) >= 0 ) {
-        // do nothing
+sel_x_axis.onchange = x_axis_changed
+function x_axis_changed(){
+    console.log("x_axis_changed");
+    var x_axis = sel_x_axis.value;
+    if( x_axis == '3' || x_axis == '2' || x_axis == '1' ) {
+        sel_x_scale.disabled = false;
+        sel_y_axis.disabled = false;
     } else {
-        y_key_list.push(y_key);
+        sel_y_axis.value = 'count';
+        sel_x_scale.value = 'by_name';
+        sel_x_scale.disabled = true;
+        sel_y_axis.disabled = true;
+    }
+}
+
+function draw_chart() {
+    var x_axis = sel_x_axis.value;
+    var y_axis = sel_y_axis.value;
+    var x_scale = sel_x_scale.value;
+    // check if x_axis if undefined
+    if( x_axis == undefined ) {
+        x_axis = '3';
+    }
+    if( x_scale == undefined ) {
+        x_scale = 'by_name';
+    }
+    if( x_axis != '3' && x_axis != '2' && x_axis != '1' ) {
+        x_scale = 'by_name';
+        y_axis = 'count';
+    }
+    console.log("x_scale", x_scale);
+    //console.log("x_axis", x_axis);
+    //console.log("option:", sel_x_axis.options[sel_x_axis.selectedIndex])
+    var x_axis_text = sel_x_axis.options[sel_x_axis.selectedIndex].text;
+    var chrono_list = [];
+    var data_matrix = [];
+    var data_count = [];
+    var y_key_list = [];
+    var x_key_list = [];
+    var chrono_id_list = [];
+    var x_scale 
+
+    // determine x_key_list and y_key_list
+    for( var i = 0 ; i < occ_data.length; i++ ) {
+        var x_key = '';
+        if( x_axis == '3' || x_axis == '2' || x_axis == '1' ) {
+            var occ_chrono_id = '';
+            if( x_axis == '3' ) {
+                occ_chrono_id = occ_data[i]['period_code'];
+            } else if( x_axis == '2' ) {
+                occ_chrono_id = occ_data[i]['epoch_code'];
+            } else if( x_axis == '1' ) {
+                occ_chrono_id = occ_data[i]['age_code'];
+            }
+
+            if( occ_chrono_id != '') {
+                if( chrono_id_list.indexOf(occ_chrono_id) >= 0) {
+                    // do nothing
+                } else {
+                    chrono_id_list.push(occ_chrono_id);
+                }
+            }
+            var y_key = '';
+            y_key = occ_data[i][y_axis];
+
+            if( y_key_list.indexOf(y_key) >= 0 ) {
+                // do nothing
+            } else {
+                y_key_list.push(y_key);
+            }
+        } else {
+            x_key = occ_data[i][x_axis];
+            console.log("x_key", x_key, "x_axis", x_axis);
+            if( x_key_list.indexOf(x_key) >= 0 ) {
+                // do nothing
+            } else {
+                x_key_list.push(x_key);
+            }
+            y_key_list = ['count'];
+        }
+
     }
 
-    var occ_chrono_id = '';
-    if( x_axis == '3' ) {
-        occ_chrono_id = occ_data[i]['period_code'];
-    } else if( x_axis == '2' ) {
-        occ_chrono_id = occ_data[i]['epoch_code'];
-    } else if( x_axis == '1' ) {
-        occ_chrono_id = occ_data[i]['age_code'];
-    }
-
-    if( chrono_id_list.indexOf(occ_chrono_id) >= 0) {
-        // do nothing
+    // set up data_matrix
+    if( chrono_id_list.length > 0 ) {
+        for( var i = 0 ; i < chrono_data.length ; i++ ) {
+            if( chrono_data[i]['level']  == x_axis && chrono_id_list.indexOf(chrono_data[i]['id']) >= 0) {
+                chrono_list.push(chrono_data[i]);
+                x_key_list.push(chrono_data[i]['name']);
+                data_count.push(0);
+                data_matrix.push(Array(y_key_list.length).fill(0));
+            }
+        }
     } else {
-        chrono_id_list.push(occ_chrono_id);
-    }
-}
-
-for( var i = 0 ; i < chrono_data.length ; i++ ) {
-    if( chrono_data[i]['level']  == x_axis && chrono_id_list.indexOf(chrono_data[i]['id']) >= 0) {
-        chrono_list.push(chrono_data[i]);
-        x_key_list.push(chrono_data[i]['name']);
-        data_count.push(0);
-        data_matrix.push(Array(y_key_list.length).fill(0));
-    }
-}
-
-data_matrix = data_matrix.map(function(x) {
-    for( var i = 0 ; i < y_key_list.length ; i++ ) {
-        x[y_key_list[i]] = 0;
-    }
-    return x;
-}); 
-
-for( var i = 0 ; i < occ_data.length; i++ ) {
-    var occ_chrono_id = '';
-    if( x_axis == '3' ) {
-        occ_chrono_id = occ_data[i]['period_code'];
-    } else if( x_axis == '2' ) {
-        occ_chrono_id = occ_data[i]['epoch_code'];
-    } else if( x_axis == '1' ) {
-        occ_chrono_id = occ_data[i]['age_code'];
-    }
-
-    for( var j = 0 ; j < chrono_list.length ; j++ ) {
-        if( occ_chrono_id == chrono_list[j]['id']) {
-            x_idx = j;
-            break;
+        for( var i = 0 ; i < x_key_list.length ; i++ ) {
+            data_count.push(0);
+            data_matrix.push([0]);
+            console.log("data_matrix", data_matrix);
         }
     }
 
-    data_count[x_idx] += 1;
-    var y_key = '';
-    if( y_axis == 'env' ) {
-        y_key = occ_data[i]['environment'];
-    } else if( y_axis == 'origin' ) {
-        y_key = occ_data[i]['origin'];
-    } else if( y_axis == 'country' ) {
-        y_key = occ_data[i]['country'];
-    } else if( y_axis == 'continent' ) {
-        y_key = occ_data[i]['continent'];
+    //console.log("x_key_list", x_key_list);
+    //console.log("data_matrix", data_matrix);
+
+    // fill data_matrix
+    for( var i = 0 ; i < occ_data.length; i++ ) {
+        var occ_chrono_id = '';
+        var x_idx = -1;
+        if( chrono_id_list.length > 0 ) {
+            if( x_axis == '3' ) {
+                occ_chrono_id = occ_data[i]['period_code'];
+            } else if( x_axis == '2' ) {
+                occ_chrono_id = occ_data[i]['epoch_code'];
+            } else if( x_axis == '1' ) {
+                occ_chrono_id = occ_data[i]['age_code'];
+            }
+
+            for( var j = 0 ; j < chrono_list.length ; j++ ) {
+                if( occ_chrono_id == chrono_list[j]['id']) {
+                    x_idx = j;
+                    break;
+                }
+            }
+            y_idx = y_key_list.indexOf(occ_data[i][y_axis]);
+        } else {
+            x_idx = x_key_list.indexOf(occ_data[i][x_axis]);
+            y_idx = 0;
+        }
+
+        console.log("x_idx:", x_idx, "y_idx:", y_idx);
+        data_count[x_idx] += 1;
+        data_matrix[x_idx][y_idx] += 1;
     }
 
-    var y_idx = y_key_list.indexOf(y_key);
-
-    data_matrix[x_idx][y_idx] += 1;
-}
-
-// remove if no count
-for( var i = data_matrix.length - 1 ; i >= 0 ; i-- ) {
-    if( data_matrix[i]['count'] == 0 ) {
-        data_matrix.splice(i, 1);
-        chrono_list.splice(i, 1);
+    // remove if no count
+    if(chrono_list.length > 0) {
+        for( var i = data_matrix.length - 1 ; i >= 0 ; i-- ) {
+            if( data_count[i] == 0 ) {
+                data_matrix.splice(i, 1);
+                chrono_list.splice(i, 1);
+            }
+        }
     }
-}
 
-data_matrix_to_table(x_key_list,y_key_list,data_matrix);
+    data_matrix_to_table(x_key_list,y_key_list,data_matrix);
+
+    var width_list = [];
+    for( var i = 0 ; i < chrono_list.length ; i++ ) {
+        var width = parseFloat(chrono_list[i]['begin']) - parseFloat(chrono_list[i]['end']);
+        console.log(width);
+        width_list.push(width);
+    }
+    var begin_list = [];
+    for( var i = 0 ; i < chrono_list.length ; i++ ) {
+        var begin = 0 - ( parseFloat(chrono_list[i]['begin']) + parseFloat(chrono_list[i]['end']) ) / 2;
+        console.log(i,begin);
+        begin_list.push(begin);
+    }
+    //console.log(width_list);
+    //console.log(begin_list);
+    var trace_data = [];
+    for (var i = 0; i < y_key_list.length; i++) {
+        var value_list = [];
+        for( var j = 0 ; j < x_key_list.length ; j++ ) {
+            value_list.push(data_matrix[j][i]);
+        }
+        trace = {
+            y: value_list,
+            name: y_key_list[i],
+            type: 'bar',
+        }
+        if( x_scale == 'by_age' ) {
+            console.log("by_age");
+            trace['x'] = begin_list;
+            trace['width'] = width_list;
+        } else {
+            console.log("by_name");
+            trace['x'] = x_key_list;
+        }
+        trace_data.push(trace);
+    }
+
+    var layout = {barmode: 'stack'};
+
+    Plotly.newPlot('myDiv', trace_data, layout);
+}
 
 function data_matrix_to_table(a_x_keys,a_y_keys,a_data_matrix) {
     var table = document.getElementById("data_matrix_table");
+    table.innerHTML = "";
     var row = table.insertRow();
     col = row.insertCell();
     for( var idx2=0;idx2<a_x_keys.length;idx2++){
@@ -172,9 +257,9 @@ function data_matrix_to_table(a_x_keys,a_y_keys,a_data_matrix) {
     }
 }
 
-console.log("data_matrix", data_matrix);
-console.log("y_key_list", y_key_list);
-console.log("x_key_list", x_key_list);
+//console.log("data_matrix", data_matrix);
+//console.log("y_key_list", y_key_list);
+//console.log("x_key_list", x_key_list);
 //console.log("occ_data", occ_data);
 //console.log("chrono_data", chrono_data);
 </script>
