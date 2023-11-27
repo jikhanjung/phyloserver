@@ -5,3 +5,4 @@ phylorun_datafile/*
 .env
 uploads/*
 nkfcluster/migrations/*
+freshwaterfish/migrations/*
