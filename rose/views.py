@@ -1,12 +1,12 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import RoseOccurrence
-from .forms import RoseOccurrenceForm
+from .models import RoseOccurrence, RoseFile
+from .forms import RoseOccurrenceForm, RoseFileForm
 from django.db.models import Q
 from django.core.paginator import Paginator
 from nkfcluster.models import ChronoUnit
 import json
-
+import os
 # Create your views here.
 
 
@@ -25,7 +25,7 @@ def get_user_obj( request ):
 
 # Create your views here.
 def index(request):
-    return HttpResponseRedirect('occ_list')
+    return HttpResponseRedirect('file_list')
 
 def occ_list(request):
     user_obj = get_user_obj(request)
@@ -122,7 +122,7 @@ def delete_occurrence(request, pk):
     occ.delete()
     return HttpResponseRedirect('/rose/occ_list')
 
-def occ_chart(request):
+def occ_chart(request, file_id=None):
     user_obj = get_user_obj(request)
 
     locality = request.POST.get('locality')
@@ -133,10 +133,92 @@ def occ_chart(request):
     chrono_data = []
     for chrono in chrono_query:
         chrono_data.append( { 'name': chrono.name, 'id': chrono.id, 'level': chrono.level, 'begin': chrono.begin, 'end': chrono.end } )
-    occ_query = RoseOccurrence.objects.all().order_by('locality')
+
+    if file_id:
+        occ_query = RoseOccurrence.objects.filter(rosefile_id=file_id).order_by('locality')
+    else:
+        occ_query = RoseOccurrence.objects.all().order_by('locality')
+
+
     occ_data = []
     for occ in occ_query:
         occ_data.append( { 'id': occ.id, 'locality': occ.locality, 'age': occ.age, 'comment': occ.comment,
                             'strike': occ.strike, 'dip': occ.dip } ) 
 
-    return render(request, 'rose/occ_chart.html', {'user_obj':user_obj, 'locality':locality, 'age':age, 'occ_data':json.dumps(occ_data)})
+    return render(request, 'rose/occ_chart.html', {'user_obj':user_obj, 'file_id': file_id, 'locality':locality, 'age':age, 'occ_data':json.dumps(occ_data)})
+
+def upload_file(request):
+    user_obj = get_user_obj(request)
+
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        file_form = RoseFileForm(request.POST,request.FILES)
+        # check whether it's valid:
+        if file_form.is_valid():
+            file = file_form.save(commit=False)
+            #print(phylorun.datafile)
+            #print(file.file)
+            name = str(file.file)
+            #print(name)
+            if not file.name:
+                file.name = name
+                #fname,fext = os.path.splitext(name)
+                #print(fname, fext)
+                #file.name = fname
+            file.save()
+            #print(file.file)
+            file.process_rows()
+            return HttpResponseRedirect('/rose/file_detail/'+str(file.id))
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        file_form = RoseFileForm()
+
+    return render(request, 'rose/rose_upload_file.html', {'file_form': file_form,'user_obj':user_obj})
+
+def file_list(request):
+    user_obj = get_user_obj(request)
+    #order_by = request.GET.get('order_by', 'year')
+    filter1 = request.GET.get('filter1')
+    filter2 = request.GET.get('filter2')
+
+    file_list = RoseFile.objects.all()
+
+    if filter2:
+        file_list = file_list.filter(Q(source_code=filter2)).distinct()
+
+    if filter1:
+        file_list = file_list.filter(Q(genus__contains=filter1)).distinct()
+        #print(ref_list)
+
+    file_list = file_list.order_by( '-uploaded_at')
+    for file in file_list:
+        print(file.name)
+
+    #occ_list = NkfOccurrence.objects.order_by('species_name')
+
+
+    paginator = Paginator(file_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'file_list': file_list,
+        'user_obj': user_obj,
+        'page_obj': page_obj,
+        'filter1': filter1,
+        'filter2': filter2,
+    }
+    return render(request, 'rose/file_list.html', context)
+
+def file_detail(request, file_id):
+    user_obj = get_user_obj(request)
+
+    file = get_object_or_404(RoseFile, pk=file_id)
+
+    occ_list = RoseOccurrence.objects.filter(rosefile=file).order_by('locality')
+
+    paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'rose/file_detail.html', {'file': file, 'user_obj':user_obj, 'occ_list': occ_list, 'page_obj': page_obj})
+
