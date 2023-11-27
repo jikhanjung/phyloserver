@@ -1,0 +1,53 @@
+{% if page_obj.paginator.num_pages > 0 %}
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{%if filter1%}&filter1={{filter1}}{%endif%}{%if filter2%}&filter2={{filter2}}{%endif%}">[First]</a>
+            <a id="prev" href="?page={{ page_obj.previous_page_number }}{%if filter1%}&filter1={{filter1}}{%endif%}{%if filter2%}&filter2={{filter2}}{%endif%}">[Prev]</a>
+        {%else%}
+        [First] [Prev]
+        {% endif %}
+
+        <span class="current">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a id="next" href="?page={{ page_obj.next_page_number }}{%if filter1%}&filter1={{filter1}}{%endif%}{%if filter2%}&filter2={{filter2}}{%endif%}">[Next]</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{%if filter1%}&filter1={{filter1}}{%endif%}{%if filter2%}&filter2={{filter2}}{%endif%}">[Last]</a>
+        {%else%}
+        [Next] [Last]
+        {% endif %}
+    </span>
+</div>
+<script>
+document.onkeydown = checkKey;
+
+function checkKey(e) {
+
+    e = e || window.event;
+
+    if (e.keyCode == '38') {
+        // up arrow
+    }
+    else if (e.keyCode == '40') {
+        // down arrow
+    }
+    else if (e.keyCode == '37') {
+        prev_a = document.getElementById('prev');
+        url = prev_a.getAttribute('href');
+        window.location.href = url;
+        //console.log(url);
+       // left arrow
+    }
+    else if (e.keyCode == '39') {
+        next_a = document.getElementById('next');
+        url = next_a.getAttribute('href');
+        window.location.href = url;
+        //console.log(url);
+       // right arrow
+    }
+}
+</script>
+
+{% endif %}

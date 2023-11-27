@@ -1,0 +1,18 @@
+{% extends "rosebase.html" %}
+{% block content %}
+<h4 class="bd-title p-2 bg-secondary text-light">Edit Occurrence</h4>
+<form action="" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+<div>
+    <table class="table table-striped table-sm">
+        <tr><th>{{occ_form.locality.label}}</th><td>{{occ_form.locality}}</td></tr>
+        <tr><th>{{occ_form.age.label}}</th><td>{{occ_form.age}}</td></tr>
+        <tr><th>{{occ_form.comment.label}}</th><td>{{occ_form.comment}}</td></tr>
+        <tr><th>{{occ_form.strike.label}}</th><td>{{occ_form.strike}}</td></tr>
+        <tr><th>{{occ_form.dip.label}}</th><td>{{occ_form.dip}}</td></tr>
+    </table>
+</div>
+<input type="submit" value="Save">
+</div>
+</form>
+{% endblock %}

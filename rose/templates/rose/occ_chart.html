@@ -1,0 +1,137 @@
+{% extends "rosebase.html" %}
+{% block content %}
+<h4 class="bd-title p-2 bg-secondary text-light">Rose Diagram</h4>
+<table class="table table-striped table-sm">
+    <thead>
+        <tr><td>
+            <div class="row">
+                <div class="col">
+                    Locality:<select name="locality" id="locality">
+                        <option value="all" checked>All</option>
+                    </select>
+                    Age:<select name="age" id="age">
+                        <option value="all" checked>All</option>
+                    </select>
+                    Unit angle:<select name="angle" id="angle">
+                        <option value="15">15</option>
+                        <option value="30" selected>30</option>
+                        <option value="45">45</option>
+                        <option value="60">60</option>
+                    </select>
+                    <button onclick="javascript:draw_chart()">보기</button></span>
+                </div>
+            </div>
+        </td></tr>
+    </thead>
+</table>
+<div id="myDiv"></div>
+<table id="data_matrix_table" class="table">
+</table>
+<a href="{% url 'rose:occ_list' %}">[Occurrence List]</a>
+<script src="https://cdn.plot.ly/plotly-2.12.1.min.js"></script>
+<script>
+
+var occ_data = JSON.parse("{{occ_data|escapejs}}");
+//var chrono_data = JSON.parse("{{chrono_data|escapejs}}");
+var sel_locality = document.getElementById("locality");
+var sel_age = document.getElementById("age");
+var sel_angle = document.getElementById("angle");
+sel_locality.onchange = locality_changed
+sel_age.onchange = age_changed
+sel_angle.onchange = age_changed
+function locality_changed(){
+    console.log("locality_changed");
+}
+function age_changed(){
+    console.log("age_changed");
+}
+function angle_changed(){
+    console.log("angle_changed");
+}
+
+function draw_chart() {
+    var locality = sel_locality.value;
+    var age = sel_age.value;
+    var unit_angle = sel_angle.value;
+    // check if x_axis if undefined
+    if( locality == undefined ) {
+        locality = 'all';
+    }
+    if( age == undefined ) {
+        age = 'all';
+    }
+    if( unit_angle == undefined ) {
+        unit_angle = '30';
+    }
+    // convert angle to int 
+    unit_angle = parseInt(unit_angle);
+    //console.log("locality", locality);
+    //console.log("age", age);
+    //console.log("unit_angle", unit_angle);
+    //console.log("x_axis", x_axis);
+    //console.log("option:", sel_x_axis.options[sel_x_axis.selectedIndex])
+    var histo_values = [];
+    var theta_values = [];
+    for (var i = 0; i < 180; i+=unit_angle) {
+        histo_values.push(0);
+        theta_values.push(i+unit_angle/2);
+        console.log(i, unit_angle);
+    }
+    console.log(histo_values);
+    // half unit angle to nearest integer 
+    half_unit_angle = Math.round(unit_angle/2*10)/10;
+    
+
+
+    // determine x_key_list and y_key_list
+    for( var i = 0 ; i < occ_data.length; i++ ) {
+        var angle = parseFloat(occ_data[i]['strike']);
+        if( angle < 0 ) {
+            angle += 360;
+        }
+        if( angle > 180 ) {
+            // angle mod 180
+            angle = angle % 180;
+        }
+        var idx = Math.floor(angle / unit_angle);
+        //console.log(angle, unit_angle, idx)
+        histo_values[idx] += 1;
+    }
+    var histo_values_2 = [ ...histo_values, ...histo_values ];
+    // theta_values + 180
+
+    var theta_values_2 = [ ...theta_values, ...theta_values.map(elem=>elem+180) ];
+    var labels = theta_values_2.map(t => `${t-half_unit_angle}°~${t+half_unit_angle}°`);
+    
+    //console.log(histo_values_2);
+    //console.log(theta_values_2);
+
+    data = [ {
+    r: histo_values_2,
+    theta: theta_values_2,
+    text: labels,
+    name: "strike",
+    marker: {color: "rgb(106,81,163)"},
+    type: "barpolar",
+    hoverinfo: 'text'
+    } ];
+    console.log(data)
+
+    var layout = {
+        title: "Strike Distribution",
+        font: {size: 16},
+        legend: {font: {size: 16}},
+        polar: {
+        barmode: "overlay",
+        bargap: 0,
+        radialaxis: {dtick: 5},
+        angularaxis: {direction: "clockwise", rotation: 90 }
+        }
+    }
+
+    Plotly.newPlot('myDiv', data, layout);
+    //console.log(histo_values_2);
+}
+
+</script>
+{% endblock %}

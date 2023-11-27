@@ -31,6 +31,7 @@ urlpatterns = [
     path('phylomanager/', include(('phylomanager.urls','phylomanager'), namespace='phylomanager')),
     path('nkfcluster/', include(('nkfcluster.urls','nkfcluster'), namespace='nkfcluster')),
     path('freshwaterfish/', include(('freshwaterfish.urls','freshwaterfish'), namespace='freshwaterfish')),
+    path('rose/', include(('rose.urls','rose'), namespace='rose')),
     path('admin/', admin.site.urls),
     path("phylomanager/", include("django.contrib.auth.urls")), 
     #path('', include('snippets.urls')),
