@@ -128,17 +128,19 @@ def occ_chart(request, file_id=None):
     locality = request.POST.get('locality')
     age = request.POST.get('age')
 
+    filter1 = request.GET.get('filter1')
+
     #chrono_data = 
-    chrono_query = ChronoUnit.objects.all().order_by('-begin')
-    chrono_data = []
-    for chrono in chrono_query:
-        chrono_data.append( { 'name': chrono.name, 'id': chrono.id, 'level': chrono.level, 'begin': chrono.begin, 'end': chrono.end } )
 
     if file_id:
-        occ_query = RoseOccurrence.objects.filter(rosefile_id=file_id).order_by('locality')
+        occ_query = RoseOccurrence.objects.filter(rosefile_id=file_id)
     else:
         occ_query = RoseOccurrence.objects.all().order_by('locality')
+    if filter1:
+        occ_query = occ_query.filter(Q(locality__contains=filter1)|Q(age__contains=filter1))
+        #print(ref_list)
 
+    occ_query = occ_query.order_by('locality')
 
     occ_data = []
     for occ in occ_query:
@@ -211,14 +213,21 @@ def file_list(request):
 
 def file_detail(request, file_id):
     user_obj = get_user_obj(request)
+    filter1 = request.GET.get('filter1')
+    #filter2 = request.GET.get('filter2')
 
     file = get_object_or_404(RoseFile, pk=file_id)
 
-    occ_list = RoseOccurrence.objects.filter(rosefile=file).order_by('locality')
+    occ_list = RoseOccurrence.objects.filter(rosefile=file)
+    if filter1:
+        occ_list = occ_list.filter(Q(locality__contains=filter1)|Q(age__contains=filter1))
+        #print(ref_list)
+    
+    occ_list = occ_list.order_by('locality')
 
     paginator = Paginator(occ_list, ITEMS_PER_PAGE) # Show ITEMS_PER_PAGE contacts per page.
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'rose/file_detail.html', {'file': file, 'user_obj':user_obj, 'occ_list': occ_list, 'page_obj': page_obj})
+    return render(request, 'rose/file_detail.html', {'file': file, 'user_obj':user_obj, 'occ_list': occ_list, 'page_obj': page_obj, 'filter1': filter1, })
 
