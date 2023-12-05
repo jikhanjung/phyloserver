@@ -12,6 +12,11 @@ class RoseOccurrence(models.Model):
     dip = models.CharField(max_length=200,blank=True,null=True)
     length = models.CharField(max_length=200,blank=True,null=True)
     distance = models.CharField(max_length=200,blank=True,null=True)
+    region = models.CharField(max_length=200,blank=True,null=True)
+    symbol = models.CharField(max_length=200,blank=True,null=True)
+    color = models.CharField(max_length=200,blank=True,null=True)
+    rocktype1 = models.CharField(max_length=200,blank=True,null=True)
+    rocktype2 = models.CharField(max_length=200,blank=True,null=True)
     rosefile = models.ForeignKey('RoseFile',on_delete=models.SET_NULL,blank=True,null=True)
 
 class RoseFile(models.Model):
@@ -45,6 +50,10 @@ class RoseFile(models.Model):
                 occ.strike = angle
                 occ.length = row['길이']
                 occ.distance = row['거리']
+                occ.rocktype1 = row['지층']
+                occ.rocktype2 = row['대표암상']
+                occ.symbol = row['기호']
+                occ.region = row['지역']
                 occ.dip = ''
                 occ.comment = ''
                 occ.rosefile = self

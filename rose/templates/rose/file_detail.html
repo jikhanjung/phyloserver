@@ -19,14 +19,16 @@
     {% if occ_list %}   
     <tbody>
         <tr>
-            <th><div>Locality</div></th>
-            <th><div>Age</div></th>
-            <th><div>Strike</div></th>
-            <th><div>Length</div></th>
-            <th><div>Distance</div></th>
+            <th><div>지역</div></th>
+            <th><div>주소</div></th>
+            <th><div>시대</div></th>
+            <th><div>방향</div></th>
+            <th><div>길이</div></th>
+            <th><div>거리</div></th>
         </tr>
         {% for occ in page_obj %}
         <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'rose:occ_detail' occ.id %}';">
+            <td>{{ occ.region|default_if_none:'' }}</td>
             <td>{{ occ.locality|default_if_none:'' }}</td>
             <td>{{ occ.age|default_if_none:'' }}</td>
             <td>{{ occ.strike|floatformat }}°</td>
