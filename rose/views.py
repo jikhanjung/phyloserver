@@ -129,13 +129,17 @@ def occ_chart(request, file_id=None):
     age = request.POST.get('age')
 
     filter1 = request.GET.get('filter1')
+    region = request.GET.get('region')
 
     #chrono_data = 
 
     if file_id:
         occ_query = RoseOccurrence.objects.filter(rosefile_id=file_id)
     else:
-        occ_query = RoseOccurrence.objects.all().order_by('locality')
+        occ_query = RoseOccurrence.objects.all()
+
+    if region:
+        occ_query = occ_query.filter(Q(region=region))
     if filter1:
         occ_query = occ_query.filter(Q(locality__contains=filter1)|Q(age__contains=filter1))
         #print(ref_list)
@@ -193,8 +197,8 @@ def file_list(request):
         #print(ref_list)
 
     file_list = file_list.order_by( '-uploaded_at')
-    for file in file_list:
-        print(file.name)
+    #for file in file_list:
+    #    print(file.name)
 
     #occ_list = NkfOccurrence.objects.order_by('species_name')
 
@@ -214,11 +218,17 @@ def file_list(request):
 def file_detail(request, file_id):
     user_obj = get_user_obj(request)
     filter1 = request.GET.get('filter1')
+    region = request.GET.get('region')
     #filter2 = request.GET.get('filter2')
 
     file = get_object_or_404(RoseFile, pk=file_id)
 
+    # select distinct region from RoseOccurrence where rosefile_id = file_id
+    region_list = [ occ['region'] for occ in RoseOccurrence.objects.filter(rosefile=file).values('region').distinct() ]
+
     occ_list = RoseOccurrence.objects.filter(rosefile=file)
+    if region:
+        occ_list = occ_list.filter(Q(region=region))
     if filter1:
         occ_list = occ_list.filter(Q(locality__contains=filter1)|Q(age__contains=filter1))
         #print(ref_list)
@@ -229,5 +239,5 @@ def file_detail(request, file_id):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'rose/file_detail.html', {'file': file, 'user_obj':user_obj, 'occ_list': occ_list, 'page_obj': page_obj, 'filter1': filter1, })
+    return render(request, 'rose/file_detail.html', {'file': file, 'user_obj':user_obj, 'occ_list': occ_list, 'page_obj': page_obj, 'filter1': filter1, 'selected_region': region, 'region_list': region_list })
 
