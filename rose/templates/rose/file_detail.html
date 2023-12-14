@@ -50,7 +50,7 @@
         <tr><td colspan="3" width="400">
             {% include "rosepaginator.html" %}
         </td><td colspan="3" width="400" align="right">
-            <a href="{% url 'rose:occ_chart' file.id %}?filter1={{filter1|default_if_none:''}}{% if selected_region != '' %}&region={{selected_region}}{%endif%}">[Rose Diagram]</a>
+            <a href="{% url 'rose:occ_chart' file.id %}?filter1={{filter1|default_if_none:''}}{% if selected_region != '' %}&region={{selected_region|default_if_none:''}}{%endif%}">[Rose Diagram]</a>
             <a href="{% url 'rose:file_list' %}">[File List]</a>
         </td></tr>
     </tfooter>
