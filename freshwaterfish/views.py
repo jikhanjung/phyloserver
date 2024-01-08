@@ -26,7 +26,7 @@ def index(request):
 
 def occ_list(request):
     user_obj = get_user_obj(request)
-    #order_by = request.GET.get('order_by', 'year')
+    order_by = request.GET.get('order_by', 'genus')
     filter1 = request.GET.get('filter1')
     filter2 = request.GET.get('filter2')
 
@@ -39,7 +39,7 @@ def occ_list(request):
         occ_list = occ_list.filter(Q(genus__contains=filter1)).distinct()
         #print(ref_list)
 
-    occ_list = occ_list.order_by( 'genus')
+    occ_list = occ_list.order_by( order_by )
 
     #occ_list = NkfOccurrence.objects.order_by('species_name')
 
@@ -53,6 +53,7 @@ def occ_list(request):
         'page_obj': page_obj,
         'filter1': filter1,
         'filter2': filter2,
+        'order_by': order_by,
     }
     return render(request, 'freshwaterfish/occ_list.html', context)
 

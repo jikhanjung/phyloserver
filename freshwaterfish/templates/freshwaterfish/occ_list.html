@@ -15,18 +15,18 @@
     {% if occ_list %}   
     <tbody>
         <tr>
-            <th><div>Locality</div></th>
-            <th><div>Country</div></th>
-            <th><div>Order/Clade</div></th>
-            <th><div>Family</div></th>
-            <th><div>Genus</div></th>
-            <th><div>Origin</div></th>
-            <th><div>Epoch</div></th>
-            <th><div>Age</div></th>
-            <th><div>Environment</div></th>
-            <th><div>Continent</div></th>
-            <th><div>Period</div></th>
-            <th><div>Reference</div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'locality' %}-{%endif%}locality{%if filter1%}&filter1={{filter1}}{%endif%}">Locality{%if order_by == 'locality'%}&uarr;{%elif order_by == '-locality'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'country' %}-{%endif%}country{%if filter1%}&filter1={{filter1}}{%endif%}">Country{%if order_by == 'country'%}&uarr;{%elif order_by == '-country'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'clade' %}-{%endif%}clade{%if filter1%}&filter1={{filter1}}{%endif%}">Order/Clade{%if order_by == 'clade'%}&uarr;{%elif order_by == '-clade'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'family' %}-{%endif%}family{%if filter1%}&filter1={{filter1}}{%endif%}">Family{%if order_by == 'family'%}&uarr;{%elif order_by == '-family'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'genus' %}-{%endif%}genus{%if filter1%}&filter1={{filter1}}{%endif%}">Genus{%if order_by == 'genus'%}&uarr;{%elif order_by == '-genus'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'origin' %}-{%endif%}origin{%if filter1%}&filter1={{filter1}}{%endif%}">Origin{%if order_by == 'origin'%}&uarr;{%elif order_by == '-origin'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'epoch' %}-{%endif%}epoch{%if filter1%}&filter1={{filter1}}{%endif%}">Epoch{%if order_by == 'epoch'%}&uarr;{%elif order_by == '-epoch'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'age' %}-{%endif%}age{%if filter1%}&filter1={{filter1}}{%endif%}">Age{%if order_by == 'age'%}&uarr;{%elif order_by == '-age'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'environment' %}-{%endif%}environment{%if filter1%}&filter1={{filter1}}{%endif%}">Environment{%if order_by == 'environment'%}&uarr;{%elif order_by == '-environment'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'continent' %}-{%endif%}continent{%if filter1%}&filter1={{filter1}}{%endif%}">Continent{%if order_by == 'continent'%}&uarr;{%elif order_by == '-continent'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'period' %}-{%endif%}period{%if filter1%}&filter1={{filter1}}{%endif%}">Period{%if order_by == 'period'%}&uarr;{%elif order_by == '-period'%}&darr;{%endif%}</a></div></th>
+            <th><div><a href="{% url 'freshwaterfish:occ_list' %}?order_by={% if order_by == 'reference' %}-{%endif%}reference{%if filter1%}&filter1={{filter1}}{%endif%}">Reference{%if order_by == 'reference'%}&uarr;{%elif order_by == '-reference'%}&darr;{%endif%}</a></div></th>
         </tr>
         {% for occ in page_obj %}
         <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'freshwaterfish:occ_detail' occ.id %}';">
