@@ -172,9 +172,14 @@ class Command(BaseCommand):
                             # copy TNT script file
                             run_file_name = os.path.join( settings.BASE_DIR, "scripts", "aquickie.run" )
                             shutil.copy( run_file_name, leg_directory )
+                            my_os = platform.system()
+                            if my_os == 'Linux':
+                                separator = ","
+                            else:
+                                separator = ";"
 
                             #run argument setting
-                            run_argument_list = [ package.run_path, "proc", data_file_location, ";", "aquickie", ";" ]
+                            run_argument_list = [ package.run_path, "proc", data_file_location, separator, "aquickie", separator ]
 
                         elif package.package_name == 'MrBayes':
                             command_filename = self.create_mrbayes_command_file( data_filename, leg_directory, leg )
