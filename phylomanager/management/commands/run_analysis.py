@@ -173,6 +173,7 @@ class Command(BaseCommand):
                             run_file_name = os.path.join( settings.BASE_DIR, "scripts", "aquickie.run" )
                             shutil.copy( run_file_name, leg_directory )
                             my_os = platform.system()
+                            print("my_os", my_os)
                             if my_os == 'Linux':
                                 separator = ","
                             else:
