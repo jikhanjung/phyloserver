@@ -51,6 +51,8 @@ class Command(BaseCommand):
 
     def do_loop(self):
         my_os = platform.system()
+        env = os.environ.copy()
+        env['TERM'] = 'xterm'
 
         while( True ):
             runs = self.get_candidate_runs()
@@ -195,7 +197,7 @@ class Command(BaseCommand):
                         print( "redirect file descriptors open")
 
                         #print( run_argument_list )
-                        p1 = subprocess.Popen( run_argument_list, cwd=leg_directory, stdout=subprocess.PIPE, stderr=stderr_fd)
+                        p1 = subprocess.Popen( run_argument_list, cwd=leg_directory, stdout=subprocess.PIPE, stderr=stderr_fd, env=env)
                         print( "p1 subprocess run", p1)
                         #p2 = subprocess.run(['python', 'manage.py', 'phylomonitor', package.package_name],cwd=settings.BASE_DIR,stdin=p1.stdout, stdout = stdout_fd)
                         monitor_argument_list =['python', 'manage.py', 'phylomonitor', '--package_name', package.package_name, '--leg_id', str(leg.id) ]
