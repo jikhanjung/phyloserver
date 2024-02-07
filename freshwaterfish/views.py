@@ -26,7 +26,7 @@ def index(request):
 
 def occ_list(request):
     user_obj = get_user_obj(request)
-    order_by = request.GET.get('order_by', 'genus')
+    order_by = request.GET.get('order_by', '-period')
     filter1 = request.GET.get('filter1')
     filter2 = request.GET.get('filter2')
 
