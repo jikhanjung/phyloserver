@@ -134,8 +134,16 @@ def occ_chart(request):
     occ_query = FrOccurrence.objects.all().order_by('genus')
     occ_data = []
     for occ in occ_query:
+        if occ.epoch_code:
+            epoch_code_id = occ.epoch_code.id
+        else:
+            epoch_code_id = None
+        if occ.period_code:
+            period_code_id = occ.period_code.id
+        else:
+            period_code_id = None
         occ_data.append( { 'id': occ.id, 'genus': occ.genus, 'locality': occ.locality, 'country': occ.country, 'clade': occ.clade, 'family': occ.family,
-                           'origin': occ.origin, 'epoch_code': occ.epoch_code.id, 'period_code': occ.period_code.id,
+                           'origin': occ.origin, 'epoch_code': epoch_code_id, 'period_code': period_code_id,
                             'environment': occ.environment, 'continent': occ.continent } ) 
 
     return render(request, 'freshwaterfish/occ_chart.html', {'user_obj':user_obj, 'x_axis':x_axis, 'y_axis':y_axis, 'chrono_data':json.dumps(chrono_data), 'occ_data':json.dumps(occ_data)})
