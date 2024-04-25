@@ -113,8 +113,8 @@ var options = {
   timeout: 5000,
   maximumAge: 0
 };
-function error(err) {
-  console.warn(`ERROR(${err.code}): ${err.message}`);
+function error_console(err) {
+  //console.warn(`ERROR(${err.code}): ${err.message}`);
   //alert(`ERROR(${err.code}): ${err.message}`);
 }
 function success(position) {
@@ -129,7 +129,7 @@ console.log(lat, lon);
 }
     
     // GeoLocation을 이용해서 접속 위치를 얻어옵니다
-    navigator.geolocation.getCurrentPosition(success, error, options);
+    navigator.geolocation.getCurrentPosition(success, error_console, options);
 } else {
   console.log("geolocation unavailable");
 }
@@ -139,7 +139,7 @@ var container = document.getElementById('map');
 var options = {
 	//center: new kakao.maps.LatLng(37.487935, 126.857758),
 	center: current_loc_position,
-	level:13 
+	level:11 
 };
 
 var map = new kakao.maps.Map(container, options);
@@ -156,40 +156,94 @@ var lat_sum=0, lon_sum=0, data_count=0;
 
 var occurrence_list = [];//nk_fossil_occurrence_data;
 //imagename_list.sort()
+var map_info_list = [];
+var coords_basis = {};
+var region_overlay_list = [];
+var max_row = 0; 
+var max_col = 0;
 
+// script.js
 fetch('map_info.json')
-  .then(response => response.json())
-  .then(map_info => {
-      // Process the JSON data here
-      console.log(map_info); 
-  })
-  .catch(error => {
-      // Handle errors, likely the file wasn't found
-      console.error("Error fetching JSON:", error); 
-  });
+    .then(response => response.json())
+    .then(data => {
+console.log("data fetched");
+        // Assuming a pre-existing variable named 'myExistingObject'
+	process_map_data(data);
+        //map_info_orig = { ...map_info_orig, ...data }; // Merge into the existing object
 
+        //console.log(map_info_orig);
+    })
+    .catch(error => console.error("Error fetching JSON:", error));
 
+//console.log("map_info_orig:", map_info_orig);
+function process_map_data(map_info) {
+//console.log("okay now processing", map_info_orig);
+coords_basis = map_info['coords_basis'];
 for( var idx=0;idx<map_info['regions'].length;idx++){
+	map_info_list[map_info_list.length] = map_info['regions'][idx];
 	var region = map_info['regions'][idx];
 	var region_name = region['name'];
 	var region_row = region['row'];
 	var region_col = region['col'];
-	var region_lat = map_info['coords_basis']['y_0'] + region_row * map_info['coords_basis']['y_diff'];
-	var region_lon = map_info['coords_basis']['x_0'] + region_col * map_info['coords_basis']['x_diff'];
-	var region_marker = new kakao.maps.Marker({
+	if(region_row > max_row) max_row = region_row;
+	if(region_col > max_col) max_col = region_col;
+
+	var region_lat = map_info['coords_basis']['y_0'] + region_row * map_info['coords_basis']['y_diff'] + region['rowspan'] * map_info['coords_basis']['y_diff'] / 2;
+	var region_lon = map_info['coords_basis']['x_0'] + region_col * map_info['coords_basis']['x_diff'] + region['colspan'] * map_info['coords_basis']['x_diff'] / 2;
+
+        var content = '<div class="label" region_name="' + region_name + '" id="' + region_row.toString() + '_' + region_col.toString() + '"><div>' + region_name + '</div></div>';
+        var position = new kakao.maps.LatLng( region_lat, region_lon );
+        var customOverlay = new kakao.maps.CustomOverlay( { position: position, content:content, map: map });
+	/*var region_marker = new kakao.maps.Marker({
 		position: new kakao.maps.LatLng(region_lat, region_lon),
 		map: map,
 		title: region_name
-	});
+	});*/
+//console.log(region_name);
+        region_overlay_list[region_overlay_list.length] = customOverlay;
+		
 	var region_infowindow = new kakao.maps.InfoWindow({
 		content: region_name
 	});
-	kakao.maps.event.addListener(region_marker, 'click', makeOverListener(map, region_marker, region_infowindow));
-	kakao.maps.event.addListener(region_marker, 'mouseout', makeOutListener(region_infowindow));
+	//kakao.maps.event.addListener(region_marker, 'click', makeOverListener(map, region_marker, region_infowindow));
+	//kakao.maps.event.addListener(region_marker, 'mouseout', makeOutListener(region_infowindow));
+}
 }
 
+function getChildImage(element) {
+     for (const child of element.children) {
+        if (child.tagName === 'IMG') {
+            return child;
+        }
+    }
+    return null; // Return null if no image found
+}
 
 kakao.maps.event.addListener(map, 'zoom_changed', function() {
+	var level = map.getLevel();
+	for( var idx=0;idx<map_info_list.length;idx++){
+		var region = map_info_list[idx];
+		var region_name = region['name'];
+		var region_row = region['row'];
+		var region_col = region['col'];
+		var d = document.getElementById(region_row.toString() + "_" + region_col.toString());
+		if(d){
+			if(level <=10 ){
+				//console.log("got the div element under level9", region_row, region_col,level);
+				var img_child = getChildImage(d);
+				if( img_child ) { }
+				else{ 
+					var img = document.createElement('img');
+					urlencoded_region_name = encodeURIComponent(region_name);
+					img.width=50; img.height=50;img.src="/rose/rose_image/?region="+urlencoded_region_name;
+					d.appendChild(img);
+				}
+			}else{
+				var img_child = getChildImage(d);
+				if( img_child ) { d.removeChild(img_child);}
+			}
+		}
+	}
 	refresh_view();
 });
 
@@ -293,7 +347,7 @@ kakao.maps.Tileset.add('TILE_NUMBER',
 var show_tile = true;
 map.addOverlayMapTypeId(kakao.maps.MapTypeId.TILE_NUMBER);
 map.setMinLevel(7);
-map.setMaxLevel(13);
+map.setMaxLevel(12);
 //filter_occurrences( age_list, true);
 
 
