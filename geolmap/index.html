@@ -233,13 +233,11 @@ kakao.maps.event.addListener(map, 'zoom_changed', function() {
 			if(level <=10 ){
 				//console.log("got the div element under level9", region_row, region_col,level);
 				var img_child = getChildImage(d);
-				if( img_child ) { }
-				else{ 
-					var img = document.createElement('img');
-					urlencoded_region_name = encodeURIComponent(region_name);
-					img.width=100*factor; img.height=80*factor;img.src="/rose/rose_image/?region="+urlencoded_region_name;
-					d.appendChild(img);
-				}
+				if( img_child ) { d.removeChild(img_child);}
+				var img = document.createElement('img');
+				urlencoded_region_name = encodeURIComponent(region_name);
+				img.width=100*factor; img.height=80*factor;img.src="/rose/rose_image/?region="+urlencoded_region_name;
+				d.appendChild(img);
 			}else{
 				var img_child = getChildImage(d);
 				if( img_child ) { d.removeChild(img_child);}
