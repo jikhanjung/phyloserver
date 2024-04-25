@@ -169,6 +169,26 @@ fetch('map_info.json')
   });
 
 
+for( var idx=0;idx<map_info['regions'].length;idx++){
+	var region = map_info['regions'][idx];
+	var region_name = region['name'];
+	var region_row = region['row'];
+	var region_col = region['col'];
+	var region_lat = map_info['coords_basis']['y_0'] + region_row * map_info['coords_basis']['y_diff'];
+	var region_lon = map_info['coords_basis']['x_0'] + region_col * map_info['coords_basis']['x_diff'];
+	var region_marker = new kakao.maps.Marker({
+		position: new kakao.maps.LatLng(region_lat, region_lon),
+		map: map,
+		title: region_name
+	});
+	var region_infowindow = new kakao.maps.InfoWindow({
+		content: region_name
+	});
+	kakao.maps.event.addListener(region_marker, 'click', makeOverListener(map, region_marker, region_infowindow));
+	kakao.maps.event.addListener(region_marker, 'mouseout', makeOutListener(region_infowindow));
+}
+
+
 kakao.maps.event.addListener(map, 'zoom_changed', function() {
 	refresh_view();
 });
