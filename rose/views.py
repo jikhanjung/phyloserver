@@ -8,7 +8,9 @@ from nkfcluster.models import ChronoUnit
 import json
 import os
 # Create your views here.
-
+import plotly.graph_objects as go
+import numpy as np
+import io
 
 ITEMS_PER_PAGE = 20
 
@@ -241,3 +243,82 @@ def file_detail(request, file_id):
 
     return render(request, 'rose/file_detail.html', {'file': file, 'user_obj':user_obj, 'occ_list': occ_list, 'page_obj': page_obj, 'filter1': filter1, 'selected_region': region, 'region_list': region_list })
 
+def rose_image(request):
+    user_obj = get_user_obj(request)
+    # get latest file
+    file = RoseFile.objects.latest('uploaded_at')
+    # get region name
+    region = request.GET.get('region')
+    # get occurrences for region
+    occ_list = RoseOccurrence.objects.filter(rosefile=file)
+    if region:
+        occ_list = occ_list.filter(Q(region=region))
+
+
+
+
+    unit_angle = 30
+
+    # Initialize values
+    histo_values = [0] * (180 // unit_angle)  # Use integer division
+    theta_values = np.arange(unit_angle / 2, 180 + unit_angle / 2, unit_angle)
+
+    half_unit_angle = round(unit_angle / 2 * 10) / 10
+
+    # Assume occ_data is a list of dictionaries 
+    count = 0
+    for item in occ_list:
+        angle = float(item.strike)#get('strike', -999))  # Handle missing values
+        if angle == -999: 
+            continue
+
+        count += 1
+        if angle < 0:
+            angle += 360
+        if angle > 180:
+            angle %= 180
+
+        idx = int(angle // unit_angle)
+        histo_values[idx] += 1  
+
+    # Duplicate values for circular chart
+    histo_values_2 = histo_values * 2
+    theta_values_2 = np.concatenate((theta_values, theta_values + 180))
+    labels = [f"{t - half_unit_angle}°~{t + half_unit_angle}°" for t in theta_values_2]
+
+    tick = round(count / 10) 
+
+    # Create Plotly figure
+    fig = go.Figure(data=[
+        go.Barpolar(
+            r=histo_values_2,
+            theta=theta_values_2,
+            text=labels,
+            name="strike",
+            marker_color="rgb(106,81,163)",
+        )
+    ])
+
+    # Layout settings
+    fig.update_layout(
+        title="",
+        font_size=12,
+        legend_font_size=12,
+        polar=dict(
+            barmode="overlay",
+            bargap=0.1,
+            radialaxis=dict(dtick=tick),
+            angularaxis=dict(direction="clockwise", rotation=90)
+        ),
+        margin=dict(l=20, r=20, t=30, b=20),
+        width=250,
+        height=200,
+    )
+    img_bytes = io.BytesIO()
+    fig.write_image(img_bytes, format='png')
+    img_bytes.seek(0)  
+
+    # Create an HTTP image response
+    response = HttpResponse(img_bytes, content_type='image/png') 
+    return response
+    #return render(request, 'rose/rose_image.html', {'user_obj':user_obj}

@@ -13,4 +13,5 @@ urlpatterns = [
     path('upload_file/', views.upload_file, name='upload_file'),
     path('file_list/', views.file_list, name='file_list'),
     path('file_detail/<int:file_id>/', views.file_detail, name='file_detail'),
+    path('rose_image/', views.rose_image, name='rose_image'),
 ]
