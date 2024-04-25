@@ -219,10 +219,11 @@ function getChildImage(element) {
     return null; // Return null if no image found
 }
 
-kakao.maps.event.addListener(map, 'zoom_changed', function() {
+
+function update_chart() {
 	var level = map.getLevel();
-	var factor = 2**(11-level);
-	console.log("zoom level:", level, "factor:", factor);
+	var factor = 2**(10-level);
+	//console.log("zoom level:", level, "factor:", factor);
 	for( var idx=0;idx<map_info_list.length;idx++){
 		var region = map_info_list[idx];
 		var region_name = region['name'];
@@ -244,9 +245,16 @@ kakao.maps.event.addListener(map, 'zoom_changed', function() {
 			}
 		}
 	}
+}
+
+kakao.maps.event.addListener(map, 'zoom_changed', function() {
+	update_chart();
 	refresh_view();
 });
-
+kakao.maps.event.addListener(map, 'dragend', function() { 
+	update_chart();
+	refresh_view();
+});
 function refresh_view() {
 	//var l_selected_date_list = filter_date();
 	//var l_selected_finid_list = filter_finid();
