@@ -239,7 +239,7 @@ kakao.maps.event.addListener(map, 'zoom_changed', function() {
 					urlencoded_region_name = encodeURIComponent(region_name);
 					img.width=100*factor; img.height=80*factor;img.src="/rose/rose_image/?region="+urlencoded_region_name;
 					d.appendChild(img);
-				}10: 200, 9: 400, 8: 800, 7:1600
+				}
 			}else{
 				var img_child = getChildImage(d);
 				if( img_child ) { d.removeChild(img_child);}
