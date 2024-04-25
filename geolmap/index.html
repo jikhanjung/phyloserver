@@ -221,6 +221,8 @@ function getChildImage(element) {
 
 kakao.maps.event.addListener(map, 'zoom_changed', function() {
 	var level = map.getLevel();
+	var factor = (11-level)**2;
+	//console.log("zoom level:", level);
 	for( var idx=0;idx<map_info_list.length;idx++){
 		var region = map_info_list[idx];
 		var region_name = region['name'];
@@ -235,9 +237,9 @@ kakao.maps.event.addListener(map, 'zoom_changed', function() {
 				else{ 
 					var img = document.createElement('img');
 					urlencoded_region_name = encodeURIComponent(region_name);
-					img.width=100; img.height=80;img.src="/rose/rose_image/?region="+urlencoded_region_name;
+					img.width=100*factor; img.height=80*factor;img.src="/rose/rose_image/?region="+urlencoded_region_name;
 					d.appendChild(img);
-				}
+				}10: 200, 9: 400, 8: 800, 7:1600
 			}else{
 				var img_child = getChildImage(d);
 				if( img_child ) { d.removeChild(img_child);}
