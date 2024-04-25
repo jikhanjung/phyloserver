@@ -221,8 +221,8 @@ function getChildImage(element) {
 
 kakao.maps.event.addListener(map, 'zoom_changed', function() {
 	var level = map.getLevel();
-	var factor = (11-level)**2;
-	//console.log("zoom level:", level);
+	var factor = 2**(11-level);
+	console.log("zoom level:", level, "factor:", factor);
 	for( var idx=0;idx<map_info_list.length;idx++){
 		var region = map_info_list[idx];
 		var region_name = region['name'];
@@ -230,7 +230,7 @@ kakao.maps.event.addListener(map, 'zoom_changed', function() {
 		var region_col = region['col'];
 		var d = document.getElementById(region_row.toString() + "_" + region_col.toString());
 		if(d){
-			if(level <=10 ){
+			if(level <=11 ){
 				//console.log("got the div element under level9", region_row, region_col,level);
 				var img_child = getChildImage(d);
 				if( img_child ) { d.removeChild(img_child);}
