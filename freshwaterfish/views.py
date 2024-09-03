@@ -76,6 +76,7 @@ def add_occurrence(request):
             occ = occ_form.save(commit=False)
             #reference = form.save(commit=False)
             #occ.process_genus_name()
+            occ.update_chronounit()
             occ.save()
                 
             return HttpResponseRedirect('/freshwaterfish/occ_detail/'+str(occ.id))
@@ -101,6 +102,7 @@ def edit_occurrence(request,pk):
             occ = occ_form.save(commit=False)
             #reference = form.save(commit=False)
             #occ.process_genus_name()
+            occ.update_chronounit()
             occ.save()
             return HttpResponseRedirect('/freshwaterfish/occ_detail/'+str(occ.id))
         else:
