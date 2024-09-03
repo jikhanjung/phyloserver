@@ -102,7 +102,9 @@ def edit_occurrence(request,pk):
             occ = occ_form.save(commit=False)
             #reference = form.save(commit=False)
             #occ.process_genus_name()
+            print("occ:", occ, occ.period_code, occ.period, occ.epoch_code, occ.epoch)
             occ.update_chronounit()
+            print("occ:", occ, occ.period_code, occ.period, occ.epoch_code, occ.epoch)
             occ.save()
             return HttpResponseRedirect('/freshwaterfish/occ_detail/'+str(occ.id))
         else:
