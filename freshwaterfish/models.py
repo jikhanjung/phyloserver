@@ -80,22 +80,16 @@ class FrFile(models.Model):
         df = pd.read_excel (filepath,sheet_name)
         #print(df)
         # locality	country	clade	family	genus	origin	epoch	age	environment	continent	period
+        column_list = ['locality', 'country', 'clade', 'family', 'genus', 'origin', 'epoch', 'age', 'environment', 'continent', 'period', 'reference']
 
         for index, row in df.iterrows():
             #print("index:", index)
+            
             if pd.notna(row['genus']):
                 occ = FrOccurrence()
-                occ.locality = row['locality']
-                occ.country = row['country']
-                occ.clade = row['clade']
-                occ.family = row['family']
-                occ.genus = row['genus']
-                occ.origin = row['origin']
-                occ.epoch = row['epoch']
-                occ.age = row['age']
-                occ.environment = row['environment']
-                occ.continent = row['continent']
-                occ.period = row['period']
+                for col in column_list:
+                    if col in df.columns and pd.notna(row[col]) and hasattr(occ, col):
+                        setattr(occ, col, row[col])
                 for choice in ENVIRONMENT_CHOICES:
                     val, disp = choice
                     if disp.lower() == str(row['environment']).lower():
@@ -105,7 +99,7 @@ class FrFile(models.Model):
                     occ.environment_code = '02'
                 occ.update_chronounit()
                 occ.frfile = self
-                if 'reference' in df.columns:
-                    occ.reference = row['reference']
+                #if 'reference' in df.columns:
+                #    occ.reference = row['reference']
                 occ.save()
                 #print("occ:", occ)
