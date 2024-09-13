@@ -6,6 +6,8 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.safestring import mark_safe
+import os
+import pandas as pd
 
 ENVIRONMENT_CHOICES = (
     ('01', 'lacustrine'),
@@ -35,6 +37,7 @@ class FrOccurrence(models.Model):
     period = models.CharField(max_length=200,blank=True,null=True)
     period_code = models.ForeignKey(ChronoUnit,on_delete=models.DO_NOTHING,blank=True,null=True,related_name='period_code')
     reference = models.CharField(max_length=200,blank=True,null=True)
+    frfile = models.ForeignKey('FrFile',on_delete=models.SET_NULL,blank=True,null=True)
 
     def __str__(self):
         return self.genus
@@ -59,3 +62,50 @@ class FrOccurrence(models.Model):
             period_code = cu.filter(name__iexact=self.period)
             if period_code != None:
                 self.period_code = period_code.first()
+
+
+    
+
+class FrFile(models.Model):
+    file = models.FileField(upload_to='freshwaterfish/files/')
+    name = models.CharField(max_length=200,blank=True,null=True)
+    comment = models.CharField(max_length=200,blank=True,null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return self.name
+    
+    def process_rows(self):
+        sheet_name = 'Sheet1'
+        filepath = os.path.join( settings.MEDIA_ROOT, str(self.file) )
+        df = pd.read_excel (filepath,sheet_name)
+        #print(df)
+        # locality	country	clade	family	genus	origin	epoch	age	environment	continent	period
+
+        for index, row in df.iterrows():
+            #print("index:", index)
+            if pd.notna(row['genus']):
+                occ = FrOccurrence()
+                occ.locality = row['locality']
+                occ.country = row['country']
+                occ.clade = row['clade']
+                occ.family = row['family']
+                occ.genus = row['genus']
+                occ.origin = row['origin']
+                occ.epoch = row['epoch']
+                occ.age = row['age']
+                occ.environment = row['environment']
+                occ.continent = row['continent']
+                occ.period = row['period']
+                for choice in ENVIRONMENT_CHOICES:
+                    val, disp = choice
+                    if disp.lower() == str(row['environment']).lower():
+                        occ.environment_code = val
+                        break
+                if str(row['environment']).lower() == 'channal'.lower():
+                    occ.environment_code = '02'
+                occ.update_chronounit()
+                occ.frfile = self
+                if 'reference' in df.columns:
+                    occ.reference = row['reference']
+                occ.save()
+                #print("occ:", occ)
