@@ -1,6 +1,6 @@
 from django import forms
 from django.db import models
-from .models import FrOccurrence
+from .models import FrOccurrence, FrFile
 from django.forms import ModelForm, inlineformset_factory, modelformset_factory
 from nkfcluster.models import ChronoUnit
 from django.contrib.auth.models import User
@@ -23,3 +23,8 @@ class FrOccurrenceForm(ModelForm):
         self.fields['period_code'].queryset = ChronoUnit.objects.filter(level='3')
         self.fields['epoch_code'].queryset = ChronoUnit.objects.filter(level='2')
         self.fields['age_code'].queryset = ChronoUnit.objects.filter(level='1')
+
+class FrFileForm(ModelForm):
+    class Meta:
+        model = FrFile
+        fields = ['file', 'comment']        
