@@ -1,8 +1,5 @@
 db.sqlite3
 *.pyc
-phylomanager/migrations/*
 phylorun_datafile/*
 .env
 uploads/*
-nkfcluster/migrations/*
-freshwaterfish/migrations/*
