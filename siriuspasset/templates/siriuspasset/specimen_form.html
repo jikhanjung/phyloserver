@@ -1,21 +1,218 @@
 {% extends "spbase.html" %}
 {% block content %}
-<h4 class="bd-title p-2 bg-secondary text-light">Edit Specimen</h4>
-<form action="" method="post" enctype="multipart/form-data">
+<h4 class="bd-title p-2 bg-secondary text-light">Add New Specimen</h4>
+
+{% if errors %}
+<div class="alert alert-danger">
+    <ul class="mb-0">
+        {% for error in errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<form action="" method="post" enctype="multipart/form-data" id="specimen_form" onsubmit="return handleSubmit(event)">
     {% csrf_token %}
-<div>
-    <table class="table table-striped table-sm">
-        <tr><th>{{specimen_form.slab.label}}</th><td>{{specimen_form.slab}}</td></tr>
-        <tr><th>{{specimen_form.specimen_no.label}}</th><td>{{specimen_form.specimen_no}}</td></tr>
-        <tr><th>{{specimen_form.taxon_name.label}}</th><td>{{specimen_form.taxon_name}}</td></tr>
-        <tr><th>{{specimen_form.phylum.label}}</th><td>{{specimen_form.phylum}}</td></tr>
-        <tr><th>{{specimen_form.horizon.label}}</th><td>{{specimen_form.horizon}}</td></tr>
-        <tr><th>{{specimen_form.remarks.label}}</th><td>{{specimen_form.remarks}}</td></tr>
-        <tr><th>{{specimen_form.counterpart.label}}</th><td>{{specimen_form.counterpart}}</td></tr>
-        <tr><th>{{specimen_form.memo.label}}</th><td>{{specimen_form.memo}}</td></tr>
-    </table>
-</div>
-<input type="submit" value="Save">
-</div>
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col">
+                <h5 class="p-2 bg-light">Slab Information</h5>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="slab_choice" id="new_slab" value="new" {% if not existing_slab %}checked{% endif %} onchange="toggleSlabForms()">
+                        <label class="form-check-label" for="new_slab">
+                            Create new slab
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="slab_choice" id="existing_slab" value="existing" {% if existing_slab %}checked{% endif %} onchange="toggleSlabForms()">
+                        <label class="form-check-label" for="existing_slab">
+                            Use existing slab
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="new_slab_form" {% if existing_slab %}style="display: none;"{% endif %}>
+                    <table class="table table-striped table-sm">
+                        <tr>
+                            <th>{{slab_form.slab_no.label}}</th>
+                            <td>
+                                {{slab_form.slab_no}}
+                                {% if slab_form.slab_no.errors %}
+                                <div class="text-danger">
+                                    {{ slab_form.slab_no.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>{{slab_form.horizon.label}}</th>
+                            <td>
+                                {{slab_form.horizon}}
+                                {% if slab_form.horizon.errors %}
+                                <div class="text-danger">
+                                    {{ slab_form.horizon.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>{{slab_form.location.label}}</th>
+                            <td>
+                                {{slab_form.location}}
+                                {% if slab_form.location.errors %}
+                                <div class="text-danger">
+                                    {{ slab_form.location.errors|join:", " }}
+                                </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div id="existing_slab_form" {% if not existing_slab %}style="display: none;"{% endif %}>
+                    <table class="table table-striped table-sm">
+                        <tr>
+                            <th>Select Slab</th>
+                            <td>
+                                <select name="existing_slab" class="form-control">
+                                    {% for slab in all_slabs %}
+                                        <option value="{{ slab.id }}" {% if existing_slab and existing_slab.id == slab.id %}selected{% endif %}>
+                                            {{ slab.slab_no }} ({{ slab.horizon|default_if_none:'' }})
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col">
+                <h5 class="p-2 bg-light">Specimen Information</h5>
+                <table class="table table-striped table-sm">
+                    <tr>
+                        <th>{{specimen_form.specimen_no.label}}</th>
+                        <td>
+                            {{specimen_form.specimen_no}}
+                            {% if specimen_form.specimen_no.errors %}
+                            <div class="text-danger">
+                                {{ specimen_form.specimen_no.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{specimen_form.taxon_name.label}}</th>
+                        <td>
+                            {{specimen_form.taxon_name}}
+                            {% if specimen_form.taxon_name.errors %}
+                            <div class="text-danger">
+                                {{ specimen_form.taxon_name.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{specimen_form.phylum.label}}</th>
+                        <td>
+                            {{specimen_form.phylum}}
+                            {% if specimen_form.phylum.errors %}
+                            <div class="text-danger">
+                                {{ specimen_form.phylum.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{specimen_form.remarks.label}}</th>
+                        <td>
+                            {{specimen_form.remarks}}
+                            {% if specimen_form.remarks.errors %}
+                            <div class="text-danger">
+                                {{ specimen_form.remarks.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{{specimen_form.counterpart.label}}</th>
+                        <td>
+                            {{specimen_form.counterpart}}
+                            {% if specimen_form.counterpart.errors %}
+                            <div class="text-danger">
+                                {{ specimen_form.counterpart.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col">
+                <input type="submit" value="Save" class="btn btn-primary">
+            </div>
+        </div>
+    </div>
 </form>
+
+<script>
+function toggleSlabForms() {
+    const newSlabRadio = document.getElementById('new_slab');
+    const newSlabForm = document.getElementById('new_slab_form');
+    const existingSlabForm = document.getElementById('existing_slab_form');
+    
+    // Get all input, select, and textarea elements in both forms
+    const newSlabInputs = newSlabForm.querySelectorAll('input, select, textarea');
+    const existingSlabInputs = existingSlabForm.querySelectorAll('input, select, textarea');
+
+    if (newSlabRadio.checked) {
+        newSlabForm.style.display = 'block';
+        existingSlabForm.style.display = 'none';
+        // Enable new slab inputs, disable existing slab inputs
+        newSlabInputs.forEach(input => input.disabled = false);
+        existingSlabInputs.forEach(input => input.disabled = true);
+    } else {
+        newSlabForm.style.display = 'none';
+        existingSlabForm.style.display = 'block';
+        // Disable new slab inputs, enable existing slab inputs
+        newSlabInputs.forEach(input => input.disabled = true);
+        existingSlabInputs.forEach(input => input.disabled = false);
+    }
+}
+
+function handleSubmit(event) {
+    console.log('Form submission triggered');
+    const form = document.getElementById('specimen_form');
+    const formData = new FormData(form);
+    
+    // Log form data for debugging
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+    
+    return true;
+}
+
+// Set initial state
+document.addEventListener('DOMContentLoaded', function() {
+    toggleSlabForms();
+    
+    // Add click handler to submit button for debugging
+    const submitBtn = document.querySelector('input[type="submit"]');
+    submitBtn.addEventListener('click', function(e) {
+        console.log('Submit button clicked');
+    });
+    
+    // Add change handler for radio buttons
+    document.querySelectorAll('input[name="slab_choice"]').forEach(radio => {
+        radio.addEventListener('change', toggleSlabForms);
+    });
+});
+</script>
 {% endblock %}

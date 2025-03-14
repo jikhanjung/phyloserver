@@ -11,7 +11,7 @@ class SpFossilSpecimenForm(ModelForm):
     class Meta:
         model = SpFossilSpecimen
         #fields = ['strat_unit', 'chronounit', 'lithology','group','species_name','revised_species_name','location','source','source_eng']
-        fields = ['slab', 'specimen_no', 'taxon_name', 'phylum', 'remarks', 'counterpart']
+        fields = ['specimen_no', 'taxon_name', 'phylum', 'remarks', 'counterpart']
 
 class SpFossilSpecimenImageForm(ModelForm):
     class Meta:

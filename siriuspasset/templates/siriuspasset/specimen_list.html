@@ -1,7 +1,23 @@
 {% extends "spbase.html" %}
 {% block content %}
+<style>
+    .slab-cell {
+        background-color: #f8f9fa !important;  /* Light gray background for slab cells */
+    }
+    .specimen-row-even {
+        background-color: #f8f9fa;  /* Light gray for even rows */
+    }
+    .specimen-row-odd {
+        background-color: #ffffff;  /* White for odd rows */
+    }
+    .table-divider {
+        height: 2px;
+        background-color: #dee2e6;
+    }
+</style>
+
 <h4 class="bd-title p-2 bg-secondary text-light">Specimen List</h4>
-<table class="table table-striped table-sm">
+<table class="table table-sm">
     <thead>
     <tr><td colspan="4" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
@@ -9,13 +25,13 @@
         <form method="GET" action="{% url 'siriuspasset:specimen_list'%}">
             {% csrf_token %}
             <select name="filter2" id="filter2">
-                <option value="" {% if filter2 == "" %}selected{%endif%}>전체</option>
+                <option value="" {% if filter2 == "" %}selected{%endif%}>All</option>
             </select>
-            <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:''}}"><button type="submit">검색</button>
-            </form>
-        </td></tr>
+            <input type="text" size="30" name="filter1" value="{{filter1|default_if_none:''}}"><button type="submit">Search</button>
+        </form>
+    </td></tr>
     </thead>
-    {% if specimen_list %}   
+    {% if grouped_specimens %}   
     <tbody>
         <tr>
             <th><div>Slab no.</div></th>
@@ -25,18 +41,33 @@
             <th><div>Horizon</div></th>
             <th><div>Remarks</div></th>
             <th><div>Counterpart?</div></th>
-            <th><div>Memo</div></th></tr>
-        {% for specimen in page_obj %}
-        <tr class="tr_link" style="cursor:pointer;" onclick="javascript:window.location='{% url 'siriuspasset:specimen_detail' specimen.id %}';">
-            <td>{{ specimen.slab|default_if_none:'' }}</td>
-            <td><a href="{% url 'siriuspasset:specimen_detail' specimen.id %}">{{ specimen.specimen_no }}</a></td>
-            <td>{{ specimen.taxon_name|default_if_none:'' }}</td>
-            <td>{{ specimen.phylum|default_if_none:'' }}</td>
-            <td>{{ specimen.horizon|default_if_none:'' }}</td>
-            <td>{{ specimen.remarks|default_if_none:'' }}</td>
-            <td>{{ specimen.counterpart|default_if_none:'' }}</td>
-            <td>{{ specimen.memo|default_if_none:'' }}</td>
+            <th><div>Memo</div></th>
         </tr>
+        {% for group in grouped_specimens %}
+            {% for specimen in group.specimens %}
+                <tr class="tr_link {% if forloop.counter0|divisibleby:2 %}specimen-row-even{% else %}specimen-row-odd{% endif %}" style="cursor:pointer;" data-href="{% url 'siriuspasset:specimen_detail' specimen.id %}">
+                    {% if forloop.first %}
+                        <td class="slab-cell" rowspan="{{ group.specimens|length }}">
+                            {{ group.slab.slab_no|default_if_none:'' }}
+                            <div class="mt-1">
+                                <a href="{% url 'siriuspasset:add_specimen' %}?slab_id={{ group.slab.id }}" class="btn btn-sm btn-outline-primary">+ Add Specimen</a>
+                            </div>
+                        </td>
+                    {% endif %}
+                    <td><a href="{% url 'siriuspasset:specimen_detail' specimen.id %}">{{ specimen.specimen_no }}</a></td>
+                    <td>{{ specimen.taxon_name|default_if_none:'' }}</td>
+                    <td>{{ specimen.phylum|default_if_none:'' }}</td>
+                    <td>{{ specimen.slab.horizon|default_if_none:'' }}</td>
+                    <td>{{ specimen.remarks|default_if_none:'' }}</td>
+                    <td>{{ specimen.counterpart|default_if_none:'' }}</td>
+                    <td>{{ specimen.memo|default_if_none:'' }}</td>
+                </tr>
+            {% endfor %}
+            {% if not forloop.last %}
+                <tr>
+                    <td colspan="8" class="table-divider"></td>
+                </tr>
+            {% endif %}
         {% endfor %}
     {% else %}
         <tr><td colspan="8">No specimens are available.</td></tr>
@@ -51,4 +82,14 @@
     </tfooter>
 </table>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('tr[data-href]');
+    rows.forEach(row => {
+        row.addEventListener('click', function() {
+            window.location.href = this.dataset.href;
+        });
+    });
+});
+</script>
 {% endblock %}
