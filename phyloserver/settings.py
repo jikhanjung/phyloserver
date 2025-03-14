@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'rose.apps.RoseConfig',
     'phylomanager.apps.PhylomanagerConfig',
     'nkfcluster.apps.NkfclusterConfig',
+    'siriuspasset.apps.SiriuspassetConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
