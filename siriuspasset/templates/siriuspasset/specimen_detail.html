@@ -3,6 +3,7 @@
 <h4 class="bd-title p-2 bg-secondary text-light">Specimen Detail</h4>
 <table class="table table-striped table-sm">
     <tr><th>Slab no.</th><td>{{ specimen.slab.slab_no|default_if_none:'' }}</td></tr>
+    <tr><th>Horizon</th><td>{{ specimen.slab.horizon|default_if_none:'' }}</td></tr>
     <tr><th>Specimen no.</th><td>{{ specimen.specimen_no|default_if_none:'' }}</td></tr>
     <tr><th>Taxon name</th><td>{{ specimen.taxon_name|default_if_none:'' }}</td></tr>
     <tr><th>Phylum</th><td>{{ specimen.phylum|default_if_none:'' }}</td></tr>
