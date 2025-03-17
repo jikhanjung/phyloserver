@@ -1,6 +1,6 @@
 from django import forms
 from django.db import models
-from .models import SpFossilSpecimen, SpFossilSpecimenImage, SpSlab
+from .models import SpFossilSpecimen, SpFossilImage, SpSlab
 from django.forms import ModelForm, inlineformset_factory, modelformset_factory
 
 from django.contrib.auth.models import User
@@ -10,13 +10,14 @@ from django.conf import settings
 class SpFossilSpecimenForm(ModelForm):
     class Meta:
         model = SpFossilSpecimen
-        #fields = ['strat_unit', 'chronounit', 'lithology','group','species_name','revised_species_name','location','source','source_eng']
         fields = ['specimen_no', 'taxon_name', 'phylum', 'remarks', 'counterpart']
 
-class SpFossilSpecimenImageForm(ModelForm):
+
+class SpFossilImageForm(ModelForm):
     class Meta:
-        model = SpFossilSpecimenImage
-        fields = ['specimen', 'image_file', 'description']
+        model = SpFossilImage
+        fields = ['image_file','description']
+
 
 class SpSlabForm(ModelForm):
     class Meta:

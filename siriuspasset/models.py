@@ -1,6 +1,7 @@
 from django.db import models
 import os, re
 from django.utils.timezone import now
+from django.core.exceptions import ValidationError
 
 def fossil_image_upload_path(instance, filename):
     """
@@ -9,7 +10,14 @@ def fossil_image_upload_path(instance, filename):
     - 파일명은 specimen_no_순번.확장자로 저장
     """
     # 표본번호에서 연도를 추출 (SP-YYYY 패턴)
-    match = re.match(r"(\w+)-(20\d{2})", instance.specimen.specimen_no)
+    if instance.specimen:
+        ref_obj = instance.specimen
+        specimen_id = ref_obj.specimen_no
+    else:
+        ref_obj = instance.slab
+        specimen_id = ref_obj.slab_no
+        
+    match = re.match(r"(\w+)-(20\d{2})", specimen_id)
     prefix = match.group(1) if match else "unknown"
     year = match.group(2) if match else "unknown"
 
@@ -17,7 +25,6 @@ def fossil_image_upload_path(instance, filename):
     ext = filename.split('.')[-1]
 
     # 파일명: specimen_no_파일명.확장자
-    specimen_id = instance.specimen.specimen_no
     file_basename = f"{specimen_id}_{instance.pk or 'temp'}.{ext}"
 
     return os.path.join(f"sp_photos/{prefix}/{year}/", file_basename)
@@ -74,13 +81,14 @@ class SpFossilSpecimen(models.Model):
     def __str__(self):
         return f'[Slab: {self.slab.slab_no}] Specimen: {self.specimen_no} ({self.taxon_name})'
     
-class SpFossilSpecimenImage(models.Model):
+class SpFossilImage(models.Model):
     """
-    FossilSpecimen(화석 표본)과 연결된 이미지 정보를 관리하는 모델.
-    하나의 표본에 여러 장의 사진이 연결될 수 있다.
+    화석 사진을 관리하는 모델.
+    슬랩이나 표본에 연결될 수 있으며, 둘 중 하나는 반드시 지정되어야 함.
     """
-    specimen = models.ForeignKey( SpFossilSpecimen, on_delete=models.CASCADE, related_name='images', help_text="이 이미지가 속한 화석 표본" )
-    image_file = models.ImageField( upload_to=fossil_image_upload_path, help_text="표본 사진 파일" )
+    slab = models.ForeignKey( SpSlab, on_delete=models.CASCADE, related_name='images', null=True, blank=True, help_text="이 이미지가 속한 슬랩" )
+    specimen = models.ForeignKey( SpFossilSpecimen, on_delete=models.CASCADE, related_name='images', null=True, blank=True, help_text="이 이미지가 속한 화석 표본" )
+    image_file = models.ImageField( upload_to=fossil_image_upload_path, help_text="화석 사진 파일" )
     description = models.TextField( "설명", blank=True, null=True, help_text="사진에 대한 설명 (예: 촬영 각도, 확대 배율 등)" )
     original_path = models.CharField( "원본 경로", max_length=500, blank=True, null=True, help_text="원본 이미지 파일의 경로" )
     md5hash = models.CharField( "MD5 해시", max_length=32, blank=True, null=True, help_text="이미지 파일의 MD5 해시값", db_index=True )
@@ -90,13 +98,25 @@ class SpFossilSpecimenImage(models.Model):
     modified_by = models.CharField(max_length=50,blank=True)
 
     class Meta:
-        ordering = ['specimen', 'created_on']
-        verbose_name = "화석 표본 사진"
-        verbose_name_plural = "화석 표본 사진 목록"
+        ordering = ['created_on']
+        verbose_name = "화석 사진"
+        verbose_name_plural = "화석 사진 목록"
         # Add unique constraint for md5hash to prevent duplicates
         constraints = [
-            models.UniqueConstraint(fields=['md5hash'], name='unique_image_hash', condition=models.Q(md5hash__isnull=False))
+            models.UniqueConstraint(fields=['md5hash'], name='unique_image_hash', condition=models.Q(md5hash__isnull=False)),
+            models.CheckConstraint(
+                check=models.Q(slab__isnull=False) | models.Q(specimen__isnull=False),
+                name='slab_or_specimen_not_null'
+            )
         ]
 
     def __str__(self):
-        return f"[Specimen: {self.specimen.specimen_no}] Image: {self.image_file.name}"
+        if self.specimen:
+            return f"[Specimen: {self.specimen.specimen_no}] Image: {self.image_file.name}"
+        else:
+            return f"[Slab: {self.slab.slab_no}] Image: {self.image_file.name}"
+
+    def clean(self):
+        """Validate that at least one of slab or specimen is set."""
+        if not self.slab and not self.specimen:
+            raise ValidationError("Either slab or specimen must be specified.")

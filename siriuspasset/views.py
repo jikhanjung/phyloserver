@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import SpFossilSpecimen, SpFossilSpecimenImage, SpSlab
+from .models import SpFossilSpecimen, SpFossilImage, SpSlab
 from django.core.paginator import Paginator
-from .forms import SpFossilSpecimenForm, SpFossilSpecimenImageForm, SpSlabForm
+from .forms import SpFossilSpecimenForm, SpFossilImageForm, SpSlabForm
 from django.urls import reverse
 #from cStringIO import StringIO
 from django.db.models import Q
@@ -85,7 +85,7 @@ def specimen_detail(request, specimen_id):
     specimen = get_object_or_404(SpFossilSpecimen, pk=specimen_id)
     
     # Get all images for this specimen
-    images = SpFossilSpecimenImage.objects.filter(specimen=specimen).order_by('id')
+    images = SpFossilImage.objects.filter(specimen=specimen).order_by('id')
     print(f"Found {images.count()} images for specimen {specimen.specimen_no}")  # Debug print
     
     # Group images into rows for the gallery (3 images per row)
