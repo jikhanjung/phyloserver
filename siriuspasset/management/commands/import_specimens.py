@@ -576,19 +576,37 @@ class Command(BaseCommand):
             filename = os.path.basename(image_path)
             self.stdout.write(f'Processing image: {filename}')
             
+            slab_match = None
+            slab_match = re.search(rf'{prefix}-{year}-(\d+)-(\d+)', filename, re.IGNORECASE)
+
             # Try to match specimen pattern first (e.g., SP-2016-0001-1)
             specimen_match = re.search(rf'{prefix}-{year}-(\d+)(\d*[A-Za-z]?)', filename, re.IGNORECASE)
-            
-            # If slab_images_only is True or no specimen match, try to match slab pattern (e.g., SP-2016-0001)
-            slab_match = None
-            if slab_images_only or not specimen_match:
-                slab_match = re.search(rf'{prefix}-{year}-(\d+)', filename, re.IGNORECASE)
             
             # Determine if this is a specimen or slab image
             specimen = None
             slab = None
-            
-            if specimen_match and not slab_images_only:
+
+            if slab_match:
+                # This is a slab image
+                slab_number = slab_match.group(1).zfill(4)
+                slab_no = f"{prefix}-{year}-{slab_number}"
+                
+                # Find the slab
+                if slab_no in slabs:
+                    slab = slabs[slab_no]
+                    self.stdout.write(f'Matched to slab: {slab_no}')
+                else:
+                    self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
+                    # Try to find it in the database directly
+                    try:
+                        slab = SpSlab.objects.get(slab_no=slab_no)
+                        self.stdout.write(f'Found slab {slab_no} in database instead')
+                    except SpSlab.DoesNotExist:
+                        if debug:
+                            self.stdout.write(f'Slab {slab_no} not found in database either')
+                        skipped_no_match_count += 1
+                        continue            
+            elif specimen_match and not slab_images_only:
                 # This is a specimen image
                 slab_number = specimen_match.group(1).zfill(4)
                 specimen_number = specimen_match.group(2)
@@ -643,26 +661,6 @@ class Command(BaseCommand):
                         self.stdout.write(f'Invalid specimen number format in filename: {filename}')
                     skipped_no_match_count += 1
                     continue
-            elif slab_match:
-                # This is a slab image
-                slab_number = slab_match.group(1).zfill(4)
-                slab_no = f"{prefix}-{year}-{slab_number}"
-                
-                # Find the slab
-                if slab_no in slabs:
-                    slab = slabs[slab_no]
-                    self.stdout.write(f'Matched to slab: {slab_no}')
-                else:
-                    self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
-                    # Try to find it in the database directly
-                    try:
-                        slab = SpSlab.objects.get(slab_no=slab_no)
-                        self.stdout.write(f'Found slab {slab_no} in database instead')
-                    except SpSlab.DoesNotExist:
-                        if debug:
-                            self.stdout.write(f'Slab {slab_no} not found in database either')
-                        skipped_no_match_count += 1
-                        continue
             else:
                 if debug:
                     self.stdout.write(f'Could not extract specimen or slab number from filename: {filename}')
