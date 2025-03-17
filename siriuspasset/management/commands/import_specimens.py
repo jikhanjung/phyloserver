@@ -128,19 +128,38 @@ class Command(BaseCommand):
                         
                         if specimen:
                             try:
-                                # Create a new SpFossilSpecimenImage instance
-                                image = SpFossilSpecimenImage(
+                                # Create and save the image instance first to get a primary key
+                                image = SpFossilSpecimenImage.objects.create(
                                     specimen=specimen,
                                     description=f"Photo sequence {sequence}"
                                 )
                                 
-                                # Save the image file
-                                with open(file_path, 'rb') as f:
-                                    image.image_file.save(filename, File(f), save=True)
+                                # Now that we have a primary key, manually construct the path
+                                # Extract year from specimen number (SP-YYYY pattern)
+                                match_year = re.match(r"(\w+)-(20\d{2})", specimen.specimen_no)
+                                prefix = match_year.group(1) if match_year else "unknown"
+                                year = match_year.group(2) if match_year else "unknown"
+                                
+                                # Keep original filename
+                                ext = filename.split('.')[-1]
+                                target_filename = filename
+                                
+                                # Create target directory if it doesn't exist
+                                target_dir = os.path.join(settings.MEDIA_ROOT, f"photos/{prefix}/{year}/")
+                                os.makedirs(target_dir, exist_ok=True)
+                                
+                                # Copy the file to the target location
+                                target_path = os.path.join(target_dir, target_filename)
+                                shutil.copy2(file_path, target_path)
+                                
+                                # Update the image_file field with the relative path
+                                relative_path = os.path.join(f"photos/{prefix}/{year}/", target_filename)
+                                image.image_file = relative_path
+                                image.save()
 
                                 photo_count += 1
                                 self.stdout.write(self.style.SUCCESS(
-                                    f'Added photo {filename} to specimen {specimen_id}'
+                                    f'Added photo {filename} to specimen {specimen_id} at {relative_path}'
                                 ))
                             except Exception as e:
                                 self.stdout.write(self.style.ERROR(
