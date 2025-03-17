@@ -20,7 +20,7 @@ def fossil_image_upload_path(instance, filename):
     specimen_id = instance.specimen.specimen_no
     file_basename = f"{specimen_id}_{instance.pk or 'temp'}.{ext}"
 
-    return os.path.join(f"photos/{prefix}/{year}/", file_basename)
+    return os.path.join(f"sp_photos/{prefix}/{year}/", file_basename)
 
 # Create your models here.
 class SpSlab(models.Model):
@@ -82,6 +82,8 @@ class SpFossilSpecimenImage(models.Model):
     specimen = models.ForeignKey( SpFossilSpecimen, on_delete=models.CASCADE, related_name='images', help_text="이 이미지가 속한 화석 표본" )
     image_file = models.ImageField( upload_to=fossil_image_upload_path, help_text="표본 사진 파일" )
     description = models.TextField( "설명", blank=True, null=True, help_text="사진에 대한 설명 (예: 촬영 각도, 확대 배율 등)" )
+    original_path = models.CharField( "원본 경로", max_length=500, blank=True, null=True, help_text="원본 이미지 파일의 경로" )
+    md5hash = models.CharField( "MD5 해시", max_length=32, blank=True, null=True, help_text="이미지 파일의 MD5 해시값", db_index=True )
     created_on = models.DateTimeField( '등록 시각', auto_now_add=True )
     created_by = models.CharField(max_length=50,blank=True)
     modified_on = models.DateTimeField( '마지막 수정 시각', auto_now=True )
@@ -91,6 +93,10 @@ class SpFossilSpecimenImage(models.Model):
         ordering = ['specimen', 'created_on']
         verbose_name = "화석 표본 사진"
         verbose_name_plural = "화석 표본 사진 목록"
+        # Add unique constraint for md5hash to prevent duplicates
+        constraints = [
+            models.UniqueConstraint(fields=['md5hash'], name='unique_image_hash', condition=models.Q(md5hash__isnull=False))
+        ]
 
     def __str__(self):
         return f"[Specimen: {self.specimen.specimen_no}] Image: {self.image_file.name}"
