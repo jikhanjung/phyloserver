@@ -82,9 +82,29 @@ def specimen_list(request):
 
 def specimen_detail(request, specimen_id):
     user_obj = get_user_obj(request)
-
     specimen = get_object_or_404(SpFossilSpecimen, pk=specimen_id)
-    return render(request, 'siriuspasset/specimen_detail.html', {'specimen': specimen, 'user_obj':user_obj})
+    
+    # Get all images for this specimen
+    images = SpFossilSpecimenImage.objects.filter(specimen=specimen).order_by('id')
+    print(f"Found {images.count()} images for specimen {specimen.specimen_no}")  # Debug print
+    
+    # Group images into rows for the gallery (3 images per row)
+    IMAGES_PER_ROW = 3
+    image_rows = [images[i:i + IMAGES_PER_ROW] for i in range(0, len(images), IMAGES_PER_ROW)]
+    
+    context = {
+        'specimen': specimen,
+        'user_obj': user_obj,
+        'image_rows': image_rows,
+        'total_images': len(images),
+        'debug_info': {
+            'specimen_id': specimen_id,
+            'image_count': images.count(),
+            'specimen_no': specimen.specimen_no
+        }
+    }
+    
+    return render(request, 'siriuspasset/specimen_detail.html', context)
 
 
 def add_specimen(request):
