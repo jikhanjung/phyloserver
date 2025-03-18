@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
 from .models import SpFossilSpecimen, SpFossilImage, SpSlab, DirectoryScan
@@ -11,6 +11,11 @@ from django.db import transaction
 from itertools import groupby
 from operator import attrgetter
 from datetime import datetime, timedelta
+from django.conf import settings
+from django.utils.text import slugify
+from django.utils import timezone
+from django.contrib.postgres.search import SearchVector
+from siriuspasset.utils import sort_images_by_filename
 
 # Create your views here.
 # Create your views here.
@@ -124,21 +129,24 @@ def specimen_detail(request, specimen_id):
     specimen = get_object_or_404(SpFossilSpecimen, pk=specimen_id)
     
     # Get all images for this specimen
-    images = SpFossilImage.objects.filter(specimen=specimen).order_by('id')
-    print(f"Found {images.count()} images for specimen {specimen.specimen_no}")  # Debug print
+    images = SpFossilImage.objects.filter(specimen=specimen)
+    
+    # Sort images by filename pattern
+    sorted_images = sort_images_by_filename(list(images))
+    print(f"Found {len(sorted_images)} images for specimen {specimen.specimen_no}")  # Debug print
     
     # Group images into rows for the gallery (3 images per row)
     IMAGES_PER_ROW = 3
-    image_rows = [images[i:i + IMAGES_PER_ROW] for i in range(0, len(images), IMAGES_PER_ROW)]
+    image_rows = [sorted_images[i:i + IMAGES_PER_ROW] for i in range(0, len(sorted_images), IMAGES_PER_ROW)]
     
     context = {
         'specimen': specimen,
         'user_obj': user_obj,
         'image_rows': image_rows,
-        'total_images': len(images),
+        'total_images': len(sorted_images),
         'debug_info': {
             'specimen_id': specimen_id,
-            'image_count': images.count(),
+            'image_count': len(sorted_images),
             'specimen_no': specimen.specimen_no
         }
     }
@@ -272,12 +280,15 @@ def slab_detail(request, slab_id):
     slab = get_object_or_404(SpSlab, pk=slab_id)
     
     # Get only slab images (those without specimen foreign key)
-    slab_only_images = SpFossilImage.objects.filter(slab=slab, specimen__isnull=True).order_by('id')
-    print(f"Found {slab_only_images.count()} slab-only images for slab {slab.slab_no}")  # Debug print
+    slab_only_images = SpFossilImage.objects.filter(slab=slab, specimen__isnull=True)
+    
+    # Sort slab images by filename pattern
+    sorted_slab_images = sort_images_by_filename(list(slab_only_images))
+    print(f"Found {len(sorted_slab_images)} slab-only images for slab {slab.slab_no}")  # Debug print
     
     # Group slab images into rows for the gallery (3 images per row)
     IMAGES_PER_ROW = 3
-    slab_image_rows = [slab_only_images[i:i + IMAGES_PER_ROW] for i in range(0, len(slab_only_images), IMAGES_PER_ROW)]
+    slab_image_rows = [sorted_slab_images[i:i + IMAGES_PER_ROW] for i in range(0, len(sorted_slab_images), IMAGES_PER_ROW)]
     
     # Get specimens with their images
     specimens = slab.specimens.all().order_by('specimen_no')
@@ -285,24 +296,28 @@ def slab_detail(request, slab_id):
     
     for specimen in specimens:
         # Get images for this specimen
-        spec_images = SpFossilImage.objects.filter(specimen=specimen).order_by('id')
-        spec_image_rows = [spec_images[i:i + IMAGES_PER_ROW] for i in range(0, len(spec_images), IMAGES_PER_ROW)]
+        spec_images = SpFossilImage.objects.filter(specimen=specimen)
+        
+        # Sort specimen images by filename pattern
+        sorted_spec_images = sort_images_by_filename(list(spec_images))
+        
+        spec_image_rows = [sorted_spec_images[i:i + IMAGES_PER_ROW] for i in range(0, len(sorted_spec_images), IMAGES_PER_ROW)]
         
         specimen_with_images.append({
             'specimen': specimen,
             'image_rows': spec_image_rows,
-            'total_images': len(spec_images)
+            'total_images': len(sorted_spec_images)
         })
     
     context = {
         'slab': slab,
         'user_obj': user_obj,
         'slab_image_rows': slab_image_rows,
-        'slab_total_images': len(slab_only_images),
+        'slab_total_images': len(sorted_slab_images),
         'specimens_with_images': specimen_with_images,
         'debug_info': {
             'slab_id': slab_id,
-            'slab_image_count': slab_only_images.count(),
+            'slab_image_count': len(sorted_slab_images),
             'specimen_count': specimens.count(),
             'slab_no': slab.slab_no
         }
