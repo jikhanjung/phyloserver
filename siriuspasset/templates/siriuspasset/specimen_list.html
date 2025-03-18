@@ -21,6 +21,35 @@
         padding: 2px 6px;
         font-size: 0.75rem;
     }
+    /* Set fixed column widths */
+    .col-slab {
+        width: 13%;
+    }
+    .col-specimen {
+        width: 15%;
+    }
+    .col-taxon {
+        width: 25%;
+    }
+    .col-phylum {
+        width: 15%;
+    }
+    .col-images {
+        width: 7%;
+        text-align: center;
+    }
+    .col-horizon {
+        width: 10%;
+    }
+    .col-remarks {
+        width: 15%;
+    }
+    /* Make table cells maintain their width */
+    .table th, .table td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 </style>
 
 <h4 class="bd-title p-2 bg-secondary text-light">Specimen List</h4>
@@ -41,19 +70,19 @@
     {% if grouped_specimens %}   
     <tbody>
         <tr>
-            <th><div>Slab no.</div></th>
-            <th><div>Specimen no.</div></th>
-            <th><div>Taxon name</div></th>
-            <th><div>Phylum</div></th>
-            <th><div>Images</div></th>
-            <th><div>Horizon</div></th>
-            <th><div>Remarks</div></th>
+            <th class="col-slab"><div>Slab no.</div></th>
+            <th class="col-specimen"><div>Specimen no.</div></th>
+            <th class="col-taxon"><div>Taxon name</div></th>
+            <th class="col-phylum"><div>Phylum</div></th>
+            <th class="col-images"><div>Images</div></th>
+            <th class="col-horizon"><div>Horizon</div></th>
+            <th class="col-remarks"><div>Remarks</div></th>
         </tr>
         {% for group in grouped_specimens %}
             {% for specimen in group.specimens %}
                 <tr class="tr_link {% if forloop.counter0|divisibleby:2 %}specimen-row-even{% else %}specimen-row-odd{% endif %}" style="cursor:pointer;" data-href="{% url 'siriuspasset:specimen_detail' specimen.id %}">
                     {% if forloop.first %}
-                        <td class="slab-cell" rowspan="{{ group.specimens|length }}">
+                        <td class="slab-cell col-slab" rowspan="{{ group.specimens|length }}">
                             <a href="{% url 'siriuspasset:slab_detail' group.slab.id %}" class="font-weight-bold" style="text-decoration: none; color: #007bff;">{{ group.slab.slab_no|default_if_none:'' }}</a>
                             {% if group.slab_only_image_count > 0 %}
                                 <span class="badge badge-image-count" title="Slab-only images">{{ group.slab_only_image_count }}</span>
@@ -63,18 +92,18 @@
                             </div>
                         </td>
                     {% endif %}
-                    <td><a href="{% url 'siriuspasset:specimen_detail' specimen.id %}">{{ specimen.specimen_no }}</a></td>
-                    <td>{{ specimen.taxon_name|default_if_none:'' }}</td>
-                    <td>{{ specimen.phylum|default_if_none:'' }}</td>
-                    <td>
+                    <td class="col-specimen"><a href="{% url 'siriuspasset:specimen_detail' specimen.id %}">{{ specimen.specimen_no }}</a></td>
+                    <td class="col-taxon">{{ specimen.taxon_name|default_if_none:'' }}</td>
+                    <td class="col-phylum">{{ specimen.phylum|default_if_none:'' }}</td>
+                    <td class="col-images">
                         {% if specimen.image_count > 0 %}
                             <span class="badge badge-image-count">{{ specimen.image_count }}</span>
                         {% else %}
                             <span class="text-muted">0</span>
                         {% endif %}
                     </td>
-                    <td>{{ specimen.slab.horizon|default_if_none:'' }}</td>
-                    <td>{{ specimen.remarks|default_if_none:'' }}</td>
+                    <td class="col-horizon">{{ specimen.slab.horizon|default_if_none:'' }}</td>
+                    <td class="col-remarks">{{ specimen.remarks|default_if_none:'' }}</td>
                 </tr>
             {% endfor %}
             {% if not forloop.last %}
