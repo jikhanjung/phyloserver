@@ -3,13 +3,18 @@ import os, re
 from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 
+# Configuration for image directory structure
+# Number of slabs per directory (e.g., 100 gives 0001-0100, 1000 gives 0001-1000)
+SLABS_PER_DIRECTORY = 100
+
 def fossil_image_upload_path(instance, filename):
     """
-    표본 발견 연도 기반 디렉토리 구조로 이미지를 저장.
-    - 표본번호가 SP-2017-1-001이라면, 2017/ 디렉토리 아래 저장
+    표본 발견 연도 및 슬랩 번호 범위 기반 디렉토리 구조로 이미지를 저장.
+    - 표본번호가 SP-2017-0042-001이라면, SP/2017/0001-0100/ 디렉토리 아래 저장
+    - 슬랩번호가 SP-2017-0142라면, SP/2017/0101-0200/ 디렉토리 아래 저장
     - 파일명은 specimen_no_순번.확장자로 저장
     """
-    # 표본번호에서 연도를 추출 (SP-YYYY 패턴)
+    # 표본번호에서 연도와 슬랩 번호를 추출
     if instance.specimen:
         ref_obj = instance.specimen
         specimen_id = ref_obj.specimen_no
@@ -17,9 +22,28 @@ def fossil_image_upload_path(instance, filename):
         ref_obj = instance.slab
         specimen_id = ref_obj.slab_no
         
-    match = re.match(r"(\w+)-(20\d{2})", specimen_id)
-    prefix = match.group(1) if match else "unknown"
-    year = match.group(2) if match else "unknown"
+    match = re.match(r"(\w+)-(20\d{2})-(\d+)", specimen_id)
+    
+    if match:
+        prefix = match.group(1)  # SP
+        year = match.group(2)    # 2016, 2017, etc.
+        slab_num = match.group(3)  # Extract the slab number
+        
+        # Convert slab number to an integer and calculate the range directory
+        try:
+            slab_num_int = int(slab_num)
+            # Calculate the range bucket based on SLABS_PER_DIRECTORY
+            range_start = ((slab_num_int - 1) // SLABS_PER_DIRECTORY) * SLABS_PER_DIRECTORY + 1
+            range_end = range_start + SLABS_PER_DIRECTORY - 1
+            range_dir = f"{range_start:04d}-{range_end:04d}"
+        except ValueError:
+            # If conversion fails, use a default directory
+            range_dir = "other"
+    else:
+        # Fallback if the pattern doesn't match
+        prefix = "unknown"
+        year = "unknown"
+        range_dir = "unknown"
 
     # 원본 파일 확장자 유지
     ext = filename.split('.')[-1]
@@ -27,7 +51,7 @@ def fossil_image_upload_path(instance, filename):
     # 파일명: specimen_no_파일명.확장자
     file_basename = f"{specimen_id}_{instance.pk or 'temp'}.{ext}"
 
-    return os.path.join(f"sp_photos/{prefix}/{year}/", file_basename)
+    return os.path.join(f"sp_photos/{prefix}/{year}/{range_dir}/", file_basename)
 
 # Create your models here.
 class SpSlab(models.Model):
