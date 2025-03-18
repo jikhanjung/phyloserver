@@ -64,7 +64,7 @@
                         <div class="card">
                             <a href="{{ image.image_file.url }}" data-lightbox="slab-gallery" class="gallery-item" 
                                data-title="{{ image.description|default:'No description' }}">
-                                <img src="{{ image.image_file.url }}" class="card-img-top img-fluid" 
+                                <img src="{{ image.get_thumbnail_url }}" class="card-img-top img-fluid" 
                                      alt="Slab photo {{ forloop.counter }}"
                                      style="object-fit: cover; height: 200px;">
                             </a>
@@ -143,7 +143,7 @@
                                         <div class="carousel-item {% if forloop.first and forloop.parentloop.first %}active{% endif %}">
                                             <a href="{{ image.image_file.url }}" data-lightbox="specimen-gallery-{{ specimen_data.specimen.id }}" 
                                                data-title="Specimen: {{ specimen_data.specimen.specimen_no }} - {{ image.description|default:'No description' }}">
-                                                <img src="{{ image.image_file.url }}" class="d-block w-100" alt="Specimen photo"
+                                                <img src="{{ image.get_thumbnail_url }}" class="d-block w-100" alt="Specimen photo"
                                                      style="object-fit: contain; height: 200px;">
                                             </a>
                                             <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded">

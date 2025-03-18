@@ -67,7 +67,7 @@
                         <div class="card">
                             <a href="{{ image.image_file.url }}" data-lightbox="specimen-gallery" class="gallery-item" 
                                data-title="{{ image.description|default:'No description' }}">
-                                <img src="{{ image.image_file.url }}" class="card-img-top img-fluid" 
+                                <img src="{{ image.get_thumbnail_url }}" class="card-img-top img-fluid" 
                                      alt="Specimen photo {{ forloop.counter }}"
                                      style="object-fit: cover; height: 200px;">
                             </a>

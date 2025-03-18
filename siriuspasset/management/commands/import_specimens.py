@@ -517,6 +517,7 @@ class Command(BaseCommand):
         skipped_duplicate_count = 0
         skipped_no_prefix_count = 0
         skipped_no_match_count = 0
+        thumbnail_count = 0
         
         # Get all image files in the directory and subdirectories
         image_files = []
@@ -741,6 +742,12 @@ class Command(BaseCommand):
                         # Then assign and save the file
                         image.image_file.save(filename, File(f), save=True)
                         
+                        # Create thumbnail after saving the image
+                        if image.generate_thumbnail():
+                            thumbnail_count += 1
+                            if debug:
+                                self.stdout.write(f"Created thumbnail for {os.path.basename(image.image_file.name)}")
+                        
                         created_count += 1
                         if specimen:
                             self.stdout.write(self.style.SUCCESS(f'Created image for specimen {specimen.specimen_no}: {filename}'))
@@ -762,6 +769,7 @@ class Command(BaseCommand):
         # Print summary statistics
         self.stdout.write(self.style.SUCCESS(f'Processed {len(image_files)} image files:'))
         self.stdout.write(f'- Created {created_count} new images')
+        self.stdout.write(f'- Created {thumbnail_count} thumbnails')
         self.stdout.write(f'- Skipped {skipped_duplicate_count} duplicate images (based on MD5 hash)')
         self.stdout.write(f'- Skipped {skipped_no_match_count} images with no matching slab/specimen')
         if skip_existing:

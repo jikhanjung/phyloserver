@@ -2,10 +2,15 @@ from django.db import models
 import os, re
 from django.utils.timezone import now
 from django.core.exceptions import ValidationError
+from django.conf import settings
+from PIL import Image as PILImage
 
 # Configuration for image directory structure
 # Number of slabs per directory (e.g., 100 gives 0001-0100, 1000 gives 0001-1000)
 SLABS_PER_DIRECTORY = 100
+
+# Thumbnail size for gallery view (width, height)
+THUMBNAIL_SIZE = (300, 300)
 
 def fossil_image_upload_path(instance, filename):
     """
@@ -144,3 +149,62 @@ class SpFossilImage(models.Model):
         """Validate that at least one of slab or specimen is set."""
         if not self.slab and not self.specimen:
             raise ValidationError("Either slab or specimen must be specified.")
+    
+    def get_thumbnail_path(self):
+        """
+        Returns the filesystem path for the thumbnail.
+        """
+        image_path = self.image_file.path
+        image_dir = os.path.dirname(image_path)
+        image_name = os.path.basename(image_path)
+        
+        thumbnail_dir = os.path.join(image_dir, '.thumbnails')
+        thumbnail_path = os.path.join(thumbnail_dir, image_name)
+        
+        return thumbnail_path
+    
+    def generate_thumbnail(self):
+        """
+        Generate a thumbnail for this image file.
+        Returns True if successful, False otherwise.
+        """
+        try:
+            image_path = self.image_file.path
+            thumbnail_path = self.get_thumbnail_path()
+            
+            # Create directory if it doesn't exist
+            os.makedirs(os.path.dirname(thumbnail_path), exist_ok=True)
+            
+            # Open the image
+            img = PILImage.open(image_path)
+            
+            # Convert RGBA to RGB if needed
+            if img.mode == 'RGBA':
+                img = img.convert('RGB')
+                
+            # Create thumbnail
+            img.thumbnail(THUMBNAIL_SIZE, PILImage.LANCZOS)
+            
+            # Save thumbnail
+            img.save(thumbnail_path, "JPEG", quality=90)
+            return True
+        except Exception as e:
+            print(f"Error creating thumbnail: {str(e)}")
+            return False
+    
+    def get_thumbnail_url(self):
+        """
+        Return the URL to the thumbnail image.
+        If thumbnail doesn't exist, returns the original image URL.
+        """
+        thumbnail_path = self.get_thumbnail_path()
+        
+        # Check if thumbnail exists
+        if os.path.exists(thumbnail_path):
+            # Convert filesystem path to URL
+            media_root = settings.MEDIA_ROOT
+            relative_path = os.path.relpath(thumbnail_path, media_root)
+            return f"{settings.MEDIA_URL}{relative_path.replace(os.sep, '/')}"
+        else:
+            # Return original image URL if thumbnail doesn't exist
+            return self.image_file.url
