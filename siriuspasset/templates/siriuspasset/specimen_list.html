@@ -14,12 +14,19 @@
         height: 2px;
         background-color: #dee2e6;
     }
+    .badge-image-count {
+        background-color: #17a2b8;
+        color: white;
+        border-radius: 10px;
+        padding: 2px 6px;
+        font-size: 0.75rem;
+    }
 </style>
 
 <h4 class="bd-title p-2 bg-secondary text-light">Specimen List</h4>
 <table class="table table-sm">
     <thead>
-    <tr><td colspan="4" align="left">
+    <tr><td colspan="5" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
     </td><td colspan="4" align="right">
         <form method="GET" action="{% url 'siriuspasset:specimen_list'%}">
@@ -38,6 +45,7 @@
             <th><div>Specimen no.</div></th>
             <th><div>Taxon name</div></th>
             <th><div>Phylum</div></th>
+            <th><div>Images</div></th>
             <th><div>Horizon</div></th>
             <th><div>Remarks</div></th>
             <th><div>Counterpart?</div></th>
@@ -48,7 +56,10 @@
                 <tr class="tr_link {% if forloop.counter0|divisibleby:2 %}specimen-row-even{% else %}specimen-row-odd{% endif %}" style="cursor:pointer;" data-href="{% url 'siriuspasset:specimen_detail' specimen.id %}">
                     {% if forloop.first %}
                         <td class="slab-cell" rowspan="{{ group.specimens|length }}">
-                            {{ group.slab.slab_no|default_if_none:'' }}
+                            <a href="{% url 'siriuspasset:slab_detail' group.slab.id %}" class="font-weight-bold" style="text-decoration: none; color: #007bff;">{{ group.slab.slab_no|default_if_none:'' }}</a>
+                            {% if group.slab_only_image_count > 0 %}
+                                <span class="badge badge-image-count" title="Slab-only images">{{ group.slab_only_image_count }}</span>
+                            {% endif %}
                             <div class="mt-1">
                                 <a href="{% url 'siriuspasset:add_specimen' %}?slab_id={{ group.slab.id }}" class="btn btn-sm btn-outline-primary">+ Add Specimen</a>
                             </div>
@@ -57,6 +68,13 @@
                     <td><a href="{% url 'siriuspasset:specimen_detail' specimen.id %}">{{ specimen.specimen_no }}</a></td>
                     <td>{{ specimen.taxon_name|default_if_none:'' }}</td>
                     <td>{{ specimen.phylum|default_if_none:'' }}</td>
+                    <td>
+                        {% if specimen.image_count > 0 %}
+                            <span class="badge badge-image-count">{{ specimen.image_count }}</span>
+                        {% else %}
+                            <span class="text-muted">0</span>
+                        {% endif %}
+                    </td>
                     <td>{{ specimen.slab.horizon|default_if_none:'' }}</td>
                     <td>{{ specimen.remarks|default_if_none:'' }}</td>
                     <td>{{ specimen.counterpart|default_if_none:'' }}</td>
@@ -65,16 +83,16 @@
             {% endfor %}
             {% if not forloop.last %}
                 <tr>
-                    <td colspan="8" class="table-divider"></td>
+                    <td colspan="9" class="table-divider"></td>
                 </tr>
             {% endif %}
         {% endfor %}
     {% else %}
-        <tr><td colspan="8">No specimens are available.</td></tr>
+        <tr><td colspan="9">No specimens are available.</td></tr>
     {% endif %}
     </tbody>
     <tfooter>
-        <tr><td colspan="4" width="400" align="right">
+        <tr><td colspan="5" width="400" align="right">
             {% include "nkfpaginator.html" %}
         </td><td colspan="4" width="400" align="right">
             <a href="{% url 'siriuspasset:add_specimen' %}">[Add specimen]</a>

@@ -1,4 +1,5 @@
 {% extends "spbase.html" %}
+{% load custom_filters %}
 
 {% block content %}
 <div class="container mt-4">
@@ -71,7 +72,11 @@
                                      style="object-fit: cover; height: 200px;">
                             </a>
                             <div class="card-body">
-                                <p class="card-text">{{ image.description|default:"No description" }}</p>
+                                {% if image.original_path %}
+                                    <p class="card-text text-truncate" title="{{ image.original_path|basename }}">{{ image.original_path|basename }}</p>
+                                {% else %}
+                                    <p class="card-text">{{ image.description|default:"No filename" }}</p>
+                                {% endif %}
                                 <small class="text-muted">Click to view full size</small>
                             </div>
                         </div>

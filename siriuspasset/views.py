@@ -62,9 +62,21 @@ def specimen_list(request):
     grouped_specimens = []
     for slab_id, group in groupby(specimens, key=lambda x: (x.slab.id if x.slab else None)):
         group_list = list(group)
+        slab = group_list[0].slab if group_list[0].slab else None
+        
+        # Count images for specimens
+        for specimen in group_list:
+            specimen.image_count = SpFossilImage.objects.filter(specimen=specimen).count()
+        
+        # Count slab-only images (if slab exists)
+        slab_only_image_count = 0
+        if slab:
+            slab_only_image_count = SpFossilImage.objects.filter(slab=slab, specimen__isnull=True).count()
+        
         grouped_specimens.append({
-            'slab': group_list[0].slab if group_list[0].slab else None,
-            'specimens': group_list
+            'slab': slab,
+            'specimens': group_list,
+            'slab_only_image_count': slab_only_image_count
         })
 
     # Paginate the grouped results
@@ -227,3 +239,46 @@ def delete_specimen(request, pk):
     occ = get_object_or_404(SpFossilSpecimen, pk=pk)
     occ.delete()
     return HttpResponseRedirect('/siriuspasset/specimen_list')
+
+def slab_detail(request, slab_id):
+    user_obj = get_user_obj(request)
+    slab = get_object_or_404(SpSlab, pk=slab_id)
+    
+    # Get only slab images (those without specimen foreign key)
+    slab_only_images = SpFossilImage.objects.filter(slab=slab, specimen__isnull=True).order_by('id')
+    print(f"Found {slab_only_images.count()} slab-only images for slab {slab.slab_no}")  # Debug print
+    
+    # Group slab images into rows for the gallery (3 images per row)
+    IMAGES_PER_ROW = 3
+    slab_image_rows = [slab_only_images[i:i + IMAGES_PER_ROW] for i in range(0, len(slab_only_images), IMAGES_PER_ROW)]
+    
+    # Get specimens with their images
+    specimens = slab.specimens.all().order_by('specimen_no')
+    specimen_with_images = []
+    
+    for specimen in specimens:
+        # Get images for this specimen
+        spec_images = SpFossilImage.objects.filter(specimen=specimen).order_by('id')
+        spec_image_rows = [spec_images[i:i + IMAGES_PER_ROW] for i in range(0, len(spec_images), IMAGES_PER_ROW)]
+        
+        specimen_with_images.append({
+            'specimen': specimen,
+            'image_rows': spec_image_rows,
+            'total_images': len(spec_images)
+        })
+    
+    context = {
+        'slab': slab,
+        'user_obj': user_obj,
+        'slab_image_rows': slab_image_rows,
+        'slab_total_images': len(slab_only_images),
+        'specimens_with_images': specimen_with_images,
+        'debug_info': {
+            'slab_id': slab_id,
+            'slab_image_count': slab_only_images.count(),
+            'specimen_count': specimens.count(),
+            'slab_no': slab.slab_no
+        }
+    }
+    
+    return render(request, 'siriuspasset/slab_detail.html', context)

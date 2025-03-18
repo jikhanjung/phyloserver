@@ -11,4 +11,5 @@ urlpatterns = [
     path('add_specimen/', views.add_specimen, name='add_specimen'),
     path('edit_specimen/<int:pk>', views.edit_specimen, name='edit_specimen'),
     path('delete_specimen/<int:pk>', views.delete_specimen, name='delete_specimen'),
+    path('slab_detail/<int:slab_id>/', views.slab_detail, name='slab_detail'),
 ]
