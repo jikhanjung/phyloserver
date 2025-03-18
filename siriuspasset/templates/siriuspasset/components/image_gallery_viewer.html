@@ -7,12 +7,18 @@
 <div id="customImageViewer" class="modal" tabindex="-1" role="dialog" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9);">
     <div class="modal-content" style="margin: 0; padding: 0; width: 100%; height: 100%; max-width: none; position: relative; background-color: transparent; border: none; box-shadow: none;">
         <span class="close-viewer" style="position: fixed; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 1060;">&times;</span>
-        <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
-            <img id="viewerImage" style="display: block; margin: 0; max-width: 100%; max-height: 100vh; object-fit: contain;">
+        <div id="imageContainer" style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; overflow: hidden;">
+            <img id="viewerImage" style="display: block; margin: 0; max-width: 100%; max-height: 100vh; object-fit: contain; cursor: move;">
         </div>
         <div id="imageCaption" style="position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; color: white; padding: 10px 0; height: 50px; background-color: rgba(0,0,0,0.5); z-index: 1051;"></div>
         
         <button id="toggleSizeBtn" style="position: fixed; top: 15px; right: 70px; background: rgba(255,255,255,0.3); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; z-index: 1060;">View Full Size</button>
+        
+        <div id="zoomControls" style="position: fixed; bottom: 70px; right: 20px; z-index: 1052; display: none;">
+            <button id="zoomIn" style="background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 4px; padding: 5px 10px; margin-right: 5px; cursor: pointer;">+</button>
+            <button id="zoomReset" style="background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 4px; padding: 5px 10px; margin-right: 5px; cursor: pointer;">100%</button>
+            <button id="zoomOut" style="background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;">-</button>
+        </div>
         
         <button id="prevImage" style="position: fixed; left: 20px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); border: none; color: white; font-size: 24px; padding: 15px; cursor: pointer; border-radius: 50%; z-index: 1052;">&lt;</button>
         <button id="nextImage" style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); border: none; color: white; font-size: 24px; padding: 15px; cursor: pointer; border-radius: 50%; z-index: 1052;">&gt;</button>
@@ -59,6 +65,11 @@ function initializeGalleryViewer() {
     // Custom image viewer
     let currentImageIndex = 0;
     let galleryImages = [];
+    let isOriginalSize = false;
+    let zoomLevel = 1;
+    let isDragging = false;
+    let startX, startY, translateX = 0, translateY = 0;
+    let lastTranslateX = 0, lastTranslateY = 0;
     
     // Collect all gallery images and their info
     $('.gallery-item').each(function(index) {
@@ -89,17 +100,30 @@ function initializeGalleryViewer() {
     // Function to display an image in the custom viewer
     function showImageInViewer(index) {
         const image = galleryImages[index];
-        $('#viewerImage').attr('src', image.src);
+        
+        // Reset zoom and position
+        zoomLevel = 1;
+        translateX = 0;
+        translateY = 0;
+        lastTranslateX = 0;
+        lastTranslateY = 0;
+        
+        const viewerImage = $('#viewerImage');
+        viewerImage.attr('src', image.src);
         $('#imageCaption').text(image.title);
         currentImageIndex = index;
         
         // Reset to fit-to-screen mode
-        $('#viewerImage').css({
+        viewerImage.css({
             'max-width': '100%',
             'max-height': '100vh',
-            'object-fit': 'contain'
+            'object-fit': 'contain',
+            'transform': 'translate(0px, 0px) scale(1)'
         });
+        
         $('#toggleSizeBtn').text('View Full Size');
+        $('#zoomControls').hide();
+        isOriginalSize = false;
     }
     
     // Next and previous buttons
@@ -121,24 +145,114 @@ function initializeGalleryViewer() {
     // Toggle image size button
     $('#toggleSizeBtn').on('click', function() {
         const img = $('#viewerImage');
-        if ($(this).text() === 'View Full Size') {
+        isOriginalSize = !isOriginalSize;
+        
+        if (isOriginalSize) {
             // Switch to original size
             img.css({
                 'max-width': 'none',
                 'max-height': 'none',
-                'object-fit': 'none'
+                'object-fit': 'none',
+                'transform': 'translate(0px, 0px) scale(1)'
             });
             $(this).text('Fit to Screen');
+            $('#zoomControls').show();
+            zoomLevel = 1;
+            translateX = 0;
+            translateY = 0;
+            lastTranslateX = 0;
+            lastTranslateY = 0;
         } else {
             // Back to fit to screen
             img.css({
                 'max-width': '100%',
                 'max-height': '100vh',
-                'object-fit': 'contain'
+                'object-fit': 'contain',
+                'transform': 'translate(0px, 0px) scale(1)'
             });
             $(this).text('View Full Size');
+            $('#zoomControls').hide();
+            zoomLevel = 1;
         }
     });
+    
+    // Mouse drag to pan image
+    $('#viewerImage').on('mousedown', function(e) {
+        if (!isOriginalSize) return; // Only enable dragging in original size mode
+        
+        isDragging = true;
+        startX = e.clientX - lastTranslateX;
+        startY = e.clientY - lastTranslateY;
+        $(this).css('cursor', 'grabbing');
+        e.preventDefault(); // Prevent image dragging behavior
+    });
+    
+    $(document).on('mousemove', function(e) {
+        if (!isDragging) return;
+        
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        
+        $('#viewerImage').css('transform', `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`);
+    });
+    
+    $(document).on('mouseup', function() {
+        if (isDragging) {
+            isDragging = false;
+            lastTranslateX = translateX;
+            lastTranslateY = translateY;
+            $('#viewerImage').css('cursor', 'move');
+        }
+    });
+    
+    // Zoom controls
+    $('#zoomIn').on('click', function() {
+        if (zoomLevel < 5) {
+            zoomLevel += 0.25;
+            updateZoom();
+        }
+    });
+    
+    $('#zoomOut').on('click', function() {
+        if (zoomLevel > 0.5) {
+            zoomLevel -= 0.25;
+            updateZoom();
+        }
+    });
+    
+    $('#zoomReset').on('click', function() {
+        zoomLevel = 1;
+        updateZoom();
+    });
+    
+    // Mouse wheel zoom
+    $('#imageContainer').on('wheel', function(e) {
+        if (!isOriginalSize) return; // Only enable zooming in original size mode
+        
+        e.preventDefault();
+        
+        // Zoom in or out based on scroll direction
+        if (e.originalEvent.deltaY < 0) {
+            // Zoom in
+            if (zoomLevel < 5) {
+                zoomLevel += 0.1;
+            }
+        } else {
+            // Zoom out
+            if (zoomLevel > 0.5) {
+                zoomLevel -= 0.1;
+            }
+        }
+        
+        zoomLevel = Math.round(zoomLevel * 10) / 10; // Round to nearest 0.1
+        updateZoom();
+    });
+    
+    // Update zoom level
+    function updateZoom() {
+        $('#viewerImage').css('transform', `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`);
+        $('#zoomReset').text(`${Math.round(zoomLevel * 100)}%`);
+    }
     
     // Close when clicking outside the image
     $('#customImageViewer').on('click', function(e) {
@@ -160,6 +274,15 @@ function initializeGalleryViewer() {
                 break;
             case 27: // Escape
                 $('.close-viewer').click();
+                break;
+            case 187: // Plus (+)
+                if (isOriginalSize) $('#zoomIn').click();
+                break;
+            case 189: // Minus (-)
+                if (isOriginalSize) $('#zoomOut').click();
+                break;
+            case 48: // Zero (0)
+                if (isOriginalSize) $('#zoomReset').click();
                 break;
         }
     });
