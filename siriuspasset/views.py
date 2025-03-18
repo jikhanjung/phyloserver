@@ -6,11 +6,10 @@ from django.core.paginator import Paginator
 from .forms import SpFossilSpecimenForm, SpFossilImageForm, SpSlabForm
 from django.urls import reverse
 #from cStringIO import StringIO
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db import transaction
 from itertools import groupby
 from operator import attrgetter
-from django.db.models import Count
 
 # Create your views here.
 # Create your views here.
