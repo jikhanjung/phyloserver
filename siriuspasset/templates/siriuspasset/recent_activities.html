@@ -1,0 +1,153 @@
+{% extends "spbase.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Title and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Recent Activities</h2>
+            <p class="text-muted">Showing recent activity in the database</p>
+        </div>
+        <div class="col-md-4">
+            <form method="GET" action="{% url 'siriuspasset:recent_activities' %}" class="form-inline justify-content-end">
+                <div class="form-group">
+                    <label for="range" class="mr-2">Time Range:</label>
+                    <select name="range" id="range" class="form-control" onchange="this.form.submit()">
+                        <option value="day" {% if time_range == 'day' %}selected{% endif %}>Past 24 Hours</option>
+                        <option value="week" {% if time_range == 'week' %}selected{% endif %}>Past Week</option>
+                        <option value="month" {% if time_range == 'month' %}selected{% endif %}>Past Month</option>
+                        <option value="year" {% if time_range == 'year' %}selected{% endif %}>Past Year</option>
+                        <option value="all" {% if time_range == 'all' %}selected{% endif %}>All Time</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Activity Stats -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Activity Summary</h5>
+            <p>Showing {{ total_activities }} recent activities</p>
+        </div>
+    </div>
+
+    <!-- Activity Timeline -->
+    {% if activities %}
+    <div class="timeline">
+        {% for activity in activities %}
+            <div class="timeline-item">
+                <div class="timeline-date">
+                    {{ activity.date|date:"Y-m-d H:i" }}
+                </div>
+                <div class="timeline-content">
+                    <div class="card mb-3">
+                        <div class="row no-gutters">
+                            <div class="col-md-3">
+                                <a href="{{ activity.image.image_file.url }}" data-lightbox="activities" data-title="
+                                    {% if activity.associated_with == 'specimen' %}
+                                        Specimen: {{ activity.specimen.specimen_no }}
+                                    {% else %}
+                                        Slab: {{ activity.slab.slab_no }}
+                                    {% endif %}
+                                ">
+                                    <img src="{{ activity.thumbnail_url }}" class="card-img" alt="Image thumbnail" style="object-fit: contain; height: 150px;">
+                                </a>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        {% if activity.associated_with == 'specimen' %}
+                                            <a href="{{ activity.detail_url }}">Specimen: {{ activity.specimen.specimen_no }}</a>
+                                            {% if activity.specimen.taxon_name %}
+                                                <small class="text-muted">{{ activity.specimen.taxon_name }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <a href="{{ activity.detail_url }}">Slab: {{ activity.slab.slab_no }}</a>
+                                        {% endif %}
+                                    </h5>
+                                    <p class="card-text">
+                                        {% if activity.image.original_path %}
+                                            <strong>Original File:</strong> {{ activity.image.original_path|basename }}
+                                        {% endif %}
+                                    </p>
+                                    <p class="card-text">
+                                        <small class="text-muted">Added on {{ activity.date|date:"Y-m-d H:i" }}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <h4>No Recent Activities</h4>
+        <p>There are no activities to display in the selected time range.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Lightbox CSS and JS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+
+<style>
+    /* Timeline styling */
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 120px;
+        width: 4px;
+        background: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        display: flex;
+    }
+    
+    .timeline-date {
+        width: 120px;
+        padding-right: 20px;
+        text-align: right;
+        font-weight: bold;
+        color: #6c757d;
+    }
+    
+    .timeline-content {
+        flex: 1;
+        padding-left: 20px;
+    }
+    
+    .timeline-content:before {
+        content: '';
+        position: absolute;
+        left: 118px;
+        top: 8px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #17a2b8;
+    }
+</style>
+
+<script>
+    lightbox.option({
+        'resizeDuration': 200,
+        'wrapAround': true,
+        'albumLabel': 'Image %1 of %2'
+    });
+</script>
+{% endblock %} 

@@ -10,6 +10,7 @@ from django.db.models import Q, Count
 from django.db import transaction
 from itertools import groupby
 from operator import attrgetter
+from datetime import datetime, timedelta
 
 # Create your views here.
 # Create your views here.
@@ -308,3 +309,64 @@ def slab_detail(request, slab_id):
     }
     
     return render(request, 'siriuspasset/slab_detail.html', context)
+
+def recent_activities(request):
+    """View to display recent image activities"""
+    user_obj = get_user_obj(request)
+    
+    # Get filter parameter for time range
+    time_range = request.GET.get('range', 'week')  # Default to showing past week
+    limit = int(request.GET.get('limit', 50))      # Default to 50 items
+    
+    # Calculate the date range
+    today = datetime.now().date()
+    if time_range == 'day':
+        start_date = today
+    elif time_range == 'week':
+        start_date = today - timedelta(days=7)
+    elif time_range == 'month':
+        start_date = today - timedelta(days=30)
+    elif time_range == 'year':
+        start_date = today - timedelta(days=365)
+    else:  # 'all'
+        start_date = None
+    
+    # Query images with dates
+    recent_images = SpFossilImage.objects.all().select_related('specimen', 'slab')
+    
+    if start_date:
+        recent_images = recent_images.filter(created_on__date__gte=start_date)
+    
+    # Order by most recent first
+    recent_images = recent_images.order_by('-created_on')[:limit]
+    
+    # Prepare context for display
+    activities = []
+    for image in recent_images:
+        activity = {
+            'image': image,
+            'date': image.created_on,
+            'thumbnail_url': image.get_thumbnail_url(),
+            'type': 'image',
+        }
+        
+        # Determine if this is a specimen image or slab image
+        if image.specimen:
+            activity['associated_with'] = 'specimen'
+            activity['specimen'] = image.specimen
+            activity['detail_url'] = reverse('siriuspasset:specimen_detail', args=[image.specimen.id])
+        elif image.slab:
+            activity['associated_with'] = 'slab'
+            activity['slab'] = image.slab
+            activity['detail_url'] = reverse('siriuspasset:slab_detail', args=[image.slab.id])
+        
+        activities.append(activity)
+    
+    context = {
+        'user_obj': user_obj,
+        'activities': activities,
+        'time_range': time_range,
+        'total_activities': len(activities),
+    }
+    
+    return render(request, 'siriuspasset/recent_activities.html', context)
