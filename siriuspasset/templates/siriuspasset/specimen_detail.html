@@ -128,92 +128,15 @@
     {% endif %}
 </div>
 
-<!-- Add Lightbox CSS and JS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+<!-- Include the shared image gallery viewer component -->
+{% include "siriuspasset/components/image_gallery_viewer.html" %}
 
 <style>
-    .image-gallery img {
-        transition: transform 0.3s ease;
-    }
-    .image-gallery img:hover {
-        transform: scale(1.05);
-    }
     .card {
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .card-header {
         background-color: #f8f9fa;
     }
-    /* Custom styles for the toggle original size button */
-    .lb-toggle-orig {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        background: rgba(0, 0, 0, 0.6);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 5px 10px;
-        font-size: 12px;
-        cursor: pointer;
-        z-index: 9999;
-    }
-    .lb-toggle-orig:hover {
-        background: rgba(0, 0, 0, 0.8);
-    }
 </style>
-
-<script>
-    lightbox.option({
-        'resizeDuration': 200,
-        'wrapAround': true,
-        'albumLabel': 'Image %1 of %2'
-    });
-    
-    // Add toggle original size button to Lightbox
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to add the button each time lightbox is opened
-        $(document).on('click', '[data-lightbox]', function() {
-            setTimeout(function() {
-                // Check if button already exists
-                if (!$('.lb-toggle-orig').length) {
-                    const toggleBtn = $('<button class="lb-toggle-orig">View Original Size</button>');
-                    $('.lb-dataContainer').append(toggleBtn);
-                    
-                    // Handle button click
-                    toggleBtn.on('click', function() {
-                        const image = $('.lb-image');
-                        const container = $('.lb-outerContainer');
-                        
-                        if (toggleBtn.text() === 'View Original Size') {
-                            // Switch to original size
-                            image.css({
-                                'max-width': 'none',
-                                'max-height': 'none'
-                            });
-                            container.css({
-                                'width': 'auto',
-                                'height': 'auto'
-                            });
-                            toggleBtn.text('Fit to Screen');
-                        } else {
-                            // Back to fit to screen
-                            image.css({
-                                'max-width': '100%',
-                                'max-height': '100vh'
-                            });
-                            container.css({
-                                'width': image.width() + 'px',
-                                'height': image.height() + 'px'
-                            });
-                            toggleBtn.text('View Original Size');
-                        }
-                    });
-                }
-            }, 100); // Small delay to ensure lightbox is fully loaded
-        });
-    });
-</script>
 {% endblock %}

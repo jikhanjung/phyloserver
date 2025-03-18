@@ -1,0 +1,213 @@
+<!-- Add Lightbox CSS and JS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+
+<!-- Custom Image Viewer Modal -->
+<div id="customImageViewer" class="modal" tabindex="-1" role="dialog" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9);">
+    <div class="modal-content" style="margin: 0; padding: 0; width: 100%; height: 100%; max-width: none; position: relative; background-color: transparent; border: none; box-shadow: none;">
+        <span class="close-viewer" style="position: fixed; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; z-index: 1060;">&times;</span>
+        <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+            <img id="viewerImage" style="display: block; margin: 0; max-width: 100%; max-height: 100vh; object-fit: contain;">
+        </div>
+        <div id="imageCaption" style="position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; color: white; padding: 10px 0; height: 50px; background-color: rgba(0,0,0,0.5); z-index: 1051;"></div>
+        
+        <button id="toggleSizeBtn" style="position: fixed; top: 15px; right: 70px; background: rgba(255,255,255,0.3); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; z-index: 1060;">View Full Size</button>
+        
+        <button id="prevImage" style="position: fixed; left: 20px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); border: none; color: white; font-size: 24px; padding: 15px; cursor: pointer; border-radius: 50%; z-index: 1052;">&lt;</button>
+        <button id="nextImage" style="position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); border: none; color: white; font-size: 24px; padding: 15px; cursor: pointer; border-radius: 50%; z-index: 1052;">&gt;</button>
+    </div>
+</div>
+
+<style>
+    .image-gallery img {
+        transition: transform 0.3s ease;
+    }
+    .image-gallery img:hover {
+        transform: scale(1.05);
+    }
+    .lb-toggle-orig {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 9999;
+    }
+    .lb-toggle-orig:hover {
+        background: rgba(0, 0, 0, 0.8);
+    }
+</style>
+
+<script>
+// Initialize gallery viewer
+function initializeGalleryViewer() {
+    // Try standard Lightbox first
+    lightbox.option({
+        'resizeDuration': 200,
+        'wrapAround': true,
+        'albumLabel': 'Image %1 of %2',
+        'fadeDuration': 200,
+        'fitImagesInViewport': true
+    });
+    
+    // Custom image viewer
+    let currentImageIndex = 0;
+    let galleryImages = [];
+    
+    // Collect all gallery images and their info
+    $('.gallery-item').each(function(index) {
+        galleryImages.push({
+            src: $(this).attr('href'),
+            title: $(this).attr('data-title') || '',
+            element: $(this)
+        });
+    });
+    
+    // Custom image viewer click handler
+    $('.gallery-item').on('click', function(e) {
+        e.preventDefault();
+        
+        // Find this image's index
+        const clickedSrc = $(this).attr('href');
+        currentImageIndex = galleryImages.findIndex(img => img.src === clickedSrc);
+        
+        // Show the image in our viewer
+        showImageInViewer(currentImageIndex);
+        
+        // Show the modal
+        $('#customImageViewer').fadeIn();
+        
+        return false;
+    });
+    
+    // Function to display an image in the custom viewer
+    function showImageInViewer(index) {
+        const image = galleryImages[index];
+        $('#viewerImage').attr('src', image.src);
+        $('#imageCaption').text(image.title);
+        currentImageIndex = index;
+        
+        // Reset to fit-to-screen mode
+        $('#viewerImage').css({
+            'max-width': '100%',
+            'max-height': '100vh',
+            'object-fit': 'contain'
+        });
+        $('#toggleSizeBtn').text('View Full Size');
+    }
+    
+    // Next and previous buttons
+    $('#nextImage').on('click', function() {
+        currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+        showImageInViewer(currentImageIndex);
+    });
+    
+    $('#prevImage').on('click', function() {
+        currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
+        showImageInViewer(currentImageIndex);
+    });
+    
+    // Close the viewer
+    $('.close-viewer').on('click', function() {
+        $('#customImageViewer').fadeOut();
+    });
+    
+    // Toggle image size button
+    $('#toggleSizeBtn').on('click', function() {
+        const img = $('#viewerImage');
+        if ($(this).text() === 'View Full Size') {
+            // Switch to original size
+            img.css({
+                'max-width': 'none',
+                'max-height': 'none',
+                'object-fit': 'none'
+            });
+            $(this).text('Fit to Screen');
+        } else {
+            // Back to fit to screen
+            img.css({
+                'max-width': '100%',
+                'max-height': '100vh',
+                'object-fit': 'contain'
+            });
+            $(this).text('View Full Size');
+        }
+    });
+    
+    // Close when clicking outside the image
+    $('#customImageViewer').on('click', function(e) {
+        if (e.target === this) {
+            $(this).fadeOut();
+        }
+    });
+    
+    // Support keyboard navigation
+    $(document).on('keydown', function(e) {
+        if (!$('#customImageViewer').is(':visible')) return;
+        
+        switch (e.keyCode) {
+            case 37: // Left arrow
+                $('#prevImage').click();
+                break;
+            case 39: // Right arrow
+                $('#nextImage').click();
+                break;
+            case 27: // Escape
+                $('.close-viewer').click();
+                break;
+        }
+    });
+    
+    // Add toggle original size button to Lightbox (as fallback)
+    $(document).on('click', '[data-lightbox]', function() {
+        setTimeout(function() {
+            // Check if button already exists
+            if (!$('.lb-toggle-orig').length) {
+                const toggleBtn = $('<button class="lb-toggle-orig">View Original Size</button>');
+                $('.lb-dataContainer').append(toggleBtn);
+                
+                // Handle button click
+                toggleBtn.on('click', function() {
+                    const image = $('.lb-image');
+                    const container = $('.lb-outerContainer');
+                    
+                    if (toggleBtn.text() === 'View Original Size') {
+                        // Switch to original size
+                        image.css({
+                            'max-width': 'none',
+                            'max-height': 'none'
+                        });
+                        container.css({
+                            'width': 'auto',
+                            'height': 'auto'
+                        });
+                        toggleBtn.text('Fit to Screen');
+                    } else {
+                        // Back to fit to screen
+                        image.css({
+                            'max-width': '100%',
+                            'max-height': '100vh'
+                        });
+                        container.css({
+                            'width': image.width() + 'px',
+                            'height': image.height() + 'px'
+                        });
+                        toggleBtn.text('View Original Size');
+                    }
+                });
+            }
+        }, 100); // Small delay to ensure lightbox is fully loaded
+    });
+}
+
+// Call when document is ready
+$(document).ready(function() {
+    initializeGalleryViewer();
+});
+</script> 
