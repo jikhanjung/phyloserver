@@ -548,7 +548,7 @@ class Command(BaseCommand):
             self.stdout.write('-' * 80)
         
         # Report auto-generated specimens count
-        total_auto_generated = sum(counter - 1 for counter in auto_specimen_counters.values())
+        total_auto_generated = sum(len(letters) for letters in auto_specimen_counters.values())
         if total_auto_generated > 0:
             self.stdout.write(f'Auto-generated {total_auto_generated} specimen numbers for rows with missing specimen numbers')
             
