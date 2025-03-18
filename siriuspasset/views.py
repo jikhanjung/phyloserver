@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.db import transaction
 from itertools import groupby
 from operator import attrgetter
+from django.db.models import Count
 
 # Create your views here.
 # Create your views here.
@@ -56,22 +57,48 @@ def specimen_list(request):
 
     # Order by slab number and specimen number
     specimen_list = specimen_list.order_by('slab__slab_no', 'specimen_no')
+    
+    # Pre-fetch specimen and slab IDs to use in image counts
+    all_specimens = list(specimen_list)
+    specimen_ids = [specimen.id for specimen in all_specimens]
+    slab_ids = list(set(specimen.slab.id for specimen in all_specimens if specimen.slab))
+    
+    # Batch query image counts for all specimens and slabs at once
+    specimen_image_counts = {}
+    slab_image_counts = {}
+    
+    # Query for specimen image counts
+    if specimen_ids:
+        specimen_images = SpFossilImage.objects.filter(specimen_id__in=specimen_ids)\
+            .values('specimen_id')\
+            .annotate(count=Count('id'))
+        
+        for item in specimen_images:
+            specimen_image_counts[item['specimen_id']] = item['count']
+    
+    # Query for slab-only image counts
+    if slab_ids:
+        slab_images = SpFossilImage.objects.filter(slab_id__in=slab_ids, specimen__isnull=True)\
+            .values('slab_id')\
+            .annotate(count=Count('id'))
+        
+        for item in slab_images:
+            slab_image_counts[item['slab_id']] = item['count']
 
     # Group specimens by slab
-    specimens = list(specimen_list)
     grouped_specimens = []
-    for slab_id, group in groupby(specimens, key=lambda x: (x.slab.id if x.slab else None)):
+    for slab_id, group in groupby(all_specimens, key=lambda x: (x.slab.id if x.slab else None)):
         group_list = list(group)
         slab = group_list[0].slab if group_list[0].slab else None
         
-        # Count images for specimens
+        # Assign pre-fetched image counts to specimens
         for specimen in group_list:
-            specimen.image_count = SpFossilImage.objects.filter(specimen=specimen).count()
+            specimen.image_count = specimen_image_counts.get(specimen.id, 0)
         
-        # Count slab-only images (if slab exists)
+        # Get pre-fetched slab-only image count
         slab_only_image_count = 0
         if slab:
-            slab_only_image_count = SpFossilImage.objects.filter(slab=slab, specimen__isnull=True).count()
+            slab_only_image_count = slab_image_counts.get(slab.id, 0)
         
         grouped_specimens.append({
             'slab': slab,

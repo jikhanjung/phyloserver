@@ -28,7 +28,7 @@
     <thead>
     <tr><td colspan="5" align="left">
      {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
-    </td><td colspan="4" align="right">
+    </td><td colspan="2" align="right">
         <form method="GET" action="{% url 'siriuspasset:specimen_list'%}">
             {% csrf_token %}
             <select name="filter2" id="filter2">
@@ -48,8 +48,6 @@
             <th><div>Images</div></th>
             <th><div>Horizon</div></th>
             <th><div>Remarks</div></th>
-            <th><div>Counterpart?</div></th>
-            <th><div>Memo</div></th>
         </tr>
         {% for group in grouped_specimens %}
             {% for specimen in group.specimens %}
@@ -77,24 +75,22 @@
                     </td>
                     <td>{{ specimen.slab.horizon|default_if_none:'' }}</td>
                     <td>{{ specimen.remarks|default_if_none:'' }}</td>
-                    <td>{{ specimen.counterpart|default_if_none:'' }}</td>
-                    <td>{{ specimen.memo|default_if_none:'' }}</td>
                 </tr>
             {% endfor %}
             {% if not forloop.last %}
                 <tr>
-                    <td colspan="9" class="table-divider"></td>
+                    <td colspan="7" class="table-divider"></td>
                 </tr>
             {% endif %}
         {% endfor %}
     {% else %}
-        <tr><td colspan="9">No specimens are available.</td></tr>
+        <tr><td colspan="7">No specimens are available.</td></tr>
     {% endif %}
     </tbody>
     <tfooter>
-        <tr><td colspan="5" width="400" align="right">
+        <tr><td colspan="4" width="400" align="right">
             {% include "nkfpaginator.html" %}
-        </td><td colspan="4" width="400" align="right">
+        </td><td colspan="3" width="400" align="right">
             <a href="{% url 'siriuspasset:add_specimen' %}">[Add specimen]</a>
         </td></tr>
     </tfooter>
