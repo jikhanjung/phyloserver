@@ -280,12 +280,21 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"Row {index+2}: Missing slab number in '{excel_headers['slab']}' column, skipping"))
                 continue
             
+            # Handle float conversion for number-only values (Excel reads numbers as floats)
+            if isinstance(slab_no_raw, float) and slab_no_raw.is_integer():
+                slab_no_raw = int(slab_no_raw)
+                self.stdout.write(f"Converting float to integer: {slab_no_raw}")
+            
             # Ensure the slab number is a string
             slab_no_raw = str(slab_no_raw)
             
             # Check if the slab number is just a number without prefix-year
-            if re.match(r'^\d+$', slab_no_raw):
+            if re.match(r'^\d+$', slab_no_raw) or re.match(r'^\d+\.0$', slab_no_raw):
                 # It's just a number, use prefix and year from filename
+                # Remove any decimal part (like .0) if present
+                if '.' in slab_no_raw:
+                    slab_no_raw = slab_no_raw.split('.')[0]
+                    
                 slab_number = slab_no_raw.strip().zfill(4)  # Pad to 4 digits
                 slab_no = f"{prefix}-{year}-{slab_number}"
                 self.stdout.write(self.style.SUCCESS(f'Auto-completed slab number from {slab_no_raw} to {slab_no}'))
