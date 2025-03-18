@@ -638,64 +638,77 @@ class Command(BaseCommand):
                 view_type = slab_parentheses_match.group(2)  # dorsal or ventral
                 slab_no = f"{prefix}-{year}-{slab_number}"
                 
-                # Find the slab
+                # Find or create the slab
                 if slab_no in slabs:
                     slab = slabs[slab_no]
-                    self.stdout.write(f'Matched to slab {slab_no} ({view_type} view)')
+                    self.stdout.write(f'Matched to existing slab {slab_no} ({view_type} view)')
                 else:
-                    self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
                     # Try to find it in the database directly
                     try:
                         slab = SpSlab.objects.get(slab_no=slab_no)
-                        self.stdout.write(f'Found slab {slab_no} in database instead')
+                        self.stdout.write(f'Found slab {slab_no} in database')
                     except SpSlab.DoesNotExist:
-                        if debug:
-                            self.stdout.write(f'Slab {slab_no} not found in database either')
-                        skipped_no_match_count += 1
-                        continue
+                        # Create new slab
+                        slab = SpSlab(slab_no=slab_no)
+                        slab.save()
+                        slabs[slab_no] = slab
+                        self.stdout.write(self.style.SUCCESS(f'Created new slab {slab_no} from image file'))
             elif specimen_with_letter_match and not slab_images_only:
                 # This is a specimen image with a letter (e.g., SP-2016-0001A)
                 slab_number = specimen_with_letter_match.group(1).zfill(4)
                 specimen_letter = specimen_with_letter_match.group(2)
+                slab_no = f"{prefix}-{year}-{slab_number}"
                 specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_letter}"
                 
-                # Find the specimen
+                # Find or create the slab first
+                if slab_no in slabs:
+                    slab = slabs[slab_no]
+                else:
+                    try:
+                        slab = SpSlab.objects.get(slab_no=slab_no)
+                    except SpSlab.DoesNotExist:
+                        # Create new slab
+                        slab = SpSlab(slab_no=slab_no)
+                        slab.save()
+                        slabs[slab_no] = slab
+                        self.stdout.write(self.style.SUCCESS(f'Created new slab {slab_no} from image file'))
+                
+                # Find or create the specimen
                 if specimen_no in specimens:
                     specimen = specimens[specimen_no]
-                    slab = specimen.slab
-                    self.stdout.write(f'Matched to specimen with letter: {specimen_no}')
+                    self.stdout.write(f'Matched to existing specimen: {specimen_no}')
                 else:
-                    self.stdout.write(f'Specimen {specimen_no} not found in the database for image: {filename}')
-                    # Try to find it in the database directly
                     try:
                         specimen = SpFossilSpecimen.objects.get(specimen_no=specimen_no)
-                        slab = specimen.slab
-                        self.stdout.write(f'Found specimen {specimen_no} in database instead')
+                        self.stdout.write(f'Found specimen {specimen_no} in database')
                     except SpFossilSpecimen.DoesNotExist:
-                        if debug:
-                            self.stdout.write(f'Specimen {specimen_no} not found in database either')
-                        skipped_no_match_count += 1
-                        continue
+                        # Create new specimen
+                        specimen = SpFossilSpecimen(
+                            specimen_no=specimen_no,
+                            slab=slab
+                        )
+                        specimen.save()
+                        specimens[specimen_no] = specimen
+                        self.stdout.write(self.style.SUCCESS(f'Created new specimen {specimen_no} from image file'))
             elif slab_match:
                 # This is a slab image (also handles SP-2017-1003-2.JPG as a slab image)
                 slab_number = slab_match.group(1).zfill(4)
                 slab_no = f"{prefix}-{year}-{slab_number}"
                 
-                # Find the slab
+                # Find or create the slab
                 if slab_no in slabs:
                     slab = slabs[slab_no]
-                    self.stdout.write(f'Matched to slab: {slab_no}')
+                    self.stdout.write(f'Matched to existing slab: {slab_no}')
                 else:
-                    self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
-                    # Try to find it in the database directly
                     try:
                         slab = SpSlab.objects.get(slab_no=slab_no)
-                        self.stdout.write(f'Found slab {slab_no} in database instead')
+                        self.stdout.write(f'Found slab {slab_no} in database')
                     except SpSlab.DoesNotExist:
-                        if debug:
-                            self.stdout.write(f'Slab {slab_no} not found in database either')
-                        skipped_no_match_count += 1
-                        continue
+                        # Create new slab
+                        slab = SpSlab(slab_no=slab_no)
+                        slab.save()
+                        slabs[slab_no] = slab
+                        self.stdout.write(self.style.SUCCESS(f'Created new slab {slab_no} from image file'))
             else:
                 if debug:
                     self.stdout.write(f'Could not extract specimen or slab number from filename: {filename}')
