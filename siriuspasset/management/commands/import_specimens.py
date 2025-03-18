@@ -283,38 +283,43 @@ class Command(BaseCommand):
             # Ensure the slab number is a string
             slab_no_raw = str(slab_no_raw)
             
-            # slab number is SP-2016-1 format. 
-            # if the slab number is not in this format, skip the row
-            if not re.match(r'^SP-\d{4}-\d+$', slab_no_raw):
-                self.stdout.write(self.style.WARNING(f"Row {index+2}: Invalid slab number format: {slab_no_raw}, skipping"))
-                continue
-            
-            # Extract raw number, removing any year prefixes
-            slab_no_match = re.search(r'(\w+)-(\d+)-(\d+)', slab_no_raw)
-            if slab_no_match:
-                prefix = slab_no_match.group(1)
-                year = slab_no_match.group(2)
-                slab_number = slab_no_match.group(3)
-                
-                # if the year is not the same as the year in the filename, skip the row
-                if year != year:
-                    self.stdout.write(self.style.WARNING(f"Row {index+2}: Invalid year: {year}, skipping"))
-                    continue
-                
-                # if the prefix is not the same as the prefix in the filename, skip the row
-                if prefix != prefix:
-                    self.stdout.write(self.style.WARNING(f"Row {index+2}: Invalid prefix: {prefix}, skipping"))
-                    continue
-
-                # if the slab number is not a number, skip the row
-                if not slab_number.isdigit():
-                    self.stdout.write(self.style.WARNING(f"Row {index+2}: Invalid slab number: {slab_number}, skipping"))
-                    continue
-
-                # format the slab number to 4 digits
-                slab_number = slab_number.zfill(4)
-
+            # Check if the slab number is just a number without prefix-year
+            if re.match(r'^\d+$', slab_no_raw):
+                # It's just a number, use prefix and year from filename
+                slab_number = slab_no_raw.strip().zfill(4)  # Pad to 4 digits
                 slab_no = f"{prefix}-{year}-{slab_number}"
+                self.stdout.write(self.style.SUCCESS(f'Auto-completed slab number from {slab_no_raw} to {slab_no}'))
+            # Regular SP-YYYY-N format
+            elif re.match(r'^SP-\d{4}-\d+$', slab_no_raw):
+                # Extract raw number, removing any year prefixes
+                slab_no_match = re.search(r'(\w+)-(\d+)-(\d+)', slab_no_raw)
+                if slab_no_match:
+                    extracted_prefix = slab_no_match.group(1)
+                    extracted_year = slab_no_match.group(2)
+                    slab_number = slab_no_match.group(3)
+                    
+                    # if the year is not the same as the year in the filename, skip the row
+                    if extracted_year != year:
+                        self.stdout.write(self.style.WARNING(f"Row {index+2}: Year in slab number ({extracted_year}) doesn't match filename year ({year}), skipping"))
+                        continue
+                    
+                    # if the prefix is not the same as the prefix in the filename, skip the row
+                    if extracted_prefix != prefix:
+                        self.stdout.write(self.style.WARNING(f"Row {index+2}: Prefix in slab number ({extracted_prefix}) doesn't match filename prefix ({prefix}), skipping"))
+                        continue
+
+                    # if the slab number is not a number, skip the row
+                    if not slab_number.isdigit():
+                        self.stdout.write(self.style.WARNING(f"Row {index+2}: Invalid slab number part: {slab_number}, skipping"))
+                        continue
+                    
+                    # format the slab number to 4 digits
+                    slab_number = slab_number.zfill(4)
+
+                    slab_no = f"{prefix}-{year}-{slab_number}"
+                else:
+                    self.stdout.write(self.style.WARNING(f'Row {index+2}: Invalid slab number format: {slab_no_raw}, skipping'))
+                    continue
             else:
                 self.stdout.write(self.style.WARNING(f'Row {index+2}: Invalid slab number format: {slab_no_raw}, skipping'))
                 continue
@@ -400,13 +405,24 @@ class Command(BaseCommand):
                 
                 # Generate specimen number based on counter without zero padding
                 specimen_number = str(auto_specimen_counters[slab_no])
-                specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_number}"
+                
+                # Extract parts from slab_no to build specimen_no
+                slab_parts = slab_no.split('-')
+                if len(slab_parts) >= 3:
+                    specimen_no = f"{slab_parts[0]}-{slab_parts[1]}-{slab_parts[2]}-{specimen_number}"
+                else:
+                    specimen_no = f"{slab_no}-{specimen_number}"
                 
                 # Keep incrementing until we find an unused specimen number
                 while SpFossilSpecimen.objects.filter(specimen_no=specimen_no, slab=slab).exists():
                     auto_specimen_counters[slab_no] += 1
                     specimen_number = str(auto_specimen_counters[slab_no])
-                    specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_number}"
+                    
+                    # Extract parts from slab_no to build specimen_no
+                    if len(slab_parts) >= 3:
+                        specimen_no = f"{slab_parts[0]}-{slab_parts[1]}-{slab_parts[2]}-{specimen_number}"
+                    else:
+                        specimen_no = f"{slab_no}-{specimen_number}"
                 
                 auto_specimen_counters[slab_no] += 1
                 is_auto_generated = True
@@ -424,7 +440,13 @@ class Command(BaseCommand):
                 if re.match(r'^[A-Za-z]$', specimen_no_raw):
                     # If it's just a single letter (A, B, C, etc.), use it directly
                     specimen_number = specimen_no_raw
-                    specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_number}"
+                    
+                    # Extract parts from slab_no to build specimen_no
+                    slab_parts = slab_no.split('-')
+                    if len(slab_parts) >= 3:
+                        specimen_no = f"{slab_parts[0]}-{slab_parts[1]}-{slab_parts[2]}-{specimen_number}"
+                    else:
+                        specimen_no = f"{slab_no}-{specimen_number}"
                 else:
                     # Try to extract numeric and alphabetic parts
                     specimen_no_match = re.search(r'(\d+)([A-Za-z])?', specimen_no_raw)
@@ -432,7 +454,13 @@ class Command(BaseCommand):
                         specimen_number = specimen_no_match.group(1)
                         # Don't pad the number
                         suffix = specimen_no_match.group(2) if specimen_no_match.group(2) else ''
-                        specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_number}{suffix}"
+                        
+                        # Extract parts from slab_no to build specimen_no
+                        slab_parts = slab_no.split('-')
+                        if len(slab_parts) >= 3:
+                            specimen_no = f"{slab_parts[0]}-{slab_parts[1]}-{slab_parts[2]}-{specimen_number}{suffix}"
+                        else:
+                            specimen_no = f"{slab_no}-{specimen_number}{suffix}"
                     else:
                         self.stdout.write(self.style.WARNING(f'Row {index+2}: Invalid specimen number format: {specimen_no_raw}, skipping'))
                         continue
@@ -527,13 +555,10 @@ class Command(BaseCommand):
         self.stdout.write(f'Looking for images in: {photo_dir}')
         self.stdout.write(f'Searching for pattern: {prefix}-{year}')
         
-        # Only search in directories that match the prefix-year pattern
-        prefix_year_pattern = rf"{prefix}-{year}"  # Pattern like "SP-2016"
+        # Pattern like "SP-2016"
+        prefix_year_pattern = rf"{prefix}-{year}"
         
         for root, dirs, files in os.walk(photo_dir):
-            # Check if this directory or any parent directory contains the prefix-year
-            rel_path = os.path.relpath(root, photo_dir)
-            
             for file in files:
                 if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')):
                     all_image_files.append(os.path.join(root, file))
@@ -581,8 +606,8 @@ class Command(BaseCommand):
             slab_parentheses_match = re.search(rf'{prefix}-{year}-(\d+)\((\w+)\)', filename, re.IGNORECASE)
             
             # Check for standard slab or specimen patterns
-            slab_match = re.search(rf'{prefix}-{year}-(\d+)-(\d+)', filename, re.IGNORECASE)
-            specimen_match = re.search(rf'{prefix}-{year}-(\d+)(\d*[A-Za-z]?)', filename, re.IGNORECASE)
+            slab_match = re.search(rf'{prefix}-{year}-(\d+)(?:-(\d+))?', filename, re.IGNORECASE)
+            specimen_match = re.search(rf'{prefix}-{year}-(\d+)([A-Za-z])', filename, re.IGNORECASE)
             
             # Determine if this is a specimen or slab image
             specimen = None
@@ -610,56 +635,15 @@ class Command(BaseCommand):
                         skipped_no_match_count += 1
                         continue
             elif slab_match:
-                # This is a slab image
+                # This is a slab or specimen image based on pattern
                 slab_number = slab_match.group(1).zfill(4)
                 slab_no = f"{prefix}-{year}-{slab_number}"
                 
-                # Find the slab
-                if slab_no in slabs:
-                    slab = slabs[slab_no]
-                    self.stdout.write(f'Matched to slab: {slab_no}')
-                else:
-                    self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
-                    # Try to find it in the database directly
-                    try:
-                        slab = SpSlab.objects.get(slab_no=slab_no)
-                        self.stdout.write(f'Found slab {slab_no} in database instead')
-                    except SpSlab.DoesNotExist:
-                        if debug:
-                            self.stdout.write(f'Slab {slab_no} not found in database either')
-                        skipped_no_match_count += 1
-                        continue            
-            elif specimen_match and not slab_images_only:
-                # This is a specimen image
-                slab_number = specimen_match.group(1).zfill(4)
-                specimen_number = specimen_match.group(2)
+                # Check if there's a number after the slab number - if so, it's a specimen image
+                specimen_number = slab_match.group(2) if slab_match.group(2) else None
                 
-                # Format specimen number for lookup
-                specimen_no_match = re.search(r'(\d+)([A-Za-z])?', specimen_number)
-                if specimen_no_match:
-                    specimen_number = specimen_no_match.group(1)  # No padding
-                    suffix = specimen_no_match.group(2) if specimen_no_match.group(2) else ''
-                    specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_number}{suffix}"
-                    
-                    # Find the specimen
-                    if specimen_no in specimens:
-                        specimen = specimens[specimen_no]
-                        slab = specimen.slab
-                        self.stdout.write(f'Matched to specimen: {specimen_no}')
-                    else:
-                        self.stdout.write(f'Specimen {specimen_no} not found in the database for image: {filename}')
-                        # Try to find it in the database directly
-                        try:
-                            specimen = SpFossilSpecimen.objects.get(specimen_no=specimen_no)
-                            slab = specimen.slab
-                            self.stdout.write(f'Found specimen {specimen_no} in database instead')
-                        except SpFossilSpecimen.DoesNotExist:
-                            if debug:
-                                self.stdout.write(f'Specimen {specimen_no} not found in database either')
-                            skipped_no_match_count += 1
-                            continue
-                elif re.match(r'^[A-Za-z]$', specimen_number):
-                    # If it's just a single letter (A, B, C, etc.), use it directly
+                if specimen_number and not slab_images_only:
+                    # This is a specimen image
                     specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_number}"
                     
                     # Find the specimen
@@ -680,10 +664,45 @@ class Command(BaseCommand):
                             skipped_no_match_count += 1
                             continue
                 else:
-                    if debug:
-                        self.stdout.write(f'Invalid specimen number format in filename: {filename}')
-                    skipped_no_match_count += 1
-                    continue
+                    # This is a slab image
+                    # Find the slab
+                    if slab_no in slabs:
+                        slab = slabs[slab_no]
+                        self.stdout.write(f'Matched to slab: {slab_no}')
+                    else:
+                        self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
+                        # Try to find it in the database directly
+                        try:
+                            slab = SpSlab.objects.get(slab_no=slab_no)
+                            self.stdout.write(f'Found slab {slab_no} in database instead')
+                        except SpSlab.DoesNotExist:
+                            if debug:
+                                self.stdout.write(f'Slab {slab_no} not found in database either')
+                            skipped_no_match_count += 1
+                            continue
+            elif specimen_match and not slab_images_only:
+                # This is a specimen image with a letter (e.g., SP-2016-0001A)
+                slab_number = specimen_match.group(1).zfill(4)
+                specimen_letter = specimen_match.group(2)
+                specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_letter}"
+                
+                # Find the specimen
+                if specimen_no in specimens:
+                    specimen = specimens[specimen_no]
+                    slab = specimen.slab
+                    self.stdout.write(f'Matched to specimen (with letter): {specimen_no}')
+                else:
+                    self.stdout.write(f'Specimen {specimen_no} not found in the database for image: {filename}')
+                    # Try to find it in the database directly
+                    try:
+                        specimen = SpFossilSpecimen.objects.get(specimen_no=specimen_no)
+                        slab = specimen.slab
+                        self.stdout.write(f'Found specimen {specimen_no} in database instead')
+                    except SpFossilSpecimen.DoesNotExist:
+                        if debug:
+                            self.stdout.write(f'Specimen {specimen_no} not found in database either')
+                        skipped_no_match_count += 1
+                        continue
             else:
                 if debug:
                     self.stdout.write(f'Could not extract specimen or slab number from filename: {filename}')
