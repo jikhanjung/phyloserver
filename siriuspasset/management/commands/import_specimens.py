@@ -576,17 +576,39 @@ class Command(BaseCommand):
             filename = os.path.basename(image_path)
             self.stdout.write(f'Processing image: {filename}')
             
-            slab_match = None
+            # Check for slab images with parentheses patterns first: SP-2016-0001(dorsal).jpg or SP-2016-0001(ventral).jpg
+            slab_parentheses_match = re.search(rf'{prefix}-{year}-(\d+)\((\w+)\)', filename, re.IGNORECASE)
+            
+            # Check for standard slab or specimen patterns
             slab_match = re.search(rf'{prefix}-{year}-(\d+)-(\d+)', filename, re.IGNORECASE)
-
-            # Try to match specimen pattern first (e.g., SP-2016-0001-1)
             specimen_match = re.search(rf'{prefix}-{year}-(\d+)(\d*[A-Za-z]?)', filename, re.IGNORECASE)
             
             # Determine if this is a specimen or slab image
             specimen = None
             slab = None
 
-            if slab_match:
+            if slab_parentheses_match:
+                # This is a slab image with (dorsal) or (ventral) notation
+                slab_number = slab_parentheses_match.group(1).zfill(4)
+                view_type = slab_parentheses_match.group(2)  # dorsal or ventral
+                slab_no = f"{prefix}-{year}-{slab_number}"
+                
+                # Find the slab
+                if slab_no in slabs:
+                    slab = slabs[slab_no]
+                    self.stdout.write(f'Matched to slab {slab_no} ({view_type} view)')
+                else:
+                    self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
+                    # Try to find it in the database directly
+                    try:
+                        slab = SpSlab.objects.get(slab_no=slab_no)
+                        self.stdout.write(f'Found slab {slab_no} in database instead')
+                    except SpSlab.DoesNotExist:
+                        if debug:
+                            self.stdout.write(f'Slab {slab_no} not found in database either')
+                        skipped_no_match_count += 1
+                        continue
+            elif slab_match:
                 # This is a slab image
                 slab_number = slab_match.group(1).zfill(4)
                 slab_no = f"{prefix}-{year}-{slab_number}"
