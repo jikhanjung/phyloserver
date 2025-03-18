@@ -384,59 +384,66 @@ class Command(BaseCommand):
                         slab=slab
                     )
                     
-                    # Start counter at 1 or the highest existing number + 1
+                    # Get all used letters/letter combinations for this slab
+                    used_letters = set()
                     if existing_specimens.exists():
-                        max_number = 0
-                        used_letters = set()
                         for existing in existing_specimens:
                             # Extract the specimen identifier from the full number
                             parts = existing.specimen_no.split('-')
                             if len(parts) >= 4:  # Format should be PREFIX-YEAR-SLAB-SPECIMEN
                                 specimen_identifier = parts[-1]
                                 
-                                # Check if it's a single letter
-                                if re.match(r'^[A-Za-z]$', specimen_identifier):
-                                    used_letters.add(specimen_identifier)
-                                # Check if it's a number
-                                elif re.match(r'^\d+$', specimen_identifier):
-                                    try:
-                                        num = int(specimen_identifier)
-                                        if num > max_number:
-                                            max_number = num
-                                    except ValueError:
-                                        pass
-                        
-                        # If there are any used letters, but no numbers, start at 1
-                        # Otherwise, start at the next number after max
-                        auto_specimen_counters[slab_no] = max_number + 1
-                    else:
-                        auto_specimen_counters[slab_no] = 1
+                                # Check if it's a letter or letter combination (not a number)
+                                if re.match(r'^[A-Za-z]+$', specimen_identifier):
+                                    used_letters.add(specimen_identifier.upper())
+                    
+                    auto_specimen_counters[slab_no] = used_letters
                 
-                # Generate specimen number based on counter without zero padding
-                specimen_number = str(auto_specimen_counters[slab_no])
+                # Generate the next available letter in Excel style (A-Z, then AA, AB, etc)
+                used_letters = auto_specimen_counters[slab_no]
+                
+                # Helper function to convert a number to Excel-style column letters
+                def num_to_excel_col(n):
+                    result = ""
+                    while n > 0:
+                        n, remainder = divmod(n - 1, 26)
+                        result = chr(65 + remainder) + result
+                    return result
+                
+                # Find the next available letter combination
+                next_letter_index = 1
+                while True:
+                    specimen_letter = num_to_excel_col(next_letter_index)
+                    if specimen_letter not in used_letters:
+                        break
+                    next_letter_index += 1
+                
+                # Add the used letter combination to the set
+                auto_specimen_counters[slab_no].add(specimen_letter)
                 
                 # Extract parts from slab_no to build specimen_no
                 slab_parts = slab_no.split('-')
                 if len(slab_parts) >= 3:
-                    specimen_no = f"{slab_parts[0]}-{slab_parts[1]}-{slab_parts[2]}-{specimen_number}"
+                    specimen_no = f"{slab_parts[0]}-{slab_parts[1]}-{slab_parts[2]}-{specimen_letter}"
                 else:
-                    specimen_no = f"{slab_no}-{specimen_number}"
+                    specimen_no = f"{slab_no}-{specimen_letter}"
                 
-                # Keep incrementing until we find an unused specimen number
+                # Keep trying letters until we find an unused specimen number
                 while SpFossilSpecimen.objects.filter(specimen_no=specimen_no, slab=slab).exists():
-                    auto_specimen_counters[slab_no] += 1
-                    specimen_number = str(auto_specimen_counters[slab_no])
+                    next_letter_index += 1
+                    specimen_letter = num_to_excel_col(next_letter_index)
+                    
+                    auto_specimen_counters[slab_no].add(specimen_letter)
                     
                     # Extract parts from slab_no to build specimen_no
                     if len(slab_parts) >= 3:
-                        specimen_no = f"{slab_parts[0]}-{slab_parts[1]}-{slab_parts[2]}-{specimen_number}"
+                        specimen_no = f"{slab_parts[0]}-{slab_parts[1]}-{slab_parts[2]}-{specimen_letter}"
                     else:
-                        specimen_no = f"{slab_no}-{specimen_number}"
+                        specimen_no = f"{slab_no}-{specimen_letter}"
                 
-                auto_specimen_counters[slab_no] += 1
                 is_auto_generated = True
                 
-                self.stdout.write(self.style.SUCCESS(f'Auto-generated specimen number: {specimen_no} for slab {slab.slab_no}'))
+                self.stdout.write(self.style.SUCCESS(f'Auto-generated specimen ID with Excel-style letter: {specimen_no} for slab {slab.slab_no}'))
                 if debug:
                     self.stdout.write(f'  - Row {index+2}: No specimen number provided, generated automatically')
             else:
@@ -614,9 +621,12 @@ class Command(BaseCommand):
             # Check for slab images with parentheses patterns first: SP-2016-0001(dorsal).jpg or SP-2016-0001(ventral).jpg
             slab_parentheses_match = re.search(rf'{prefix}-{year}-(\d+)\((\w+)\)', filename, re.IGNORECASE)
             
-            # Check for standard slab or specimen patterns
-            slab_match = re.search(rf'{prefix}-{year}-(\d+)(?:-(\d+))?', filename, re.IGNORECASE)
-            specimen_match = re.search(rf'{prefix}-{year}-(\d+)([A-Za-z])', filename, re.IGNORECASE)
+            # Check for specimens with letter identifiers: SP-2016-0001A or SP-2016-0001A-2.jpg
+            specimen_with_letter_match = re.search(rf'{prefix}-{year}-(\d+)([A-Za-z])(?:-\d+)?', filename, re.IGNORECASE)
+            
+            # All other patterns (including SP-2017-1003-2.JPG) should be treated as slab images
+            # This will match patterns like SP-2016-0001.jpg and SP-2016-0001-2.jpg
+            slab_match = re.search(rf'{prefix}-{year}-(\d+)(?:-\d+)?', filename, re.IGNORECASE)
             
             # Determine if this is a specimen or slab image
             specimen = None
@@ -643,63 +653,17 @@ class Command(BaseCommand):
                             self.stdout.write(f'Slab {slab_no} not found in database either')
                         skipped_no_match_count += 1
                         continue
-            elif slab_match:
-                # This is a slab or specimen image based on pattern
-                slab_number = slab_match.group(1).zfill(4)
-                slab_no = f"{prefix}-{year}-{slab_number}"
-                
-                # Check if there's a number after the slab number - if so, it's a specimen image
-                specimen_number = slab_match.group(2) if slab_match.group(2) else None
-                
-                if specimen_number and not slab_images_only:
-                    # This is a specimen image
-                    specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_number}"
-                    
-                    # Find the specimen
-                    if specimen_no in specimens:
-                        specimen = specimens[specimen_no]
-                        slab = specimen.slab
-                        self.stdout.write(f'Matched to specimen: {specimen_no}')
-                    else:
-                        self.stdout.write(f'Specimen {specimen_no} not found in the database for image: {filename}')
-                        # Try to find it in the database directly
-                        try:
-                            specimen = SpFossilSpecimen.objects.get(specimen_no=specimen_no)
-                            slab = specimen.slab
-                            self.stdout.write(f'Found specimen {specimen_no} in database instead')
-                        except SpFossilSpecimen.DoesNotExist:
-                            if debug:
-                                self.stdout.write(f'Specimen {specimen_no} not found in database either')
-                            skipped_no_match_count += 1
-                            continue
-                else:
-                    # This is a slab image
-                    # Find the slab
-                    if slab_no in slabs:
-                        slab = slabs[slab_no]
-                        self.stdout.write(f'Matched to slab: {slab_no}')
-                    else:
-                        self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
-                        # Try to find it in the database directly
-                        try:
-                            slab = SpSlab.objects.get(slab_no=slab_no)
-                            self.stdout.write(f'Found slab {slab_no} in database instead')
-                        except SpSlab.DoesNotExist:
-                            if debug:
-                                self.stdout.write(f'Slab {slab_no} not found in database either')
-                            skipped_no_match_count += 1
-                            continue
-            elif specimen_match and not slab_images_only:
+            elif specimen_with_letter_match and not slab_images_only:
                 # This is a specimen image with a letter (e.g., SP-2016-0001A)
-                slab_number = specimen_match.group(1).zfill(4)
-                specimen_letter = specimen_match.group(2)
+                slab_number = specimen_with_letter_match.group(1).zfill(4)
+                specimen_letter = specimen_with_letter_match.group(2)
                 specimen_no = f"{prefix}-{year}-{slab_number}-{specimen_letter}"
                 
                 # Find the specimen
                 if specimen_no in specimens:
                     specimen = specimens[specimen_no]
                     slab = specimen.slab
-                    self.stdout.write(f'Matched to specimen (with letter): {specimen_no}')
+                    self.stdout.write(f'Matched to specimen with letter: {specimen_no}')
                 else:
                     self.stdout.write(f'Specimen {specimen_no} not found in the database for image: {filename}')
                     # Try to find it in the database directly
@@ -710,6 +674,26 @@ class Command(BaseCommand):
                     except SpFossilSpecimen.DoesNotExist:
                         if debug:
                             self.stdout.write(f'Specimen {specimen_no} not found in database either')
+                        skipped_no_match_count += 1
+                        continue
+            elif slab_match:
+                # This is a slab image (also handles SP-2017-1003-2.JPG as a slab image)
+                slab_number = slab_match.group(1).zfill(4)
+                slab_no = f"{prefix}-{year}-{slab_number}"
+                
+                # Find the slab
+                if slab_no in slabs:
+                    slab = slabs[slab_no]
+                    self.stdout.write(f'Matched to slab: {slab_no}')
+                else:
+                    self.stdout.write(f'Slab {slab_no} not found in the database for image: {filename}')
+                    # Try to find it in the database directly
+                    try:
+                        slab = SpSlab.objects.get(slab_no=slab_no)
+                        self.stdout.write(f'Found slab {slab_no} in database instead')
+                    except SpSlab.DoesNotExist:
+                        if debug:
+                            self.stdout.write(f'Slab {slab_no} not found in database either')
                         skipped_no_match_count += 1
                         continue
             else:
