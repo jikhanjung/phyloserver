@@ -1,0 +1,108 @@
+{% extends "spbase.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Directory Scan History</h2>
+            <p class="text-muted">Showing history of directory scans for new images</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'siriuspasset:recent_activities' %}" class="btn btn-info">
+                <i class="bi bi-clock-history"></i> Recent Activities
+            </a>
+        </div>
+    </div>
+
+    <!-- Scan List Table -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Scan History</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Directory</th>
+                            <th>Date/Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Files Found</th>
+                            <th>Images Imported</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if scans %}
+                            {% for scan in scans %}
+                                <tr>
+                                    <td>{{ scan.id }}</td>
+                                    <td>{{ scan.scan_directory }}</td>
+                                    <td>{{ scan.scan_start_time|date:"Y-m-d H:i:s" }}</td>
+                                    <td>
+                                        {% if scan.duration %}
+                                            {{ scan.duration|floatformat:1 }} seconds
+                                        {% else %}
+                                            In progress
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if scan.status == 'completed' %}
+                                            <span class="badge bg-success">Completed</span>
+                                        {% elif scan.status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">In Progress</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ scan.total_files_found }}</td>
+                                    <td>{{ scan.new_images_imported }}</td>
+                                    <td>
+                                        <a href="{% url 'siriuspasset:directory_scan_detail' scan.id %}" class="btn btn-sm btn-primary">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <p class="text-muted mb-0">No scan history found.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="mt-4">
+        {% include "nkfpaginator.html" %}
+    </div>
+    {% endif %}
+
+    <!-- Help Section -->
+    <div class="card mt-4">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Run a New Scan</h5>
+        </div>
+        <div class="card-body">
+            <p>To run a new directory scan, use the management command:</p>
+            <pre class="bg-light p-3 rounded"><code>python manage.py scan_for_new_images /path/to/photos --pattern="SP-" [--debug] [--skip-existing]</code></pre>
+            <p class="text-muted mt-3">Options:</p>
+            <ul class="text-muted">
+                <li><strong>--pattern</strong>: Pattern to match in filenames (e.g., SP-2016)</li>
+                <li><strong>--skip-existing</strong>: Skip existing images instead of updating them</li>
+                <li><strong>--debug</strong>: Enable debug output</li>
+                <li><strong>--slab-images-only</strong>: Process images as slab images only</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %} 

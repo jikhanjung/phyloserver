@@ -1,0 +1,162 @@
+{% extends "spbase.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Title -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Directory Scan Details</h2>
+            <p class="text-muted">Scan #{{ scan.id }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'siriuspasset:directory_scan_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Scan History
+            </a>
+        </div>
+    </div>
+
+    <!-- Scan Information Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Scan Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Directory</th>
+                            <td>{{ scan.scan_directory }}</td>
+                        </tr>
+                        <tr>
+                            <th>Pattern</th>
+                            <td>{{ scan.scan_pattern }}</td>
+                        </tr>
+                        <tr>
+                            <th>Start Time</th>
+                            <td>{{ scan.scan_start_time|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                        <tr>
+                            <th>End Time</th>
+                            <td>
+                                {% if scan.scan_end_time %}
+                                    {{ scan.scan_end_time|date:"Y-m-d H:i:s" }}
+                                {% else %}
+                                    In progress
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Status</th>
+                            <td>
+                                {% if scan.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% elif scan.status == 'failed' %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% else %}
+                                    <span class="badge bg-warning">In Progress</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Duration</th>
+                            <td>
+                                {% if scan.duration %}
+                                    {{ scan.duration|floatformat:1 }} seconds
+                                {% else %}
+                                    In progress
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Initiated By</th>
+                            <td>{{ scan.created_by|default:"System" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Scan Results</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3 text-white bg-info">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Files</h5>
+                            <p class="display-4">{{ scan.total_files_found }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-3 text-white bg-success">
+                        <div class="card-body">
+                            <h5 class="card-title">New Images Imported</h5>
+                            <p class="display-4">{{ scan.new_images_imported }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-3 text-white bg-secondary">
+                        <div class="card-body">
+                            <h5 class="card-title">Duplicate Images</h5>
+                            <p class="display-4">{{ scan.duplicate_images_skipped }}</p>
+                            <p class="card-text">Skipped due to MD5 hash match</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 text-white bg-secondary">
+                        <div class="card-body">
+                            <h5 class="card-title">Existing Images</h5>
+                            <p class="display-4">{{ scan.existing_images_skipped }}</p>
+                            <p class="card-text">Skipped due to existing file</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 text-white bg-secondary">
+                        <div class="card-body">
+                            <h5 class="card-title">Older Files</h5>
+                            <p class="display-4">{{ scan.older_files_skipped }}</p>
+                            <p class="card-text">Skipped files from before last scan</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 text-white {% if scan.error_count > 0 %}bg-danger{% else %}bg-secondary{% endif %}">
+                        <div class="card-body">
+                            <h5 class="card-title">Errors</h5>
+                            <p class="display-4">{{ scan.error_count }}</p>
+                            <p class="card-text">Files that could not be processed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Card -->
+    {% if scan.log_summary %}
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Log Summary</h5>
+        </div>
+        <div class="card-body">
+            <pre class="bg-light p-3 rounded"><code>{{ scan.log_summary }}</code></pre>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

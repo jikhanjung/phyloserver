@@ -4,6 +4,7 @@ from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from PIL import Image as PILImage
+from django.utils import timezone
 
 # Configuration for image directory structure
 # Number of slabs per directory (e.g., 100 gives 0001-0100, 1000 gives 0001-1000)
@@ -208,3 +209,49 @@ class SpFossilImage(models.Model):
         else:
             # Return original image URL if thumbnail doesn't exist
             return self.image_file.url
+
+class DirectoryScan(models.Model):
+    """
+    Records information about directory scans for new images,
+    including when the scan was performed, what directory was scanned,
+    and statistics about the import process.
+    """
+    scan_directory = models.CharField("Scanned Directory", max_length=255, help_text="Path of the scanned directory")
+    scan_start_time = models.DateTimeField("Scan Start Time", auto_now_add=True, help_text="When the scan started")
+    scan_end_time = models.DateTimeField("Scan End Time", null=True, blank=True, help_text="When the scan completed")
+    scan_pattern = models.CharField("File Pattern", max_length=50, help_text="Pattern used to match files")
+    total_files_found = models.IntegerField("Total Files Found", default=0, help_text="Total image files found")
+    new_images_imported = models.IntegerField("New Images Imported", default=0, help_text="Number of new images imported")
+    duplicate_images_skipped = models.IntegerField("Duplicate Images Skipped", default=0, help_text="Number of duplicate images skipped")
+    existing_images_skipped = models.IntegerField("Existing Images Skipped", default=0, help_text="Number of existing images skipped")
+    older_files_skipped = models.IntegerField("Older Files Skipped", default=0, help_text="Number of files skipped because they were created before the last scan")
+    error_count = models.IntegerField("Errors Encountered", default=0, help_text="Number of errors encountered")
+    status = models.CharField("Status", max_length=20, choices=[
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed')
+    ], default='in_progress')
+    log_summary = models.TextField("Log Summary", blank=True, help_text="Summary of the scan log")
+    
+    # User who initiated the scan
+    created_by = models.CharField(max_length=100, blank=True)
+    
+    class Meta:
+        ordering = ['-scan_start_time']
+        verbose_name = 'Directory Scan'
+        verbose_name_plural = 'Directory Scans'
+    
+    def __str__(self):
+        return f"Scan of {self.scan_directory} on {self.scan_start_time.strftime('%Y-%m-%d %H:%M')}"
+    
+    def duration(self):
+        """Returns the duration of the scan in seconds, or None if not completed"""
+        if self.scan_end_time:
+            return (self.scan_end_time - self.scan_start_time).total_seconds()
+        return None
+    
+    def mark_completed(self, status='completed'):
+        """Mark this scan as completed with the given status"""
+        self.status = status
+        self.scan_end_time = timezone.now()
+        self.save()

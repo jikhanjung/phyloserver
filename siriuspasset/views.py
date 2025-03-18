@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from .models import SpFossilSpecimen, SpFossilImage, SpSlab
+from .models import SpFossilSpecimen, SpFossilImage, SpSlab, DirectoryScan
 from django.core.paginator import Paginator
 from .forms import SpFossilSpecimenForm, SpFossilImageForm, SpSlabForm
 from django.urls import reverse
@@ -370,3 +370,36 @@ def recent_activities(request):
     }
     
     return render(request, 'siriuspasset/recent_activities.html', context)
+
+def directory_scan_list(request):
+    """View to display a history of directory scans"""
+    user_obj = get_user_obj(request)
+    
+    # Get scan history
+    scans = DirectoryScan.objects.order_by('-scan_start_time')
+    
+    # Pagination
+    page_no = int(request.GET.get('page', 1))
+    paginator = Paginator(scans, ITEMS_PER_PAGE)
+    page_obj = paginator.get_page(page_no)
+    
+    context = {
+        'user_obj': user_obj,
+        'page_obj': page_obj,
+        'scans': page_obj,
+        'total_scans': scans.count(),
+    }
+    
+    return render(request, 'siriuspasset/directory_scan_list.html', context)
+
+def directory_scan_detail(request, scan_id):
+    """View to display details of a specific directory scan"""
+    user_obj = get_user_obj(request)
+    scan = get_object_or_404(DirectoryScan, pk=scan_id)
+    
+    context = {
+        'user_obj': user_obj,
+        'scan': scan,
+    }
+    
+    return render(request, 'siriuspasset/directory_scan_detail.html', context)
