@@ -16,6 +16,7 @@ from django.utils.text import slugify
 from django.utils import timezone
 from django.contrib.postgres.search import SearchVector
 from siriuspasset.utils import sort_images_by_filename
+import os
 
 # Helper function to get client IP address
 def get_client_ip(request):
@@ -139,26 +140,28 @@ def specimen_detail(request, specimen_id):
     user_obj = get_user_obj(request)
     specimen = get_object_or_404(SpFossilSpecimen, pk=specimen_id)
     
-    # Get all images for this specimen
+    # Get images
     images = SpFossilImage.objects.filter(specimen=specimen)
     
     # Sort images by filename pattern
     sorted_images = sort_images_by_filename(list(images))
-    print(f"Found {len(sorted_images)} images for specimen {specimen.specimen_no}")  # Debug print
     
     # Group images into rows for the gallery (3 images per row)
     IMAGES_PER_ROW = 3
     image_rows = [sorted_images[i:i + IMAGES_PER_ROW] for i in range(0, len(sorted_images), IMAGES_PER_ROW)]
+    
+    # Convert history records to a list to support indexing operations in template
+    history_records = list(specimen.history.all())
     
     context = {
         'specimen': specimen,
         'user_obj': user_obj,
         'image_rows': image_rows,
         'total_images': len(sorted_images),
+        'history_records': history_records,
         'debug_info': {
             'specimen_id': specimen_id,
-            'image_count': len(sorted_images),
-            'specimen_no': specimen.specimen_no
+            'image_count': len(sorted_images)
         }
     }
     
@@ -213,6 +216,8 @@ def add_specimen(request):
                         # Set IP address
                         slab.created_ip = get_client_ip(request)
                         slab.modified_ip = get_client_ip(request)
+                        # Set change reason for history
+                        slab._change_reason = "Initial creation"
                         slab.save()
                     
                     specimen = specimen_form.save(commit=False)
@@ -220,6 +225,8 @@ def add_specimen(request):
                     # Set IP address
                     specimen.created_ip = get_client_ip(request)
                     specimen.modified_ip = get_client_ip(request)
+                    # Set change reason for history
+                    specimen._change_reason = "Initial creation"
                     specimen.save()
                 return HttpResponseRedirect('/siriuspasset/specimen_list')
             except Exception as e:
@@ -264,14 +271,41 @@ def edit_specimen(request,pk):
     
     if request.method == 'POST':
         specimen_form = SpFossilSpecimenForm(request.POST, request.FILES, instance=specimen)
+        
+        # Create a list to hold any errors
+        form_errors = []
+        
         if specimen_form.is_valid():
             specimen = specimen_form.save(commit=False)
             # Set IP address
             specimen.modified_ip = get_client_ip(request)
+            # Set change reason for history
+            specimen._change_reason = "Edit via web interface"
             specimen.save()
-            return HttpResponseRedirect('/siriuspasset/specimen_detail/'+str(specimen.id))
+            
+            # Handle image uploads
+            uploaded_images = request.FILES.getlist('specimen_images')
+            if uploaded_images:
+                for image_file in uploaded_images:
+                    # Create a new image instance
+                    image = SpFossilImage(
+                        specimen=specimen,
+                        slab=specimen.slab,
+                        image_file=image_file,
+                        description=f"Uploaded via web interface"
+                    )
+                    try:
+                        image.save()
+                    except Exception as e:
+                        form_errors.append(f"Error saving image {image_file.name}: {str(e)}")
+            
+            if not form_errors:
+                return HttpResponseRedirect('/siriuspasset/specimen_detail/'+str(specimen.id))
+        else:
+            form_errors.extend([f"{field}: {error}" for field, errors in specimen_form.errors.items() for error in errors])
     else:
         specimen_form = SpFossilSpecimenForm(instance=specimen)
+        form_errors = []
 
     # Get list of all slabs for the dropdown
     all_slabs = SpSlab.objects.all().order_by('slab_no')
@@ -281,13 +315,18 @@ def edit_specimen(request,pk):
     for field in slab_form.fields.values():
         field.disabled = True
     
+    # Get existing images
+    existing_images = SpFossilImage.objects.filter(specimen=specimen)
+    
     return render(request, 'siriuspasset/specimen_form.html', {
         'specimen_form': specimen_form,
         'slab_form': slab_form,
         'user_obj': user_obj,
         'all_slabs': all_slabs,
         'existing_slab': specimen.slab,
-        'editing': True
+        'editing': True,
+        'existing_images': existing_images,
+        'errors': form_errors
     })
 
 def delete_specimen(request, pk):
@@ -331,12 +370,16 @@ def slab_detail(request, slab_id):
             'total_images': len(sorted_spec_images)
         })
     
+    # Convert history records to a list to support indexing operations in template
+    history_records = list(slab.history.all())
+    
     context = {
         'slab': slab,
         'user_obj': user_obj,
         'slab_image_rows': slab_image_rows,
         'slab_total_images': len(sorted_slab_images),
         'specimens_with_images': specimen_with_images,
+        'history_records': history_records,
         'debug_info': {
             'slab_id': slab_id,
             'slab_image_count': len(sorted_slab_images),
@@ -358,6 +401,8 @@ def add_slab(request):
             # Set IP address
             slab.created_ip = get_client_ip(request)
             slab.modified_ip = get_client_ip(request)
+            # Set change reason for history
+            slab._change_reason = "Initial creation"
             slab.save()
             return HttpResponseRedirect(f'/siriuspasset/slab_detail/{slab.id}')
     else:
@@ -374,21 +419,51 @@ def edit_slab(request, pk):
     user_obj = get_user_obj(request)
     slab = get_object_or_404(SpSlab, pk=pk)
     
+    # Create a list to hold any errors
+    form_errors = []
+
     if request.method == 'POST':
-        form = SpSlabForm(request.POST, instance=slab)
+        form = SpSlabForm(request.POST, request.FILES, instance=slab)
         if form.is_valid():
             slab = form.save(commit=False)
             # Set IP address
             slab.modified_ip = get_client_ip(request)
+            # Set change reason for history
+            slab._change_reason = "Edit via web interface"
             slab.save()
-            return HttpResponseRedirect(f'/siriuspasset/slab_detail/{slab.id}')
+            
+            # Handle image uploads
+            uploaded_images = request.FILES.getlist('slab_images')
+            if uploaded_images:
+                for image_file in uploaded_images:
+                    # Create a new image instance
+                    image = SpFossilImage(
+                        slab=slab,
+                        specimen=None,  # This is a slab image, not a specimen image
+                        image_file=image_file,
+                        description=f"Uploaded via web interface"
+                    )
+                    try:
+                        image.save()
+                    except Exception as e:
+                        form_errors.append(f"Error saving image {image_file.name}: {str(e)}")
+            
+            if not form_errors:
+                return HttpResponseRedirect(f'/siriuspasset/slab_detail/{slab.id}')
+        else:
+            form_errors.extend([f"{field}: {error}" for field, errors in form.errors.items() for error in errors])
     else:
         form = SpSlabForm(instance=slab)
-    
+
+    # Get existing images for this slab (only those not associated with a specimen)
+    existing_images = SpFossilImage.objects.filter(slab=slab, specimen__isnull=True)
+
     return render(request, 'siriuspasset/slab_form.html', {
         'slab_form': form,
         'user_obj': user_obj,
-        'slab': slab
+        'slab': slab,
+        'existing_images': existing_images,
+        'errors': form_errors
     })
 
 def delete_slab(request, pk):
@@ -499,3 +574,37 @@ def directory_scan_detail(request, scan_id):
     }
     
     return render(request, 'siriuspasset/directory_scan_detail.html', context)
+
+def delete_image(request, image_id):
+    """
+    View to delete an image via AJAX request
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Only POST method is allowed'})
+    
+    try:
+        image = get_object_or_404(SpFossilImage, pk=image_id)
+        
+        # Get the specimen ID before deletion for redirection purposes
+        specimen_id = None
+        if image.specimen:
+            specimen_id = image.specimen.id
+        
+        # Get the image file path for deletion
+        image_path = image.image_file.path if image.image_file else None
+        
+        # Delete the image record from the database
+        image.delete()
+        
+        # Delete the actual file if it exists
+        if image_path and os.path.exists(image_path):
+            os.remove(image_path)
+            
+            # Try to delete the thumbnail if it exists
+            thumbnail_path = os.path.join(os.path.dirname(image_path), 'thumbnails', os.path.basename(image_path))
+            if os.path.exists(thumbnail_path):
+                os.remove(thumbnail_path)
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})

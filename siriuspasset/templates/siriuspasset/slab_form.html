@@ -1,4 +1,5 @@
 {% extends "spbase.html" %}
+{% load custom_filters %}
 {% block content %}
 <div class="container mt-4">
     <div class="card">
@@ -6,20 +7,21 @@
             <h4>{% if slab.id %}Edit Slab{% else %}Add New Slab{% endif %}</h4>
         </div>
         <div class="card-body">
-            {% if messages %}
+            {% if errors %}
             <div class="alert alert-danger">
                 <ul class="mb-0">
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
                     {% endfor %}
                 </ul>
             </div>
             {% endif %}
 
-            <form action="" method="post">
+            <form action="" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="row">
                     <div class="col">
+                        <h5 class="p-2 bg-light">Slab Information</h5>
                         <table class="table table-striped table-sm">
                             <tr>
                                 <th>{{ slab_form.slab_no.label }}</th>
@@ -68,7 +70,62 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Image Upload Section -->
+                {% if slab.id %}
+                <div class="row mt-4">
+                    <div class="col">
+                        <h5 class="p-2 bg-light">Upload Images</h5>
+                        <div class="mb-3">
+                            <div class="drop-area" id="drop-area">
+                                <div class="drop-area-content">
+                                    <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                                    <p>Drag & drop images here</p>
+                                    <p>or</p>
+                                    <label for="slab_images" class="btn btn-outline-primary">Select Files</label>
+                                    <input type="file" name="slab_images" id="slab_images" class="file-input" multiple accept="image/*">
+                                </div>
+                            </div>
+                            <div class="form-text">You can select multiple images at once. Supported formats: JPG, PNG, GIF.</div>
+                            <div id="image-preview-area" class="row mt-3"></div>
+                        </div>
+                    </div>
+                </div>
                 
+                <!-- Existing Images Section -->
+                {% if existing_images %}
+                <div class="row mt-4">
+                    <div class="col">
+                        <h5 class="p-2 bg-light">Existing Images</h5>
+                        <div class="row">
+                            {% for image in existing_images %}
+                            <div class="col-md-3 mb-3">
+                                <div class="card">
+                                    <div class="position-relative">
+                                        <img src="{{ image.get_thumbnail_url }}" class="card-img-top" alt="Slab image" style="height: 150px; object-fit: cover;">
+                                        <button type="button" class="btn btn-sm btn-danger delete-image-btn" 
+                                                data-image-id="{{ image.id }}" 
+                                                style="position: absolute; top: 5px; right: 5px;"
+                                                title="Delete image">
+                                            <span style="font-weight: bold;">×</span> Delete
+                                        </button>
+                                    </div>
+                                    <div class="card-body p-2">
+                                        {% if image.original_path %}
+                                            <p class="card-text small text-truncate" title="{{ image.original_path|basename }}">{{ image.original_path|basename }}</p>
+                                        {% else %}
+                                            <p class="card-text small">{{ image.description|default:"No description" }}</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+
                 <div class="row mt-3">
                     <div class="col">
                         {% if slab %}
@@ -91,5 +148,367 @@
     .card-header {
         background-color: #f8f9fa;
     }
+    
+    /* Drag and drop area styles */
+    .drop-area {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 40px 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .drop-area.highlight {
+        border-color: #4285f4;
+        background-color: #e8f0fe;
+    }
+    
+    .drop-area-content {
+        color: #666;
+    }
+    
+    .drop-area-content p {
+        margin: 10px 0;
+        font-size: 16px;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    /* Preview area styles */
+    #image-preview-area h6 {
+        width: 100%;
+        margin-bottom: 15px;
+        margin-top: 10px;
+        padding-left: 15px;
+    }
 </style>
+
+<script>
+// Set initial state
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Image preview functionality
+    const imageInput = document.getElementById('slab_images');
+    const dropArea = document.getElementById('drop-area');
+    const previewArea = document.getElementById('image-preview-area');
+    
+    // Global collection to store all selected files
+    let globalFilesCollection = [];
+    
+    // Function to handle the file preview
+    function handleFiles(files) {
+        // Clear existing previews
+        previewArea.innerHTML = '';
+        
+        // Create heading
+        if (files.length > 0) {
+            const heading = document.createElement('h6');
+            heading.textContent = `Preview (${files.length} image${files.length > 1 ? 's' : ''} selected)`;
+            previewArea.appendChild(heading);
+        }
+        
+        // Create preview for each file
+        Array.from(files).forEach((file, index) => {
+            // Create column
+            const col = document.createElement('div');
+            col.className = 'col-md-3 mb-3';
+            
+            // Create card
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Create image container with relative positioning
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'position-relative';
+            
+            // Create image element
+            const img = document.createElement('img');
+            img.className = 'card-img-top';
+            img.style.height = '150px';
+            img.style.objectFit = 'cover';
+            img.alt = 'Image preview';
+            
+            // Create URL for image preview
+            const url = URL.createObjectURL(file);
+            img.src = url;
+            
+            // Create remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn btn-sm btn-danger';
+            removeBtn.style.position = 'absolute';
+            removeBtn.style.top = '5px';
+            removeBtn.style.right = '5px';
+            removeBtn.innerHTML = '<span style="font-weight: bold;">×</span> Delete';
+            removeBtn.title = 'Remove this file';
+            removeBtn.dataset.fileIndex = index;
+            
+            // Add event listener to remove button
+            removeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                removeFileFromInput(parseInt(this.dataset.fileIndex));
+            });
+            
+            // Add image and button to container
+            imgContainer.appendChild(img);
+            imgContainer.appendChild(removeBtn);
+            
+            // Create card body
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body p-2';
+            
+            // Create filename text
+            const filename = document.createElement('p');
+            filename.className = 'card-text small text-truncate';
+            filename.title = file.name;
+            filename.textContent = file.name;
+            
+            // Assemble card
+            cardBody.appendChild(filename);
+            card.appendChild(imgContainer);
+            card.appendChild(cardBody);
+            col.appendChild(card);
+            previewArea.appendChild(col);
+        });
+    }
+    
+    // Function to remove a file from the input
+    function removeFileFromInput(fileIndex) {
+        try {
+            const currentFiles = Array.from(imageInput.files);
+            
+            if (fileIndex < 0 || fileIndex >= currentFiles.length) {
+                console.error('Invalid file index:', fileIndex);
+                return;
+            }
+            
+            // Remove the file from our global collection
+            globalFilesCollection.splice(fileIndex, 1);
+            
+            // Create a new DataTransfer object
+            const dataTransfer = new DataTransfer();
+            
+            // Add all files from global collection
+            globalFilesCollection.forEach(file => {
+                dataTransfer.items.add(file);
+            });
+            
+            // Update the input's files
+            imageInput.files = dataTransfer.files;
+            
+            // Update the preview
+            handleFiles(imageInput.files);
+            
+            console.log('File removed, remaining files:', imageInput.files.length);
+        } catch (err) {
+            console.error('Error removing file:', err);
+        }
+    }
+    
+    if (imageInput && dropArea) {
+        // Handle file input change
+        imageInput.addEventListener('change', function(e) {
+            const newFiles = Array.from(this.files || []);
+            
+            try {
+                console.log('Files selected via input:', newFiles.length);
+                
+                // Add newly selected files to our global collection
+                newFiles.forEach(file => {
+                    globalFilesCollection.push(file);
+                });
+                
+                console.log('Total files in collection:', globalFilesCollection.length);
+                
+                // Create a new DataTransfer to update the input
+                const dataTransfer = new DataTransfer();
+                
+                // Add all files from global collection
+                globalFilesCollection.forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+                
+                // Update the input's files
+                imageInput.files = dataTransfer.files;
+                
+                // Show all files
+                handleFiles(imageInput.files);
+                
+            } catch (err) {
+                console.error('Error handling selected files:', err);
+                // If DataTransfer API fails, at least show the current selection
+                handleFiles(this.files);
+            }
+        });
+        
+        // Click on drop area triggers file input click
+        dropArea.addEventListener('click', function(e) {
+            // Prevent the click from triggering drop events if we're clicking on an element inside the drop area
+            if (e.target !== dropArea) {
+                e.stopPropagation();
+            }
+            imageInput.click();
+        });
+        
+        // Stop events from bubbling up if clicking on elements inside the drop area
+        const elementsInsideDropArea = dropArea.querySelectorAll('*');
+        elementsInsideDropArea.forEach(el => {
+            el.addEventListener('click', e => e.stopPropagation());
+        });
+        
+        // Prevent the browser's default drag-and-drop handling
+        window.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        }, false);
+        
+        window.addEventListener('drop', function(e) {
+            e.preventDefault();
+        }, false);
+        
+        // Handle specific drop area events
+        dropArea.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Drag enter event');
+            this.classList.add('highlight');
+        }, false);
+        
+        dropArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.add('highlight');
+            return false;
+        }, false);
+        
+        dropArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Drag leave event');
+            this.classList.remove('highlight');
+        }, false);
+        
+        dropArea.addEventListener('drop', function(e) {
+            console.log('Drop event handler triggered');
+            e.preventDefault(); 
+            e.stopPropagation();
+            this.classList.remove('highlight');
+            
+            // Get the dropped files
+            let files = e.dataTransfer.files;
+            console.log('Dropped files:', files.length);
+            
+            // Filter for only image files
+            let imageFiles = [];
+            for (let i = 0; i < files.length; i++) {
+                if (files[i].type.match(/^image\//)) {
+                    imageFiles.push(files[i]);
+                }
+            }
+            
+            if (imageFiles.length === 0) {
+                console.log('No valid image files were dropped');
+                return;
+            }
+            
+            console.log('Valid image files:', imageFiles.length);
+            
+            // Try to set the files to the input element
+            try {
+                // Get existing files first
+                const existingFiles = Array.from(imageInput.files || []);
+                console.log('Existing files:', existingFiles.length);
+                
+                // Add dropped files to global collection
+                imageFiles.forEach(file => {
+                    globalFilesCollection.push(file);
+                });
+                
+                console.log('Total files in collection after drop:', globalFilesCollection.length);
+                
+                // This will work in modern browsers
+                const dataTransfer = new DataTransfer();
+                
+                // Add all files from global collection
+                globalFilesCollection.forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+                
+                // Set the combined files to the input
+                imageInput.files = dataTransfer.files;
+                console.log('Successfully set files on input element - total files:', dataTransfer.files.length);
+                
+                // Show all files in preview
+                handleFiles(dataTransfer.files);
+            } catch (err) {
+                console.error('Error setting files:', err);
+                alert("Your browser doesn't support drag and drop uploads. Please use the file selector.");
+                return;
+            }
+        }, false);
+    }
+    
+    // Handle delete image buttons
+    document.querySelectorAll('.delete-image-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const imageId = this.getAttribute('data-image-id');
+            if (confirm('Are you sure you want to delete this image? This action cannot be undone.')) {
+                deleteImage(imageId, this);
+            }
+        });
+    });
+    
+    // Function to delete an image via AJAX
+    function deleteImage(imageId, buttonElement) {
+        // Get the CSRF token from the form
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // Create the fetch request
+        fetch(`/siriuspasset/delete_image/${imageId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Remove the image card from the UI
+                const imageCard = buttonElement.closest('.col-md-3');
+                imageCard.remove();
+                
+                // Show success message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-success mt-2';
+                alertDiv.innerHTML = 'Image was successfully deleted.';
+                document.getElementById('image-preview-area').prepend(alertDiv);
+                
+                // Remove the alert after 3 seconds
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 3000);
+            } else {
+                alert('Error deleting image: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting image:', error);
+            alert('An error occurred while deleting the image.');
+        });
+    }
+});
+</script>
 {% endblock %} 

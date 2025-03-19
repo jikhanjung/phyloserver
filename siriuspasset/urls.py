@@ -18,4 +18,5 @@ urlpatterns = [
     path('recent_activities/', views.recent_activities, name='recent_activities'),
     path('directory_scans/', views.directory_scan_list, name='directory_scan_list'),
     path('directory_scans/<int:scan_id>/', views.directory_scan_detail, name='directory_scan_detail'),
+    path('delete_image/<int:image_id>/', views.delete_image, name='delete_image'),
 ]

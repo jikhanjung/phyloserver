@@ -66,11 +66,6 @@
     <div class="mt-4 mb-4">
         <a href="{% url 'siriuspasset:specimen_list' %}" class="btn btn-secondary">Back to List</a>
         <a href="{% url 'siriuspasset:edit_specimen' specimen.id %}" class="btn btn-primary">Edit Specimen</a>
-        {% if total_images == 0 %}
-        <a href="{% url 'siriuspasset:add_specimen_image' specimen.id %}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Add Images
-        </a>
-        {% endif %}
         <a href="{% url 'siriuspasset:delete_specimen' specimen.id %}" class="btn btn-danger" 
             onclick="return confirm('Are you sure you want to delete this specimen?')">Delete Specimen</a>
     </div>
@@ -113,16 +108,111 @@
     <div class="alert alert-info">
         <h4>No Images Available</h4>
         <p>There are currently no images associated with this specimen.</p>
-        {% if user_obj %}
-        <p>
-            <a href="{% url 'siriuspasset:add_specimen_image' specimen.id %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add Images
-            </a>
-        </p>
-        {% endif %}
     </div>
     {% endif %}
 
+    <!-- History Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Change History</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Changes</th>
+                        <th>User</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if history_records %}
+                        {% for i in history_records|length|get_range %}
+                            {% if forloop.counter0 < history_records|length|add:"-1" %}
+                                {% with current=history_records|get_by_index:i next_index=i|add:"1" %}
+                                {% with next=history_records|get_by_index:next_index %}
+                                    {% if current.taxon_name != next.taxon_name or current.phylum != next.phylum or current.remarks != next.remarks or current.counterpart != next.counterpart %}
+                                    <tr>
+                                        <td>{{ current.history_date|date:"Y-m-d H:i" }}</td>
+                                        <td>
+                                            <ul class="mb-0 pl-3">
+                                                {% if current.taxon_name != next.taxon_name %}
+                                                <li>
+                                                    <strong>Taxon Name:</strong> 
+                                                    <span class="text-danger">{{ next.taxon_name|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.taxon_name|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% if current.phylum != next.phylum %}
+                                                <li>
+                                                    <strong>Phylum:</strong> 
+                                                    <span class="text-danger">{{ next.phylum|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.phylum|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% if current.remarks != next.remarks %}
+                                                <li>
+                                                    <strong>Remarks:</strong> 
+                                                    <span class="text-danger">{{ next.remarks|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.remarks|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% if current.counterpart != next.counterpart %}
+                                                <li>
+                                                    <strong>Counterpart:</strong> 
+                                                    <span class="text-danger">{{ next.counterpart|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.counterpart|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            {% if current.history_user_id %}
+                                                {{ current.history_user }}
+                                            {% elif current.modified_ip %}
+                                                IP: {{ current.modified_ip }}
+                                            {% else %}
+                                                System
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ current.history_change_reason|default:"No reason provided" }}</td>
+                                    </tr>
+                                    {% endif %}
+                                {% endwith %}
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Record Creation Entry -->
+                        {% with oldest=history_records|last %}
+                        <tr>
+                            <td>{{ oldest.history_date|date:"Y-m-d H:i" }}</td>
+                            <td>Record Created</td>
+                            <td>
+                                {% if oldest.history_user_id %}
+                                    {{ oldest.history_user }}
+                                {% elif oldest.modified_ip %}
+                                    IP: {{ oldest.modified_ip }}
+                                {% else %}
+                                    System
+                                {% endif %}
+                            </td>
+                            <td>{{ oldest.history_change_reason|default:"Initial creation" }}</td>
+                        </tr>
+                        {% endwith %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No history records available.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     {% if debug_info %}
     <!-- Debug Information -->

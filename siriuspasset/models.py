@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from PIL import Image as PILImage
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 
 # Configuration for image directory structure
 # Number of slabs per directory (e.g., 100 gives 0001-0100, 1000 gives 0001-1000)
@@ -76,6 +77,7 @@ class SpSlab(models.Model):
     modified_on = models.DateTimeField( 'Modified on', auto_now=True )
     modified_by = models.CharField(max_length=50,blank=True)
     modified_ip = models.GenericIPAddressField('Modified IP', blank=True, null=True, help_text='IP address of the user who last modified this record')
+    history = HistoricalRecords()
 
     class Meta:
         ordering = ['slab_no']
@@ -104,6 +106,7 @@ class SpFossilSpecimen(models.Model):
     modified_on = models.DateTimeField( 'Modified on', auto_now=True )
     modified_by = models.CharField(max_length=50,blank=True)
     modified_ip = models.GenericIPAddressField('Modified IP', blank=True, null=True, help_text='IP address of the user who last modified this record')
+    history = HistoricalRecords()
 
     class Meta:
         # 슬랩-샘플번호 조합이 고유해야 한다면 unique_together 적용

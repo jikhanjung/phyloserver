@@ -210,6 +210,117 @@
     </div>
     {% endif %}
 
+    <!-- History Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h3>Change History</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Changes</th>
+                        <th>User</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if history_records %}
+                        {% for i in history_records|length|get_range %}
+                            {% if forloop.counter0 < history_records|length|add:"-1" %}
+                                {% with current=history_records|get_by_index:i next_index=i|add:"1" %}
+                                {% with next=history_records|get_by_index:next_index %}
+                                    {% if current.slab_no != next.slab_no or current.horizon != next.horizon or current.location != next.location or current.counterpart != next.counterpart or current.expedition_year != next.expedition_year %}
+                                    <tr>
+                                        <td>{{ current.history_date|date:"Y-m-d H:i" }}</td>
+                                        <td>
+                                            <ul class="mb-0 pl-3">
+                                                {% if current.slab_no != next.slab_no %}
+                                                <li>
+                                                    <strong>Slab Number:</strong> 
+                                                    <span class="text-danger">{{ next.slab_no|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.slab_no|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% if current.horizon != next.horizon %}
+                                                <li>
+                                                    <strong>Horizon:</strong> 
+                                                    <span class="text-danger">{{ next.horizon|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.horizon|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% if current.location != next.location %}
+                                                <li>
+                                                    <strong>Location:</strong> 
+                                                    <span class="text-danger">{{ next.location|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.location|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% if current.counterpart != next.counterpart %}
+                                                <li>
+                                                    <strong>Counterpart:</strong> 
+                                                    <span class="text-danger">{{ next.counterpart|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.counterpart|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                                
+                                                {% if current.expedition_year != next.expedition_year %}
+                                                <li>
+                                                    <strong>Expedition Year:</strong> 
+                                                    <span class="text-danger">{{ next.expedition_year|default:"(Empty)" }}</span> → 
+                                                    <span class="text-success">{{ current.expedition_year|default:"(Empty)" }}</span>
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            {% if current.history_user_id %}
+                                                {{ current.history_user }}
+                                            {% elif current.modified_ip %}
+                                                IP: {{ current.modified_ip }}
+                                            {% else %}
+                                                System
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ current.history_change_reason|default:"No reason provided" }}</td>
+                                    </tr>
+                                    {% endif %}
+                                {% endwith %}
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <!-- Record Creation Entry -->
+                        {% with oldest=history_records|last %}
+                        <tr>
+                            <td>{{ oldest.history_date|date:"Y-m-d H:i" }}</td>
+                            <td>Record Created</td>
+                            <td>
+                                {% if oldest.history_user_id %}
+                                    {{ oldest.history_user }}
+                                {% elif oldest.modified_ip %}
+                                    IP: {{ oldest.modified_ip }}
+                                {% else %}
+                                    System
+                                {% endif %}
+                            </td>
+                            <td>{{ oldest.history_change_reason|default:"Initial creation" }}</td>
+                        </tr>
+                        {% endwith %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No history records available.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     {% if debug_info %}
     <!-- Debug Information -->
     <div class="card mt-4">
