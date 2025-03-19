@@ -135,6 +135,10 @@
                                 <th>Phylum:</th>
                                 <td>{{ specimen_data.specimen.phylum|default:"Not specified" }}</td>
                             </tr>
+                            <tr>
+                                <th>Taxon Name:</th>
+                                <td>{{ specimen_data.specimen.taxon_name|default:"Not specified" }}</td>
+                            </tr>
                             {% if specimen_data.specimen.remarks %}
                             <tr>
                                 <th>Remarks:</th>
