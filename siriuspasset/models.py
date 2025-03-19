@@ -65,15 +65,17 @@ class SpSlab(models.Model):
     슬랩(Slab) 정보를 관리하는 모델.
     여러 표본(FossilSample)이 붙어 있을 수 있는 암석조각 단위.
     """
-    slab_no = models.CharField( '슬랩 번호', max_length=100, unique=True, db_index=True, help_text='고유 슬랩 식별 번호 (예: SLAB-01)')
-    counterpart = models.CharField( '대응 슬랩', max_length=100, default=False )
-    horizon = models.CharField( '층준', max_length=100, blank=True, null=True,  help_text='이 슬랩이 발견된 층준 정보')
-    expedition_year = models.CharField( '탐사연도', max_length=4, blank=True, null=True,  help_text='이 슬랩이 발견된 탐사 연도')
-    location = models.CharField( '보관 위치', max_length=100, blank=True, null=True, help_text='슬랩이 보관된 위치(수장고 정보 등)' )
-    created_on = models.DateTimeField( '등록 시각', auto_now_add=True )
+    slab_no = models.CharField( 'Slab no.', max_length=100, unique=True, db_index=True, help_text='고유 슬랩 식별 번호 (예: SLAB-01)')
+    counterpart = models.CharField( 'Counterpart', max_length=100, null=True, blank=True )
+    horizon = models.CharField( 'Horizon', max_length=100, blank=True, null=True,  help_text='이 슬랩이 발견된 층준 정보')
+    expedition_year = models.CharField( 'Year', max_length=4, blank=True, null=True,  help_text='이 슬랩이 발견된 탐사 연도')
+    location = models.CharField( 'Location', max_length=100, blank=True, null=True, help_text='슬랩이 보관된 위치(수장고 정보 등)' )
+    created_on = models.DateTimeField( 'Created on', auto_now_add=True )
     created_by = models.CharField(max_length=50,blank=True)
-    modified_on = models.DateTimeField( '마지막 수정 시각', auto_now=True )
+    created_ip = models.GenericIPAddressField('Created IP', blank=True, null=True, help_text='IP address of the user who created this record')
+    modified_on = models.DateTimeField( 'Modified on', auto_now=True )
     modified_by = models.CharField(max_length=50,blank=True)
+    modified_ip = models.GenericIPAddressField('Modified IP', blank=True, null=True, help_text='IP address of the user who last modified this record')
 
     class Meta:
         ordering = ['slab_no']
@@ -91,15 +93,17 @@ class SpFossilSpecimen(models.Model):
     슬랩 위의 표본(Specimen) 정보를 관리하는 모델.
     """
     slab = models.ForeignKey( SpSlab, on_delete=models.CASCADE, related_name='specimens', help_text='해당 표본이 속한 슬랩(예:SP-2017-1)' )
-    specimen_no = models.CharField( '표본 번호', max_length=100, db_index=True, help_text='개별 표본 식별 번호 (예: SP-2017-1-001)' )
-    taxon_name = models.CharField( '학명', max_length=100, blank=True, null=True )
-    phylum = models.CharField( '문(Phylum)', max_length=100, blank=True, null=True )
-    remarks = models.TextField( '비고', blank=True, null=True )
-    counterpart = models.CharField( '대응 표본', max_length=100, default=False )
-    created_on = models.DateTimeField( '등록 시각', auto_now_add=True )
+    specimen_no = models.CharField( 'Specimen number', max_length=100, db_index=True, help_text='개별 표본 식별 번호 (예: SP-2017-1-001)' )
+    taxon_name = models.CharField( 'Taxon name', max_length=100, blank=True, null=True )
+    phylum = models.CharField( 'Phylum', max_length=100, blank=True, null=True )
+    remarks = models.TextField( 'Remarks', blank=True, null=True )
+    counterpart = models.CharField( 'Counterpart', max_length=100, null=True, blank=True )
+    created_on = models.DateTimeField( 'Created on', auto_now_add=True )
     created_by = models.CharField(max_length=50,blank=True)
-    modified_on = models.DateTimeField( '마지막 수정 시각', auto_now=True )
+    created_ip = models.GenericIPAddressField('Created IP', blank=True, null=True, help_text='IP address of the user who created this record')
+    modified_on = models.DateTimeField( 'Modified on', auto_now=True )
     modified_by = models.CharField(max_length=50,blank=True)
+    modified_ip = models.GenericIPAddressField('Modified IP', blank=True, null=True, help_text='IP address of the user who last modified this record')
 
     class Meta:
         # 슬랩-샘플번호 조합이 고유해야 한다면 unique_together 적용
@@ -119,18 +123,18 @@ class SpFossilImage(models.Model):
     slab = models.ForeignKey( SpSlab, on_delete=models.CASCADE, related_name='images', null=True, blank=True, help_text="이 이미지가 속한 슬랩" )
     specimen = models.ForeignKey( SpFossilSpecimen, on_delete=models.CASCADE, related_name='images', null=True, blank=True, help_text="이 이미지가 속한 화석 표본" )
     image_file = models.ImageField( upload_to=fossil_image_upload_path, help_text="화석 사진 파일" )
-    description = models.TextField( "설명", blank=True, null=True, help_text="사진에 대한 설명 (예: 촬영 각도, 확대 배율 등)" )
-    original_path = models.CharField( "원본 경로", max_length=500, blank=True, null=True, help_text="원본 이미지 파일의 경로" )
-    md5hash = models.CharField( "MD5 해시", max_length=32, blank=True, null=True, help_text="이미지 파일의 MD5 해시값", db_index=True )
-    created_on = models.DateTimeField( '등록 시각', auto_now_add=True )
+    description = models.TextField( "Description", blank=True, null=True, help_text="사진에 대한 설명 (예: 촬영 각도, 확대 배율 등)" )
+    original_path = models.CharField( "Original path", max_length=500, blank=True, null=True, help_text="원본 이미지 파일의 경로" )
+    md5hash = models.CharField( "MD5 hash", max_length=32, blank=True, null=True, help_text="이미지 파일의 MD5 해시값", db_index=True )
+    created_on = models.DateTimeField( 'Created on', auto_now_add=True )
     created_by = models.CharField(max_length=50,blank=True)
-    modified_on = models.DateTimeField( '마지막 수정 시각', auto_now=True )
+    modified_on = models.DateTimeField( 'Modified on', auto_now=True )
     modified_by = models.CharField(max_length=50,blank=True)
 
     class Meta:
         ordering = ['created_on']
-        verbose_name = "화석 사진"
-        verbose_name_plural = "화석 사진 목록"
+        verbose_name = "Fossil image"
+        verbose_name_plural = "Fossil images"
         # Add unique constraint for md5hash to prevent duplicates
         constraints = [
             models.UniqueConstraint(fields=['md5hash'], name='unique_image_hash', condition=models.Q(md5hash__isnull=False)),

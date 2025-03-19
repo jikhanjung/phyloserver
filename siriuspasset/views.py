@@ -17,6 +17,17 @@ from django.utils import timezone
 from django.contrib.postgres.search import SearchVector
 from siriuspasset.utils import sort_images_by_filename
 
+# Helper function to get client IP address
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        # X-Forwarded-For can be a comma-separated list of IPs.
+        # The client's IP will be the first one.
+        ip = x_forwarded_for.split(',')[0].strip()
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 # Create your views here.
 # Create your views here.
 ITEMS_PER_PAGE = 20
@@ -198,10 +209,17 @@ def add_specimen(request):
             try:
                 with transaction.atomic():
                     if slab_choice != 'existing':
-                        slab = slab_form.save()
+                        slab = slab_form.save(commit=False)
+                        # Set IP address
+                        slab.created_ip = get_client_ip(request)
+                        slab.modified_ip = get_client_ip(request)
+                        slab.save()
                     
                     specimen = specimen_form.save(commit=False)
                     specimen.slab = slab
+                    # Set IP address
+                    specimen.created_ip = get_client_ip(request)
+                    specimen.modified_ip = get_client_ip(request)
                     specimen.save()
                 return HttpResponseRedirect('/siriuspasset/specimen_list')
             except Exception as e:
@@ -242,31 +260,35 @@ def add_specimen(request):
 
 def edit_specimen(request,pk):
     user_obj = get_user_obj(request)
-
-    #print("edit run")
     specimen = get_object_or_404(SpFossilSpecimen, pk=pk)
     
     if request.method == 'POST':
-        specimen_form = SpFossilSpecimenForm(request.POST,request.FILES,instance=specimen)
-        #print("method POST")
-        # create a form instance and populate it with data from the request:
-        # check whether it's valid:
+        specimen_form = SpFossilSpecimenForm(request.POST, request.FILES, instance=specimen)
         if specimen_form.is_valid():
-            #print("run form valid")
             specimen = specimen_form.save(commit=False)
-            #reference = form.save(commit=False)
-            
+            # Set IP address
+            specimen.modified_ip = get_client_ip(request)
             specimen.save()
             return HttpResponseRedirect('/siriuspasset/specimen_detail/'+str(specimen.id))
-        else:
-            pass
-            #print(run_form)
-
-    # if a GET (or any other method) we'll create a blank form
     else:
         specimen_form = SpFossilSpecimenForm(instance=specimen)
 
-    return render(request, 'siriuspasset/specimen_form.html', {'specimen_form': specimen_form,'user_obj':user_obj})
+    # Get list of all slabs for the dropdown
+    all_slabs = SpSlab.objects.all().order_by('slab_no')
+    
+    # Get a form for the slab (read-only)
+    slab_form = SpSlabForm(instance=specimen.slab)
+    for field in slab_form.fields.values():
+        field.disabled = True
+    
+    return render(request, 'siriuspasset/specimen_form.html', {
+        'specimen_form': specimen_form,
+        'slab_form': slab_form,
+        'user_obj': user_obj,
+        'all_slabs': all_slabs,
+        'existing_slab': specimen.slab,
+        'editing': True
+    })
 
 def delete_specimen(request, pk):
     user_obj = get_user_obj(request)
@@ -324,6 +346,65 @@ def slab_detail(request, slab_id):
     }
     
     return render(request, 'siriuspasset/slab_detail.html', context)
+
+def add_slab(request):
+    """Add a new slab"""
+    user_obj = get_user_obj(request)
+    
+    if request.method == 'POST':
+        form = SpSlabForm(request.POST)
+        if form.is_valid():
+            slab = form.save(commit=False)
+            # Set IP address
+            slab.created_ip = get_client_ip(request)
+            slab.modified_ip = get_client_ip(request)
+            slab.save()
+            return HttpResponseRedirect(f'/siriuspasset/slab_detail/{slab.id}')
+    else:
+        form = SpSlabForm()
+    
+    return render(request, 'siriuspasset/slab_form.html', {
+        'slab_form': form,
+        'user_obj': user_obj,
+        'slab': None
+    })
+
+def edit_slab(request, pk):
+    """Edit slab information"""
+    user_obj = get_user_obj(request)
+    slab = get_object_or_404(SpSlab, pk=pk)
+    
+    if request.method == 'POST':
+        form = SpSlabForm(request.POST, instance=slab)
+        if form.is_valid():
+            slab = form.save(commit=False)
+            # Set IP address
+            slab.modified_ip = get_client_ip(request)
+            slab.save()
+            return HttpResponseRedirect(f'/siriuspasset/slab_detail/{slab.id}')
+    else:
+        form = SpSlabForm(instance=slab)
+    
+    return render(request, 'siriuspasset/slab_form.html', {
+        'slab_form': form,
+        'user_obj': user_obj,
+        'slab': slab
+    })
+
+def delete_slab(request, pk):
+    """Delete a slab"""
+    user_obj = get_user_obj(request)
+    slab = get_object_or_404(SpSlab, pk=pk)
+    
+    # Check if slab has specimens
+    if slab.specimens.exists():
+        from django.contrib import messages
+        messages.error(request, f"Cannot delete slab {slab.slab_no} because it has associated specimens. Delete the specimens first.")
+        return HttpResponseRedirect(f'/siriuspasset/slab_detail/{slab.id}')
+    
+    # Delete the slab
+    slab.delete()
+    return HttpResponseRedirect('/siriuspasset/specimen_list')
 
 def recent_activities(request):
     """View to display recent image activities"""

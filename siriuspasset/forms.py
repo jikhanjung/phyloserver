@@ -22,4 +22,4 @@ class SpFossilImageForm(ModelForm):
 class SpSlabForm(ModelForm):
     class Meta:
         model = SpSlab
-        fields = ['slab_no', 'horizon', 'location']
+        fields = ['slab_no', 'horizon', 'location', 'counterpart']

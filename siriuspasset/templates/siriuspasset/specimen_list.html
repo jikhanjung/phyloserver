@@ -53,6 +53,18 @@
 </style>
 
 <h4 class="bd-title p-2 bg-secondary text-light">Slab/Specimen List</h4>
+
+<div class="mb-3">
+    {% if user_obj %}
+    <a href="{% url 'siriuspasset:add_slab' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Slab
+    </a>
+    <a href="{% url 'siriuspasset:add_specimen' %}" class="btn btn-success">
+        <i class="fas fa-plus"></i> Add New Specimen
+    </a>
+    {% endif %}
+</div>
+
 <table class="table table-sm">
     <thead>
     <tr><td colspan="5" align="left">

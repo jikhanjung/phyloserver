@@ -46,12 +46,35 @@
                             <th>Total Images:</th>
                             <td>{{ total_images }}</td>
                         </tr>
+                        {% if user_obj %}
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ specimen.created_on|date:"Y-m-d H:i" }} {% if specimen.created_ip %}(IP: {{ specimen.created_ip }}){% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Modified:</th>
+                            <td>{{ specimen.modified_on|date:"Y-m-d H:i" }} {% if specimen.modified_ip %}(IP: {{ specimen.modified_ip }}){% endif %}</td>
+                        </tr>
+                        {% endif %}
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Action Buttons -->
+    <div class="mt-4 mb-4">
+        <a href="{% url 'siriuspasset:specimen_list' %}" class="btn btn-secondary">Back to List</a>
+        <a href="{% url 'siriuspasset:edit_specimen' specimen.id %}" class="btn btn-primary">Edit Specimen</a>
+        {% if total_images == 0 %}
+        <a href="{% url 'siriuspasset:add_specimen_image' specimen.id %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Add Images
+        </a>
+        {% endif %}
+        <a href="{% url 'siriuspasset:delete_specimen' specimen.id %}" class="btn btn-danger" 
+            onclick="return confirm('Are you sure you want to delete this specimen?')">Delete Specimen</a>
+    </div>
+    
     <!-- Image Gallery -->
     {% if total_images > 0 %}
     <div class="card">
@@ -100,20 +123,6 @@
     </div>
     {% endif %}
 
-    <!-- Action Buttons -->
-    <div class="mt-4 mb-4">
-        <a href="{% url 'siriuspasset:specimen_list' %}" class="btn btn-secondary">Back to List</a>
-        {% if user_obj %}
-        <a href="{% url 'siriuspasset:edit_specimen' specimen.id %}" class="btn btn-primary">Edit Specimen</a>
-        {% if total_images == 0 %}
-        <a href="{% url 'siriuspasset:add_specimen_image' specimen.id %}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Add Images
-        </a>
-        {% endif %}
-        <a href="{% url 'siriuspasset:delete_specimen' specimen.id %}" class="btn btn-danger" 
-           onclick="return confirm('Are you sure you want to delete this specimen?')">Delete Specimen</a>
-        {% endif %}
-    </div>
 
     {% if debug_info %}
     <!-- Debug Information -->

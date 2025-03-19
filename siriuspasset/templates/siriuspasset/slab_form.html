@@ -1,0 +1,95 @@
+{% extends "spbase.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h4>{% if slab.id %}Edit Slab{% else %}Add New Slab{% endif %}</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col">
+                        <table class="table table-striped table-sm">
+                            <tr>
+                                <th>{{ slab_form.slab_no.label }}</th>
+                                <td>
+                                    {{ slab_form.slab_no }}
+                                    {% if slab_form.slab_no.errors %}
+                                    <div class="text-danger">
+                                        {{ slab_form.slab_no.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>{{ slab_form.horizon.label }}</th>
+                                <td>
+                                    {{ slab_form.horizon }}
+                                    {% if slab_form.horizon.errors %}
+                                    <div class="text-danger">
+                                        {{ slab_form.horizon.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>{{ slab_form.location.label }}</th>
+                                <td>
+                                    {{ slab_form.location }}
+                                    {% if slab_form.location.errors %}
+                                    <div class="text-danger">
+                                        {{ slab_form.location.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>{{ slab_form.counterpart.label }}</th>
+                                <td>
+                                    {{ slab_form.counterpart }}
+                                    {% if slab_form.counterpart.errors %}
+                                    <div class="text-danger">
+                                        {{ slab_form.counterpart.errors|join:", " }}
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col">
+                        {% if slab %}
+                        <a href="{% url 'siriuspasset:slab_detail' slab.id %}" class="btn btn-secondary">Cancel</a>
+                        {% else %}
+                        <a href="{% url 'siriuspasset:specimen_list' %}" class="btn btn-secondary">Cancel</a>
+                        {% endif %}
+                        <input type="submit" value="Save" class="btn btn-primary">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card-header {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %} 

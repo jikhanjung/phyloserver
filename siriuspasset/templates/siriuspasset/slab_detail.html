@@ -42,11 +42,30 @@
                             <th>Specimens:</th>
                             <td>{{ slab.specimens.count }}</td>
                         </tr>
+                        {% if user_obj %}
+                        <tr>
+                            <th>Created:</th>
+                            <td>{{ slab.created_on|date:"Y-m-d H:i" }} {% if slab.created_ip %}(IP: {{ slab.created_ip }}){% endif %}</td>
+                        </tr>
+                        <tr>
+                            <th>Last Modified:</th>
+                            <td>{{ slab.modified_on|date:"Y-m-d H:i" }} {% if slab.modified_ip %}(IP: {{ slab.modified_ip }}){% endif %}</td>
+                        </tr>
+                        {% endif %}
                     </table>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-4 mb-4">
+        <a href="{% url 'siriuspasset:specimen_list' %}" class="btn btn-secondary">Back to List</a>
+        <a href="{% url 'siriuspasset:edit_slab' slab.id %}" class="btn btn-primary">Edit Slab</a>
+        <a href="{% url 'siriuspasset:delete_slab' slab.id %}" class="btn btn-danger" 
+           onclick="return confirm('Are you sure you want to delete this slab? This will delete all associated slab images. Note: You cannot delete slabs with specimens.')">Delete Slab</a>
+    </div>
+
 
     <!-- Slab Image Gallery -->
     {% if slab_total_images > 0 %}
@@ -190,14 +209,6 @@
         <p>There are currently no specimens associated with this slab.</p>
     </div>
     {% endif %}
-
-    <!-- Action Buttons -->
-    <div class="mt-4 mb-4">
-        <a href="{% url 'siriuspasset:specimen_list' %}" class="btn btn-secondary">Back to List</a>
-        {% if user_obj %}
-        <!-- Add additional action buttons if needed -->
-        {% endif %}
-    </div>
 
     {% if debug_info %}
     <!-- Debug Information -->
