@@ -68,7 +68,7 @@
 <table class="table table-sm">
     <thead>
     <tr><td colspan="5" align="left">
-     {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }} 
+     {{ page_obj.start_index }}-{{ page_obj.end_index }} out of {{ page_obj.paginator.count }}
     </td><td colspan="2" align="right">
         <form method="GET" action="{% url 'siriuspasset:specimen_list'%}">
             {% csrf_token %}
@@ -83,11 +83,11 @@
     <tbody>
         <tr>
             <th class="col-slab"><div>Slab no.</div></th>
+            <th class="col-horizon"><div>Horizon</div></th>
             <th class="col-specimen"><div>Specimen no.</div></th>
             <th class="col-taxon"><div>Taxon name</div></th>
             <th class="col-phylum"><div>Phylum</div></th>
             <th class="col-images"><div>Images</div></th>
-            <th class="col-horizon"><div>Horizon</div></th>
             <th class="col-remarks"><div>Remarks</div></th>
         </tr>
         {% for group in grouped_specimens %}
@@ -103,6 +103,9 @@
                                 <a href="{% url 'siriuspasset:add_specimen' %}?slab_id={{ group.slab.id }}" class="btn btn-sm btn-outline-primary">+ Add Specimen</a>
                             </div>
                         </td>
+                        <td class="slab-cell col-horizon" rowspan="{{ group.specimens|length }}">
+                            {{ group.slab.horizon|default_if_none:'' }}
+                        </td>
                     {% endif %}
                     <td class="col-specimen"><a href="{% url 'siriuspasset:specimen_detail' specimen.id %}">{{ specimen.specimen_no }}</a></td>
                     <td class="col-taxon">{{ specimen.taxon_name|default_if_none:'' }}</td>
@@ -114,7 +117,6 @@
                             <span class="text-muted">0</span>
                         {% endif %}
                     </td>
-                    <td class="col-horizon">{{ specimen.slab.horizon|default_if_none:'' }}</td>
                     <td class="col-remarks">{{ specimen.remarks|default_if_none:'' }}</td>
                 </tr>
             {% endfor %}

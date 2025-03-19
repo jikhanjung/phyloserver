@@ -19,7 +19,7 @@
                         </tr>
                         <tr>
                             <th>Slab:</th>
-                            <td>{{ specimen.slab.slab_no }}</td>
+                            <td><a href="{% url 'siriuspasset:slab_detail' specimen.slab.id %}">{{ specimen.slab.slab_no }}</a></td>
                         </tr>
                         <tr>
                             <th>Taxon Name:</th>
