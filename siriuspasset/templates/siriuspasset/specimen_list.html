@@ -80,10 +80,10 @@
         </tr>
         {% for group in grouped_specimens %}
             {% for specimen in group.specimens %}
-                <tr class="tr_link {% if forloop.counter0|divisibleby:2 %}specimen-row-even{% else %}specimen-row-odd{% endif %}" style="cursor:pointer;" data-href="{% url 'siriuspasset:specimen_detail' specimen.id %}">
+                <tr class="{% if forloop.counter0|divisibleby:2 %}specimen-row-even{% else %}specimen-row-odd{% endif %}">
                     {% if forloop.first %}
                         <td class="slab-cell col-slab" rowspan="{{ group.specimens|length }}">
-                            <a href="{% url 'siriuspasset:slab_detail' group.slab.id %}" class="font-weight-bold" style="text-decoration: none; color: #007bff;">{{ group.slab.slab_no|default_if_none:'' }}</a>
+                            <a href="{% url 'siriuspasset:slab_detail' group.slab.id %}">{{ group.slab.slab_no|default_if_none:'' }}</a>
                             {% if group.slab_only_image_count > 0 %}
                                 <span class="badge badge-image-count" title="Slab-only images">{{ group.slab_only_image_count }}</span>
                             {% endif %}

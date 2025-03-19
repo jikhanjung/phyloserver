@@ -23,11 +23,11 @@
                         </tr>
                         <tr>
                             <th>Taxon Name:</th>
-                            <td>{{ specimen.taxon_name|default:"Not specified" }}</td>
+                            <td>{{ specimen.taxon_name|default:"" }}</td>
                         </tr>
                         <tr>
                             <th>Phylum:</th>
-                            <td>{{ specimen.phylum|default:"Not specified" }}</td>
+                            <td>{{ specimen.phylum|default:"" }}</td>
                         </tr>
                     </table>
                 </div>
@@ -36,11 +36,11 @@
                     <table class="table table-bordered">
                         <tr>
                             <th>Remarks:</th>
-                            <td>{{ specimen.remarks|default:"No remarks" }}</td>
+                            <td>{{ specimen.remarks|default:"" }}</td>
                         </tr>
                         <tr>
                             <th>Counterpart:</th>
-                            <td>{{ specimen.counterpart|default:"None" }}</td>
+                            <td>{{ specimen.counterpart|default:"" }}</td>
                         </tr>
                         <tr>
                             <th>Total Images:</th>
