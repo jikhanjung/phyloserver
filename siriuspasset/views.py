@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.contrib.postgres.search import SearchVector
 from siriuspasset.utils import sort_images_by_filename
 import os
+import time
 
 # Helper function to get client IP address
 def get_client_ip(request):
@@ -482,27 +483,40 @@ def delete_slab(request, pk):
     return HttpResponseRedirect('/siriuspasset/specimen_list')
 
 def recent_activities(request):
-    """View to display recent image activities"""
+    """View to display recent activities: images, slab edits, and specimen edits"""
+    print("[RECENT_ACTIVITIES] Starting recent activities view")
+    start_time = time.time()
+    
     user_obj = get_user_obj(request)
     
     # Get filter parameter for time range
     time_range = request.GET.get('range', 'week')  # Default to showing past week
     limit = int(request.GET.get('limit', 50))      # Default to 50 items
+    print(f"[RECENT_ACTIVITIES] Time range: {time_range}, limit: {limit}")
     
     # Calculate the date range
     today = datetime.now().date()
+    print(f"[RECENT_ACTIVITIES] Current date: {today}")
+    
     if time_range == 'day':
-        start_date = today
+        start_date = today - timedelta(days=1)
     elif time_range == 'week':
         start_date = today - timedelta(days=7)
     elif time_range == 'month':
         start_date = today - timedelta(days=30)
     elif time_range == 'year':
         start_date = today - timedelta(days=365)
+    elif time_range == 'future':
+        # This option is now redundant but kept for compatibility
+        start_date = None
+        time_range = 'all'  # Convert to 'all' since we're not filtering for future dates
     else:  # 'all'
         start_date = None
     
+    print(f"[RECENT_ACTIVITIES] Start date for filtering: {start_date}")
+    
     # Query images with dates
+    print("[RECENT_ACTIVITIES] Querying recent images")
     recent_images = SpFossilImage.objects.all().select_related('specimen', 'slab')
     
     if start_date:
@@ -510,15 +524,68 @@ def recent_activities(request):
     
     # Order by most recent first
     recent_images = recent_images.order_by('-created_on')[:limit]
+    print(f"[RECENT_ACTIVITIES] Found {len(recent_images)} recent images")
+    
+    # Get history records for slabs
+    print("[RECENT_ACTIVITIES] Querying slab history")
+    from siriuspasset.models import SpSlab
+    slab_history = SpSlab.history.all()
+    print(f"[RECENT_ACTIVITIES] Initial slab history query returned {slab_history.count()} records")
+    
+    if start_date:
+        # Add a one-hour buffer to avoid timezone issues
+        from datetime import time as dt_time
+        start_datetime = datetime.combine(start_date, dt_time.min) - timedelta(hours=1)
+        print(f"[RECENT_ACTIVITIES] Using buffer-adjusted start_datetime: {start_datetime} for comparison")
+        
+        # Debug the date formats of some history records
+        for i, record in enumerate(slab_history[:2]):
+            print(f"[RECENT_ACTIVITIES] Sample record date format: {record.history_date} (type: {type(record.history_date)})")
+        
+        # Filter using the datetime object with buffer
+        slab_history = slab_history.filter(history_date__gte=start_datetime)
+        print(f"[RECENT_ACTIVITIES] After date filter ({start_date}), slab history has {slab_history.count()} records")
+    
+    slab_history = slab_history.order_by('-history_date')[:limit]
+    print(f"[RECENT_ACTIVITIES] Found {len(slab_history)} slab history records after ordering and limiting")
+    
+    # Debug: Log some sample slab history records
+    for i, record in enumerate(slab_history[:3]):
+        print(f"[RECENT_ACTIVITIES] Sample slab history #{i+1}: ID={record.id}, history_id={record.history_id}, "
+              f"type={record.history_type}, date={record.history_date}, slab_no={record.slab_no}")
+    
+    # Get history records for specimens
+    print("[RECENT_ACTIVITIES] Querying specimen history")
+    from siriuspasset.models import SpFossilSpecimen
+    specimen_history = SpFossilSpecimen.history.all()
+    print(f"[RECENT_ACTIVITIES] Initial specimen history query returned {specimen_history.count()} records")
+    
+    if start_date:
+        # Use the same adjusted start_datetime with buffer
+        specimen_history = specimen_history.filter(history_date__gte=start_datetime)
+        print(f"[RECENT_ACTIVITIES] After date filter ({start_date}), specimen history has {specimen_history.count()} records")
+    
+    specimen_history = specimen_history.order_by('-history_date')[:limit]
+    print(f"[RECENT_ACTIVITIES] Found {len(specimen_history)} specimen history records after ordering and limiting")
+    
+    # Debug: Log some sample specimen history records
+    for i, record in enumerate(specimen_history[:3]):
+        print(f"[RECENT_ACTIVITIES] Sample specimen history #{i+1}: ID={record.id}, history_id={record.history_id}, "
+              f"type={record.history_type}, date={record.history_date}, specimen_no={record.specimen_no}")
     
     # Prepare context for display
     activities = []
+    
+    # Process image activities
+    print("[RECENT_ACTIVITIES] Processing image activities")
+    image_count = 0
     for image in recent_images:
         activity = {
             'image': image,
             'date': image.created_on,
             'thumbnail_url': image.get_thumbnail_url(),
             'type': 'image',
+            'action': 'added',
         }
         
         # Determine if this is a specimen image or slab image
@@ -532,13 +599,147 @@ def recent_activities(request):
             activity['detail_url'] = reverse('siriuspasset:slab_detail', args=[image.slab.id])
         
         activities.append(activity)
+        image_count += 1
+    
+    print(f"[RECENT_ACTIVITIES] Processed {image_count} image activities")
+    
+    # Process slab history activities
+    print("[RECENT_ACTIVITIES] Processing slab history activities")
+    slab_count = 0
+    for record in slab_history:
+        try:
+            # Debug record details
+            print(f"[RECENT_ACTIVITIES] Processing slab history: ID={record.id}, type={record.history_type}, "
+                  f"history_id={record.history_id}, date={record.history_date}")
+            
+            # Check if record.history_user exists
+            if hasattr(record, 'history_user'):
+                user_info = record.history_user.username if record.history_user else "Unknown"
+            else:
+                user_info = "No history_user attribute"
+                print(f"[RECENT_ACTIVITIES] Warning: history_user attribute missing on slab history record {record.id}")
+            
+            activity = {
+                'date': record.history_date,
+                'type': 'slab',
+                'action': record.history_type,  # '+' for created, '~' for modified, '-' for deleted
+                'slab_no': record.slab_no,
+                'record_id': record.id,
+                'instance_id': record.history_id,
+                'detail_url': reverse('siriuspasset:slab_detail', args=[record.history_id]),
+                'user': user_info,
+                'associated_with': 'slab',
+            }
+            
+            # Determine action text
+            if record.history_type == '+':
+                activity['action_text'] = 'created'
+            elif record.history_type == '~':
+                activity['action_text'] = 'modified'
+            elif record.history_type == '-':
+                activity['action_text'] = 'deleted'
+                # For deleted records, we don't have a valid URL
+                activity['detail_url'] = '#'
+            
+            activities.append(activity)
+            slab_count += 1
+            print(f"[RECENT_ACTIVITIES] Successfully added slab activity for {record.slab_no}, action={record.history_type}")
+        except Exception as e:
+            print(f"[RECENT_ACTIVITIES] Error processing slab history record {record.id}: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+    
+    print(f"[RECENT_ACTIVITIES] Processed {slab_count} slab history activities")
+    
+    # Process specimen history activities
+    print("[RECENT_ACTIVITIES] Processing specimen history activities")
+    specimen_count = 0
+    for record in specimen_history:
+        try:
+            # Debug record details
+            print(f"[RECENT_ACTIVITIES] Processing specimen history: ID={record.id}, type={record.history_type}, "
+                  f"history_id={record.history_id}, date={record.history_date}")
+            
+            # Check if record.history_user exists
+            if hasattr(record, 'history_user'):
+                user_info = record.history_user.username if record.history_user else "Unknown"
+            else:
+                user_info = "No history_user attribute"
+                print(f"[RECENT_ACTIVITIES] Warning: history_user attribute missing on specimen history record {record.id}")
+            
+            activity = {
+                'date': record.history_date,
+                'type': 'specimen',
+                'action': record.history_type,  # '+' for created, '~' for modified, '-' for deleted
+                'specimen_no': record.specimen_no,
+                'taxon_name': record.taxon_name,
+                'record_id': record.id,
+                'instance_id': record.history_id,
+                'slab_id': record.slab_id,
+                'detail_url': reverse('siriuspasset:specimen_detail', args=[record.history_id]),
+                'user': user_info,
+                'associated_with': 'specimen',
+            }
+            
+            # Determine action text
+            if record.history_type == '+':
+                activity['action_text'] = 'created'
+            elif record.history_type == '~':
+                activity['action_text'] = 'modified'
+            elif record.history_type == '-':
+                activity['action_text'] = 'deleted'
+                # For deleted records, we don't have a valid URL
+                activity['detail_url'] = '#'
+            
+            activities.append(activity)
+            specimen_count += 1
+            print(f"[RECENT_ACTIVITIES] Successfully added specimen activity for {record.specimen_no}, action={record.history_type}")
+        except Exception as e:
+            print(f"[RECENT_ACTIVITIES] Error processing specimen history record {record.id}: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+    
+    print(f"[RECENT_ACTIVITIES] Processed {specimen_count} specimen history activities")
+    
+    # Sort all activities by date, most recent first
+    print("[RECENT_ACTIVITIES] Sorting activities by date")
+    activities.sort(key=lambda x: x['date'], reverse=True)
+    
+    # Limit the total number of activities
+    activities = activities[:limit]
+    
+    # Debug log the final activities structure
+    print(f"[RECENT_ACTIVITIES] Final activities list contains {len(activities)} items")
+    activity_types = {}
+    for i, activity in enumerate(activities[:5]):  # Log first 5 for debugging
+        print(f"[RECENT_ACTIVITIES] Activity #{i+1}: type={activity['type']}, " +
+              f"action={activity.get('action', 'N/A')}, date={activity['date']}")
+        # Count by type
+        activity_type = activity['type']
+        if activity_type not in activity_types:
+            activity_types[activity_type] = 0
+        activity_types[activity_type] += 1
+    
+    # Log activity type counts
+    print("[RECENT_ACTIVITIES] Activity counts by type:")
+    for activity_type, count in activity_types.items():
+        print(f"[RECENT_ACTIVITIES]   - {activity_type}: {count}")
     
     context = {
         'user_obj': user_obj,
         'activities': activities,
         'time_range': time_range,
         'total_activities': len(activities),
+        'debug_info': {
+            'has_image_activities': any(activity['type'] == 'image' for activity in activities),
+            'has_slab_activities': any(activity['type'] == 'slab' for activity in activities),
+            'has_specimen_activities': any(activity['type'] == 'specimen' for activity in activities),
+            'sample_activity': activities[0] if activities else None
+        }
     }
+    
+    end_time = time.time()
+    print(f"[RECENT_ACTIVITIES] Finished in {end_time - start_time:.2f} seconds with {len(activities)} total activities")
     
     return render(request, 'siriuspasset/recent_activities.html', context)
 
@@ -608,3 +809,120 @@ def delete_image(request, image_id):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+def recent_photos(request):
+    """View to display recently added photos in descending order of creation date"""
+    print("[RECENT_PHOTOS] Starting recent photos view")
+    start_time = time.time()
+    
+    user_obj = get_user_obj(request)
+    
+    # Get filter parameters
+    time_range = request.GET.get('range', 'week')  # Default to showing past week
+    limit = int(request.GET.get('limit', 50))      # Default to 50 items
+    print(f"[RECENT_PHOTOS] Time range: {time_range}, limit: {limit}")
+    
+    # Calculate the date range
+    today = datetime.now().date()
+    print(f"[RECENT_PHOTOS] Current date: {today}")
+    
+    if time_range == 'day':
+        start_date = today - timedelta(days=1)
+    elif time_range == 'week':
+        start_date = today - timedelta(days=7)
+    elif time_range == 'month':
+        start_date = today - timedelta(days=30)
+    elif time_range == 'year':
+        start_date = today - timedelta(days=365)
+    elif time_range == 'show_all':
+        # Special option to explicitly show all images, bypass date filtering completely
+        start_date = None
+        print("[RECENT_PHOTOS] Using special 'show_all' mode - bypassing all date filtering")
+    else:  # 'all'
+        start_date = None
+    
+    print(f"[RECENT_PHOTOS] Start date for filtering: {start_date}")
+    
+    # Query all images first to check dates
+    all_images = SpFossilImage.objects.all()
+    print(f"[RECENT_PHOTOS] Total images in database: {all_images.count()}")
+    
+    # Check some sample created_on dates
+    for i, img in enumerate(all_images[:5]):
+        print(f"[RECENT_PHOTOS] Sample image #{i+1}: ID={img.id}, created_on={img.created_on} (type: {type(img.created_on)})")
+    
+    # Query images with dates
+    recent_images = SpFossilImage.objects.all().select_related('specimen', 'slab')
+    print(f"[RECENT_PHOTOS] Initial query returned {recent_images.count()} images")
+    
+    if start_date:
+        # Instead of using datetime filter, manually filter after fetching
+        print(f"[RECENT_PHOTOS] Using manual date filtering for date >= {start_date}")
+        
+        # First get all images
+        all_recent_images = list(recent_images)
+        print(f"[RECENT_PHOTOS] Retrieved {len(all_recent_images)} images for manual filtering")
+        
+        # Then filter manually by date part only
+        filtered_images = []
+        for img in all_recent_images:
+            img_date = img.created_on.date()
+            print(f"[RECENT_PHOTOS] Comparing image date {img_date} with filter date {start_date}")
+            if img_date >= start_date:
+                filtered_images.append(img)
+        
+        print(f"[RECENT_PHOTOS] After manual date filtering, found {len(filtered_images)} matching images")
+        recent_images = filtered_images
+    
+    # Order by most recent first (manual sort since we have a list now)
+    recent_images = sorted(recent_images, key=lambda x: x.created_on, reverse=True)[:limit]
+    print(f"[RECENT_PHOTOS] Found {len(recent_images)} recent images after sorting and limiting")
+    
+    # Add additional information to each image
+    photos = []
+    for image in recent_images:
+        print(f"[RECENT_PHOTOS] Processing image: ID={image.id}, created_on={image.created_on}")
+        
+        photo = {
+            'image': image,
+            'thumbnail_url': image.get_thumbnail_url(),
+            'created_on': image.created_on,
+            'file_name': os.path.basename(image.original_path) if hasattr(image, 'original_path') and image.original_path else (os.path.basename(image.image_file.name) if image.image_file else "Unknown"),
+            'file_size': image.image_file.size if image.image_file else 0,
+        }
+        
+        # Determine if this is a specimen image or slab image
+        if image.specimen:
+            photo['associated_with'] = 'specimen'
+            photo['specimen'] = image.specimen
+            photo['detail_url'] = reverse('siriuspasset:specimen_detail', args=[image.specimen.id])
+            photo['specimen_no'] = image.specimen.specimen_no
+            photo['taxon_name'] = image.specimen.taxon_name
+            print(f"[RECENT_PHOTOS] Image associated with specimen: {image.specimen.specimen_no}")
+        elif image.slab:
+            photo['associated_with'] = 'slab'
+            photo['slab'] = image.slab
+            photo['detail_url'] = reverse('siriuspasset:slab_detail', args=[image.slab.id])
+            photo['slab_no'] = image.slab.slab_no
+            print(f"[RECENT_PHOTOS] Image associated with slab: {image.slab.slab_no}")
+        
+        photos.append(photo)
+    
+    print(f"[RECENT_PHOTOS] Final photos list contains {len(photos)} items")
+    
+    context = {
+        'user_obj': user_obj,
+        'photos': photos,
+        'time_range': time_range,
+        'total_photos': len(photos),
+        'debug_info': {
+            'total_in_db': all_images.count() if 'all_images' in locals() else 'Unknown',
+            'filter_date': start_date,
+            'current_date': today,
+        }
+    }
+    
+    end_time = time.time()
+    print(f"[RECENT_PHOTOS] Finished in {end_time - start_time:.2f} seconds with {len(photos)} total photos")
+    
+    return render(request, 'siriuspasset/recent_photos.html', context)

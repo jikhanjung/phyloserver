@@ -16,6 +16,7 @@ urlpatterns = [
     path('edit_slab/<int:pk>', views.edit_slab, name='edit_slab'),
     path('delete_slab/<int:pk>', views.delete_slab, name='delete_slab'),
     path('recent_activities/', views.recent_activities, name='recent_activities'),
+    path('recent_photos/', views.recent_photos, name='recent_photos'),
     path('directory_scans/', views.directory_scan_list, name='directory_scan_list'),
     path('directory_scans/<int:scan_id>/', views.directory_scan_detail, name='directory_scan_detail'),
     path('delete_image/<int:image_id>/', views.delete_image, name='delete_image'),

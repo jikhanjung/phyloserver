@@ -1,0 +1,126 @@
+{% extends "spbase.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Title and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Recent Photos</h2>
+            <p class="text-muted">Showing recently added photos to the database</p>
+        </div>
+        <div class="col-md-4">
+            <form method="GET" action="{% url 'siriuspasset:recent_photos' %}" class="form-inline justify-content-end">
+                <div class="form-group">
+                    <label for="range" class="mr-2">Time Range:</label>
+                    <select name="range" id="range" class="form-control" onchange="this.form.submit()">
+                        <option value="day" {% if time_range == 'day' %}selected{% endif %}>Past 24 Hours</option>
+                        <option value="week" {% if time_range == 'week' %}selected{% endif %}>Past Week</option>
+                        <option value="month" {% if time_range == 'month' %}selected{% endif %}>Past Month</option>
+                        <option value="year" {% if time_range == 'year' %}selected{% endif %}>Past Year</option>
+                        <option value="all" {% if time_range == 'all' %}selected{% endif %}>All Time</option>
+                        <option value="show_all" {% if time_range == 'show_all' %}selected{% endif %}>Show All (Bypass Filter)</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Photo Stats -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Photo Summary</h5>
+            <p>Showing {{ total_photos }} recent photos</p>
+            
+            <!-- Debug information -->
+            {% if debug_info %}
+            <div class="mt-3 p-3 bg-light">
+                <h6>Debug Information</h6>
+                <ul>
+                    <li>Total photos in database: {{ debug_info.total_in_db }}</li>
+                    <li>Current date: {{ debug_info.current_date }}</li>
+                    <li>Filter start date: {{ debug_info.filter_date|default:"All time (no filter)" }}</li>
+                    <li>Time range selected: {{ time_range }}</li>
+                </ul>
+                
+                <div class="mt-2">
+                    <p><strong>Try other time ranges:</strong></p>
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'siriuspasset:recent_photos' %}?range=day" class="btn btn-sm {% if time_range == 'day' %}btn-primary{% else %}btn-outline-primary{% endif %}">Day</a>
+                        <a href="{% url 'siriuspasset:recent_photos' %}?range=week" class="btn btn-sm {% if time_range == 'week' %}btn-primary{% else %}btn-outline-primary{% endif %}">Week</a>
+                        <a href="{% url 'siriuspasset:recent_photos' %}?range=month" class="btn btn-sm {% if time_range == 'month' %}btn-primary{% else %}btn-outline-primary{% endif %}">Month</a>
+                        <a href="{% url 'siriuspasset:recent_photos' %}?range=year" class="btn btn-sm {% if time_range == 'year' %}btn-primary{% else %}btn-outline-primary{% endif %}">Year</a>
+                        <a href="{% url 'siriuspasset:recent_photos' %}?range=all" class="btn btn-sm {% if time_range == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">All Time</a>
+                        <a href="{% url 'siriuspasset:recent_photos' %}?range=show_all" class="btn btn-sm {% if time_range == 'show_all' %}btn-danger{% else %}btn-outline-danger{% endif %}">Show All</a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Photo Gallery -->
+    {% if photos %}
+    <div class="row">
+        {% for photo in photos %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <a href="{{ photo.image.image_file.url }}" class="gallery-item" data-lightbox="photo-gallery" data-title="
+                    {% if photo.associated_with == 'specimen' %}
+                        Specimen: {{ photo.specimen_no }}{% if photo.taxon_name %} ({{ photo.taxon_name }}){% endif %}
+                    {% else %}
+                        Slab: {{ photo.slab_no }}
+                    {% endif %}
+                    - {{ photo.file_name }}
+                ">
+                    <img src="{{ photo.thumbnail_url }}" class="card-img-top" alt="Image thumbnail" style="object-fit: contain; height: 200px;">
+                </a>
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {% if photo.associated_with == 'specimen' %}
+                            <a href="{{ photo.detail_url }}">Specimen: {{ photo.specimen_no }}</a>
+                            {% if photo.taxon_name %}
+                                <small class="text-muted">{{ photo.taxon_name }}</small>
+                            {% endif %}
+                        {% else %}
+                            <a href="{{ photo.detail_url }}">Slab: {{ photo.slab_no }}</a>
+                        {% endif %}
+                    </h5>
+                    <p class="card-text">
+                        <strong>File:</strong> {{ photo.file_name }}<br>
+                        <strong>Size:</strong> {{ photo.file_size|filesizeformat }}
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">Added on {{ photo.created_on|date:"Y-m-d H:i" }}</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <h4>No Recent Photos</h4>
+        <p>There are no photos to display in the selected time range.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Include the image viewer component -->
+{% include "siriuspasset/components/image_gallery_viewer.html" %}
+
+<style>
+    .card-img-top {
+        transition: transform 0.3s ease;
+    }
+    .card-img-top:hover {
+        transform: scale(1.05);
+    }
+    .card {
+        transition: box-shadow 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %} 
