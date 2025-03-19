@@ -12,9 +12,12 @@
         </div>
         <div id="imageCaption" style="position: fixed; bottom: 10px; left: 0; right: 0; text-align: center; color: white; padding: 10px 0; height: 50px; background-color: rgba(0,0,0,0.5); z-index: 1051;"></div>
         
-        <button id="toggleSizeBtn" style="position: fixed; top: 15px; right: 70px; background: rgba(255,255,255,0.3); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; z-index: 1060;">View Full Size</button>
+        <div id="viewControls" style="position: fixed; top: 15px; right: 70px; z-index: 1060;">
+            <button id="fitToScreenBtn" style="background: rgba(255,255,255,0.3); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-right: 5px;" disabled>Fit to Screen</button>
+            <button id="originalSizeBtn" style="background: rgba(255,255,255,0.3); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Original Size</button>
+        </div>
         
-        <div id="zoomControls" style="position: fixed; bottom: 70px; right: 20px; z-index: 1052; display: none;">
+        <div id="zoomControls" style="position: fixed; bottom: 70px; right: 20px; z-index: 1052;">
             <button id="zoomIn" style="background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 4px; padding: 5px 10px; margin-right: 5px; cursor: pointer;">+</button>
             <button id="zoomReset" style="background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 4px; padding: 5px 10px; margin-right: 5px; cursor: pointer;">100%</button>
             <button id="zoomOut" style="background: rgba(255,255,255,0.3); color: white; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer;">-</button>
@@ -65,11 +68,14 @@ function initializeGalleryViewer() {
     // Custom image viewer
     let currentImageIndex = 0;
     let galleryImages = [];
-    let isOriginalSize = false;
     let zoomLevel = 1;
     let isDragging = false;
     let startX, startY, translateX = 0, translateY = 0;
     let lastTranslateX = 0, lastTranslateY = 0;
+    let originalImageWidth = 0;
+    let originalImageHeight = 0;
+    let fitScale = 1; // Scale factor when fit to screen
+    let isFitToScreen = true;
     
     // Collect all gallery images and their info
     $('.gallery-item').each(function(index) {
@@ -107,13 +113,14 @@ function initializeGalleryViewer() {
         translateY = 0;
         lastTranslateX = 0;
         lastTranslateY = 0;
+        isFitToScreen = true;
         
         const viewerImage = $('#viewerImage');
         viewerImage.attr('src', image.src);
         $('#imageCaption').text(image.title);
         currentImageIndex = index;
         
-        // Reset to fit-to-screen mode
+        // Initial state: fit to screen
         viewerImage.css({
             'max-width': '100%',
             'max-height': '100vh',
@@ -121,9 +128,55 @@ function initializeGalleryViewer() {
             'transform': 'translate(0px, 0px) scale(1)'
         });
         
-        $('#toggleSizeBtn').text('View Full Size');
-        $('#zoomControls').hide();
-        isOriginalSize = false;
+        // Reset button states
+        $('#fitToScreenBtn').prop('disabled', true);
+        $('#originalSizeBtn').prop('disabled', false);
+        
+        // Show zoom controls
+        $('#zoomControls').show();
+        $('#zoomReset').text('Fit');
+        
+        // Get original image dimensions after it loads
+        viewerImage.on('load', function() {
+            const img = new Image();
+            img.onload = function() {
+                originalImageWidth = this.width;
+                originalImageHeight = this.height;
+                
+                // Calculate fit scale by comparing original image dimensions to container
+                const containerWidth = $('#imageContainer').width();
+                const containerHeight = $('#imageContainer').height();
+                
+                const scaleX = containerWidth / originalImageWidth;
+                const scaleY = containerHeight / originalImageHeight;
+                fitScale = Math.min(scaleX, scaleY);
+                
+                // Update the button states to reflect the current view
+                updateButtonStates();
+            };
+            img.src = image.src;
+        });
+    }
+    
+    // Update button states based on current view mode
+    function updateButtonStates() {
+        if (isFitToScreen) {
+            $('#fitToScreenBtn').prop('disabled', true);
+            $('#originalSizeBtn').prop('disabled', false);
+            $('#zoomReset').text('Fit');
+        } else {
+            // If we're at 100% original size
+            if (Math.abs(zoomLevel - 1) < 0.05) {
+                $('#originalSizeBtn').prop('disabled', true);
+                $('#fitToScreenBtn').prop('disabled', false);
+                $('#zoomReset').text('100%');
+            } else {
+                // At some custom zoom level
+                $('#originalSizeBtn').prop('disabled', false);
+                $('#fitToScreenBtn').prop('disabled', false);
+                $('#zoomReset').text(`${Math.round(zoomLevel * 100)}%`);
+            }
+        }
     }
     
     // Next and previous buttons
@@ -142,43 +195,60 @@ function initializeGalleryViewer() {
         $('#customImageViewer').fadeOut();
     });
     
-    // Toggle image size button
-    $('#toggleSizeBtn').on('click', function() {
-        const img = $('#viewerImage');
-        isOriginalSize = !isOriginalSize;
+    // Button to fit image to screen
+    $('#fitToScreenBtn').on('click', function() {
+        isFitToScreen = true;
         
-        if (isOriginalSize) {
-            // Switch to original size
-            img.css({
-                'max-width': 'none',
-                'max-height': 'none',
-                'object-fit': 'none',
-                'transform': 'translate(0px, 0px) scale(1)'
-            });
-            $(this).text('Fit to Screen');
-            $('#zoomControls').show();
-            zoomLevel = 1;
-            translateX = 0;
-            translateY = 0;
-            lastTranslateX = 0;
-            lastTranslateY = 0;
-        } else {
-            // Back to fit to screen
-            img.css({
-                'max-width': '100%',
-                'max-height': '100vh',
-                'object-fit': 'contain',
-                'transform': 'translate(0px, 0px) scale(1)'
-            });
-            $(this).text('View Full Size');
-            $('#zoomControls').hide();
-            zoomLevel = 1;
-        }
+        // Reset position and transform
+        translateX = 0;
+        translateY = 0;
+        lastTranslateX = 0;
+        lastTranslateY = 0;
+        
+        const img = $('#viewerImage');
+        img.css({
+            'max-width': '100%',
+            'max-height': '100vh',
+            'object-fit': 'contain',
+            'transform': 'translate(0px, 0px) scale(1)'
+        });
+        
+        // Update cursor
+        img.css('cursor', 'default');
+        
+        // Update button states
+        updateButtonStates();
+    });
+    
+    // Button to view at original size (100%)
+    $('#originalSizeBtn').on('click', function() {
+        isFitToScreen = false;
+        zoomLevel = 1; // 100% original size
+        
+        // Reset position
+        translateX = 0;
+        translateY = 0;
+        lastTranslateX = 0;
+        lastTranslateY = 0;
+        
+        const img = $('#viewerImage');
+        img.css({
+            'max-width': 'none',
+            'max-height': 'none',
+            'object-fit': 'none',
+            'transform': 'translate(0px, 0px) scale(1)'
+        });
+        
+        // Update cursor for dragging
+        img.css('cursor', 'move');
+        
+        // Update button states
+        updateButtonStates();
     });
     
     // Mouse drag to pan image
     $('#viewerImage').on('mousedown', function(e) {
-        if (!isOriginalSize) return; // Only enable dragging in original size mode
+        if (isFitToScreen) return; // Only enable dragging when not in fit-to-screen mode
         
         isDragging = true;
         startX = e.clientX - lastTranslateX;
@@ -207,29 +277,100 @@ function initializeGalleryViewer() {
     
     // Zoom controls
     $('#zoomIn').on('click', function() {
+        if (isFitToScreen) {
+            // Switch to custom zoom mode but preserve the current fit scale
+            isFitToScreen = false;
+            
+            // Start from the current fit scale ratio
+            const img = $('#viewerImage');
+            img.css({
+                'max-width': 'none',
+                'max-height': 'none',
+                'object-fit': 'none',
+                'transform': `translate(0px, 0px) scale(${fitScale})`
+            });
+            
+            // Set initial zoom level to the fit scale
+            zoomLevel = fitScale;
+            
+            // Update cursor for dragging if beyond fit scale
+            img.css('cursor', 'move');
+        }
+        
+        // Now increase the zoom if below max limit
         if (zoomLevel < 5) {
             zoomLevel += 0.25;
-            updateZoom();
+            applyZoom();
         }
     });
     
     $('#zoomOut').on('click', function() {
-        if (zoomLevel > 0.5) {
+        if (isFitToScreen) {
+            // Switch to custom zoom mode but preserve the current fit scale
+            isFitToScreen = false;
+            
+            // Start from the current fit scale ratio
+            const img = $('#viewerImage');
+            img.css({
+                'max-width': 'none',
+                'max-height': 'none',
+                'object-fit': 'none',
+                'transform': `translate(0px, 0px) scale(${fitScale})`
+            });
+            
+            // Set initial zoom level to the fit scale
+            zoomLevel = fitScale;
+            
+            // Update cursor for dragging if beyond fit scale
+            img.css('cursor', 'move');
+        }
+        
+        // Now decrease the zoom
+        if (zoomLevel > 0.25) {
             zoomLevel -= 0.25;
-            updateZoom();
+            applyZoom();
         }
     });
     
     $('#zoomReset').on('click', function() {
-        zoomLevel = 1;
-        updateZoom();
+        if (isFitToScreen) {
+            // If we're already in fit mode, switch to original size
+            $('#originalSizeBtn').click();
+        } else {
+            // Otherwise, go back to fit mode
+            $('#fitToScreenBtn').click();
+        }
     });
+    
+    // Apply current zoom level
+    function applyZoom() {
+        $('#viewerImage').css('transform', `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`);
+        updateButtonStates();
+    }
     
     // Mouse wheel zoom
     $('#imageContainer').on('wheel', function(e) {
-        if (!isOriginalSize) return; // Only enable zooming in original size mode
-        
         e.preventDefault();
+        
+        // If in fit-to-screen mode, first switch to custom zoom while preserving the fit scale
+        if (isFitToScreen) {
+            isFitToScreen = false;
+            
+            // Start from the current fit scale ratio
+            const img = $('#viewerImage');
+            img.css({
+                'max-width': 'none',
+                'max-height': 'none',
+                'object-fit': 'none',
+                'transform': `translate(0px, 0px) scale(${fitScale})`
+            });
+            
+            // Set initial zoom level to the fit scale
+            zoomLevel = fitScale;
+            
+            // Update cursor for dragging if beyond fit scale
+            img.css('cursor', 'move');
+        }
         
         // Zoom in or out based on scroll direction
         if (e.originalEvent.deltaY < 0) {
@@ -239,20 +380,14 @@ function initializeGalleryViewer() {
             }
         } else {
             // Zoom out
-            if (zoomLevel > 0.5) {
+            if (zoomLevel > 0.25) {
                 zoomLevel -= 0.1;
             }
         }
         
         zoomLevel = Math.round(zoomLevel * 10) / 10; // Round to nearest 0.1
-        updateZoom();
+        applyZoom();
     });
-    
-    // Update zoom level
-    function updateZoom() {
-        $('#viewerImage').css('transform', `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`);
-        $('#zoomReset').text(`${Math.round(zoomLevel * 100)}%`);
-    }
     
     // Close when clicking outside the image
     $('#customImageViewer').on('click', function(e) {
@@ -276,13 +411,16 @@ function initializeGalleryViewer() {
                 $('.close-viewer').click();
                 break;
             case 187: // Plus (+)
-                if (isOriginalSize) $('#zoomIn').click();
+                $('#zoomIn').click();
                 break;
             case 189: // Minus (-)
-                if (isOriginalSize) $('#zoomOut').click();
+                $('#zoomOut').click();
                 break;
             case 48: // Zero (0)
-                if (isOriginalSize) $('#zoomReset').click();
+                $('#zoomReset').click();
+                break;
+            case 70: // F key
+                $('#fitToScreenBtn').click();
                 break;
         }
     });
