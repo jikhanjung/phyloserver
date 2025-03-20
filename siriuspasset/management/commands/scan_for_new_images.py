@@ -80,6 +80,12 @@ class Command(BaseCommand):
                 if not recursive and root != directory:
                     continue
                 
+                if debug:
+                    self.stdout.write(f'Scanning directory: {root}')
+                    if dirs:
+                        self.stdout.write(f'  Found subdirectories: {", ".join(dirs[:5])}{" and more..." if len(dirs) > 5 else ""}')
+                    self.stdout.write(f'  Found {len([f for f in files if f.lower().endswith((".jpg", ".jpeg", ".png", ".gif"))])} image files')
+                
                 for file in files:
                     # Only process image files
                     if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')):
@@ -127,9 +133,13 @@ class Command(BaseCommand):
     def process_file(self, image_path, slabs, specimens, prefix=None, year=None, debug=False):
         """Process a single image file."""
         filename = os.path.basename(image_path)
+        directory = os.path.dirname(image_path)
         specimen = None
         slab = None
         file_hash = None
+        
+        if debug:
+            self.stdout.write(f'Processing file: {filename} (in {directory})')
         
         # Calculate MD5 hash of the image file
         try:
@@ -153,7 +163,7 @@ class Command(BaseCommand):
         if FossilImage.objects.filter(md5hash=file_hash).exists():
             duplicate_image = FossilImage.objects.filter(md5hash=file_hash).first()
             if debug:
-                self.stdout.write(f'Image with hash {file_hash} already exists, skipping: {image_path}')
+                self.stdout.write(f'Image with hash {file_hash} already exists, skipping: {filename} (in {directory})')
             
             # Track the duplicate
             SpImageProcessingRecord.objects.create(
@@ -173,7 +183,7 @@ class Command(BaseCommand):
         if FossilImage.objects.filter(original_path=image_path).exists():
             existing_image = FossilImage.objects.filter(original_path=image_path).first()
             if debug:
-                self.stdout.write(f'Image with this path already exists, skipping: {image_path}')
+                self.stdout.write(f'Image with this path already exists, skipping: {filename} (in {directory})')
             
             # Track the existing path
             SpImageProcessingRecord.objects.create(
@@ -243,7 +253,7 @@ class Command(BaseCommand):
                         slab.save()
                         slabs[slab_no] = slab
             else:
-                self.stdout.write(self.style.WARNING(f"Could not parse filename: {filename} (clean version: {clean_filename})"))
+                self.stdout.write(self.style.WARNING(f"Could not parse filename: {filename} (clean version: {clean_filename}) in directory: {directory}"))
                 
                 # Track the no-match file
                 SpImageProcessingRecord.objects.create(
@@ -288,10 +298,10 @@ class Command(BaseCommand):
                 success_message = ""
                 if specimen:
                     success_message = f"Created image for specimen {specimen.specimen_no}"
-                    self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename}'))
+                    self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename} (in {directory})'))
                 else:
                     success_message = f"Created image for slab {slab.slab_no}"
-                    self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename}'))
+                    self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename} (in {directory})'))
                     
                 SpImageProcessingRecord.objects.create(
                     original_path=image_path,
