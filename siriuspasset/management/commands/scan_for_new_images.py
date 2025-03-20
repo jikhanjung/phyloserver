@@ -209,11 +209,11 @@ class Command(BaseCommand):
         
         # Extract specimen or slab number from filename
         if prefix and year:
-            # Pattern for specimens like SP-2016-0001A.jpg
-            specimen_match = re.search(rf'{prefix}-{year}-(\d+)([A-Za-z])', clean_filename, re.IGNORECASE)
+            # Pattern for specimens like SP-2016-0001A.jpg, SP-2016-278B-1.JPG, or SP-2016-278B1.JPG
+            specimen_match = re.search(rf'{prefix}-{year}-(\d+)([A-Za-z])(?:-?\d+)?', clean_filename, re.IGNORECASE)
             
             # Pattern for slabs like SP-2016-0001.jpg
-            slab_match = re.search(rf'{prefix}-{year}-(\d+)', clean_filename, re.IGNORECASE)
+            slab_match = re.search(rf'{prefix}-{year}-(\d+)(?:-\d+)?', clean_filename, re.IGNORECASE)
             
             if specimen_match:
                 slab_number = specimen_match.group(1).zfill(4)
@@ -280,6 +280,36 @@ class Command(BaseCommand):
             
             # Create a new image record
             with open(temp_path, 'rb') as f:
+                # Validate that we have either a slab or specimen
+                if not slab and not specimen:
+                    self.stdout.write(self.style.ERROR(f"Cannot create image with both slab and specimen null for {filename}"))
+                    
+                    # Try to extract just the slab part if this is a specimen file
+                    if prefix and year:
+                        basic_slab_match = re.search(rf'{prefix}-{year}-(\d+)', clean_filename, re.IGNORECASE)
+                        if basic_slab_match:
+                            slab_number = basic_slab_match.group(1).zfill(4)
+                            slab_no = f"{prefix}-{year}-{slab_number}"
+                            
+                            # Find or create the slab
+                            slab = Slab.objects.filter(slab_no=slab_no).first()
+                            if not slab:
+                                self.stdout.write(self.style.WARNING(f'Fallback: Creating slab {slab_no} for {filename}'))
+                                slab = Slab(slab_no=slab_no)
+                                slab.save()
+                    
+                    if not slab:
+                        # If we still couldn't get a slab, log error and skip this file
+                        SpImageProcessingRecord.objects.create(
+                            original_path=image_path,
+                            filename=filename,
+                            md5hash=file_hash,
+                            status='error',
+                            status_message="Could not determine slab or specimen for this image",
+                            command_used='scan_for_new_images'
+                        )
+                        raise ValueError("Cannot create image with both slab and specimen null")
+                
                 image = FossilImage(
                     slab=slab,
                     specimen=specimen,
@@ -304,9 +334,37 @@ class Command(BaseCommand):
                 if specimen:
                     success_message = f"Created image for specimen {specimen.specimen_no}"
                     self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename} (in {directory})'))
-                else:
+                elif slab:
                     success_message = f"Created image for slab {slab.slab_no}"
                     self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename} (in {directory})'))
+                else:
+                    # This should never happen, but just in case
+                    error_msg = f"Error: Both slab and specimen are null for {filename}"
+                    self.stdout.write(self.style.ERROR(error_msg))
+                    
+                    # Try to fix it by finding a slab if possible
+                    if debug:
+                        self.stdout.write(f"Attempting to recover by finding a valid slab for {filename}")
+                    
+                    try:
+                        # Match again to ensure we have a slab reference
+                        if prefix and year and re.search(rf'{prefix}-{year}-\d+', clean_filename, re.IGNORECASE):
+                            basic_slab_match = re.search(rf'{prefix}-{year}-(\d+)', clean_filename, re.IGNORECASE)
+                            if basic_slab_match:
+                                slab_number = basic_slab_match.group(1).zfill(4)
+                                slab_no = f"{prefix}-{year}-{slab_number}"
+                                slab = Slab.objects.filter(slab_no=slab_no).first()
+                                if not slab:
+                                    self.stdout.write(f"Creating recovery slab {slab_no} for {filename}")
+                                    slab = Slab(slab_no=slab_no)
+                                    slab.save()
+                                    
+                                # Update the image with the slab
+                                image.slab = slab
+                                image.save()
+                                success_message = f"Recovered by creating slab {slab_no}"
+                    except Exception as recover_error:
+                        self.stdout.write(self.style.ERROR(f"Recovery failed: {str(recover_error)}"))
                     
                 SpImageProcessingRecord.objects.create(
                     original_path=image_path,

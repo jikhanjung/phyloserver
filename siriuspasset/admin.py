@@ -6,6 +6,14 @@ from siriuspasset.models import (
 
 # Register your models here.
 
+@admin.register(DirectoryScan)
+class DirectoryScanAdmin(admin.ModelAdmin):
+    list_display = ('directory', 'status', 'scan_start_time', 'scan_end_time', 'images_found', 'images_created')
+    list_filter = ('status', 'recursive', 'scan_start_time')
+    search_fields = ('directory', 'prefix', 'year')
+    readonly_fields = ('scan_start_time', 'scan_end_time')
+    date_hierarchy = 'scan_start_time'
+
 @admin.register(SpImageProcessingRecord)
 class SpImageProcessingRecordAdmin(admin.ModelAdmin):
     list_display = ('filename', 'status', 'process_datetime', 'command_used')

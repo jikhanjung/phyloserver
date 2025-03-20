@@ -40,7 +40,7 @@
                             {% for scan in scans %}
                                 <tr>
                                     <td>{{ scan.id }}</td>
-                                    <td>{{ scan.scan_directory }}</td>
+                                    <td>{{ scan.directory }}</td>
                                     <td>{{ scan.scan_start_time|date:"Y-m-d H:i:s" }}</td>
                                     <td>
                                         {% if scan.duration %}

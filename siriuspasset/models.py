@@ -256,6 +256,38 @@ class DirectoryScan(models.Model):
     scan_start_time = models.DateTimeField(auto_now_add=True, help_text="When the scan was started")
     scan_end_time = models.DateTimeField(blank=True, null=True, help_text="When the scan completed")
     
+    # For backward compatibility - property methods to ensure old code still works
+    @property
+    def get_scan_directory(self):
+        """Return the directory field for backward compatibility"""
+        return self.directory if self.directory else self.scan_directory
+    
+    @property
+    def get_total_files_found(self):
+        """Return the images_found field for backward compatibility"""
+        return self.images_found if self.images_found else self.total_files_found
+    
+    @property
+    def get_new_images_imported(self):
+        """Return the images_created field for backward compatibility"""
+        return self.images_created if self.images_created else self.new_images_imported
+    
+    def save(self, *args, **kwargs):
+        """Ensure data is synced between old and new fields"""
+        # Sync directory fields
+        if not self.directory and self.scan_directory:
+            self.directory = self.scan_directory
+        elif self.directory and not self.scan_directory:
+            self.scan_directory = self.directory
+            
+        # Sync count fields
+        if not self.images_found and self.total_files_found:
+            self.images_found = self.total_files_found
+        if not self.images_created and self.new_images_imported:
+            self.images_created = self.new_images_imported
+            
+        super().save(*args, **kwargs)
+    
     class Meta:
         ordering = ['-scan_start_time']
         verbose_name = 'Directory Scan'
