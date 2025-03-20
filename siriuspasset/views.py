@@ -812,19 +812,14 @@ def delete_image(request, image_id):
 
 def recent_photos(request):
     """View to display recently added photos in descending order of creation date"""
-    print("[RECENT_PHOTOS] Starting recent photos view")
-    start_time = time.time()
-    
     user_obj = get_user_obj(request)
     
     # Get filter parameters
     time_range = request.GET.get('range', 'week')  # Default to showing past week
     limit = int(request.GET.get('limit', 50))      # Default to 50 items
-    print(f"[RECENT_PHOTOS] Time range: {time_range}, limit: {limit}")
     
     # Calculate the date range
     today = datetime.now().date()
-    print(f"[RECENT_PHOTOS] Current date: {today}")
     
     if time_range == 'day':
         start_date = today - timedelta(days=1)
@@ -837,52 +832,30 @@ def recent_photos(request):
     elif time_range == 'show_all':
         # Special option to explicitly show all images, bypass date filtering completely
         start_date = None
-        print("[RECENT_PHOTOS] Using special 'show_all' mode - bypassing all date filtering")
     else:  # 'all'
         start_date = None
     
-    print(f"[RECENT_PHOTOS] Start date for filtering: {start_date}")
+    # Query images with efficient database filtering
+    recent_images_query = SpFossilImage.objects.all().select_related('specimen', 'slab')
     
-    # Query all images first to check dates
-    all_images = SpFossilImage.objects.all()
-    print(f"[RECENT_PHOTOS] Total images in database: {all_images.count()}")
-    
-    # Check some sample created_on dates
-    for i, img in enumerate(all_images[:5]):
-        print(f"[RECENT_PHOTOS] Sample image #{i+1}: ID={img.id}, created_on={img.created_on} (type: {type(img.created_on)})")
-    
-    # Query images with dates
-    recent_images = SpFossilImage.objects.all().select_related('specimen', 'slab')
-    print(f"[RECENT_PHOTOS] Initial query returned {recent_images.count()} images")
-    
+    # Apply date filtering at the database level if needed
     if start_date:
-        # Instead of using datetime filter, manually filter after fetching
-        print(f"[RECENT_PHOTOS] Using manual date filtering for date >= {start_date}")
+        # Convert to datetime to catch all records from that day
+        from datetime import time as dt_time
+        start_datetime = datetime.combine(start_date, dt_time.min)
         
-        # First get all images
-        all_recent_images = list(recent_images)
-        print(f"[RECENT_PHOTOS] Retrieved {len(all_recent_images)} images for manual filtering")
-        
-        # Then filter manually by date part only
-        filtered_images = []
-        for img in all_recent_images:
-            img_date = img.created_on.date()
-            print(f"[RECENT_PHOTOS] Comparing image date {img_date} with filter date {start_date}")
-            if img_date >= start_date:
-                filtered_images.append(img)
-        
-        print(f"[RECENT_PHOTOS] After manual date filtering, found {len(filtered_images)} matching images")
-        recent_images = filtered_images
+        # Use raw SQL filtering to handle date part consistently across databases
+        recent_images_query = recent_images_query.extra(
+            where=["DATE(created_on) >= %s"],
+            params=[start_date]
+        )
     
-    # Order by most recent first (manual sort since we have a list now)
-    recent_images = sorted(recent_images, key=lambda x: x.created_on, reverse=True)[:limit]
-    print(f"[RECENT_PHOTOS] Found {len(recent_images)} recent images after sorting and limiting")
+    # Apply sorting and limiting at the database level
+    recent_images = recent_images_query.order_by('-created_on')[:limit]
     
-    # Add additional information to each image
+    # Process the results efficiently
     photos = []
     for image in recent_images:
-        print(f"[RECENT_PHOTOS] Processing image: ID={image.id}, created_on={image.created_on}")
-        
         photo = {
             'image': image,
             'thumbnail_url': image.get_thumbnail_url(),
@@ -898,17 +871,13 @@ def recent_photos(request):
             photo['detail_url'] = reverse('siriuspasset:specimen_detail', args=[image.specimen.id])
             photo['specimen_no'] = image.specimen.specimen_no
             photo['taxon_name'] = image.specimen.taxon_name
-            print(f"[RECENT_PHOTOS] Image associated with specimen: {image.specimen.specimen_no}")
         elif image.slab:
             photo['associated_with'] = 'slab'
             photo['slab'] = image.slab
             photo['detail_url'] = reverse('siriuspasset:slab_detail', args=[image.slab.id])
             photo['slab_no'] = image.slab.slab_no
-            print(f"[RECENT_PHOTOS] Image associated with slab: {image.slab.slab_no}")
         
         photos.append(photo)
-    
-    print(f"[RECENT_PHOTOS] Final photos list contains {len(photos)} items")
     
     context = {
         'user_obj': user_obj,
@@ -916,13 +885,10 @@ def recent_photos(request):
         'time_range': time_range,
         'total_photos': len(photos),
         'debug_info': {
-            'total_in_db': all_images.count() if 'all_images' in locals() else 'Unknown',
+            'total_in_db': SpFossilImage.objects.count(),
             'filter_date': start_date,
             'current_date': today,
         }
     }
-    
-    end_time = time.time()
-    print(f"[RECENT_PHOTOS] Finished in {end_time - start_time:.2f} seconds with {len(photos)} total photos")
     
     return render(request, 'siriuspasset/recent_photos.html', context)
