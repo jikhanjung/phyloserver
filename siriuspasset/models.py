@@ -6,6 +6,9 @@ from django.conf import settings
 from PIL import Image as PILImage
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
+from io import BytesIO
+from django.core.files.base import ContentFile
+import hashlib
 
 # Configuration for image directory structure
 # Number of slabs per directory (e.g., 100 gives 0001-0100, 1000 gives 0001-1000)
@@ -219,29 +222,39 @@ class SpFossilImage(models.Model):
 
 class DirectoryScan(models.Model):
     """
-    Records information about directory scans for new images,
-    including when the scan was performed, what directory was scanned,
-    and statistics about the import process.
+    Record of directory scans for image files
     """
-    scan_directory = models.CharField("Scanned Directory", max_length=255, help_text="Path of the scanned directory")
-    scan_start_time = models.DateTimeField("Scan Start Time", auto_now_add=True, help_text="When the scan started")
-    scan_end_time = models.DateTimeField("Scan End Time", null=True, blank=True, help_text="When the scan completed")
-    scan_pattern = models.CharField("File Pattern", max_length=50, help_text="Pattern used to match files")
-    total_files_found = models.IntegerField("Total Files Found", default=0, help_text="Total image files found")
-    new_images_imported = models.IntegerField("New Images Imported", default=0, help_text="Number of new images imported")
-    duplicate_images_skipped = models.IntegerField("Duplicate Images Skipped", default=0, help_text="Number of duplicate images skipped")
-    existing_images_skipped = models.IntegerField("Existing Images Skipped", default=0, help_text="Number of existing images skipped")
-    older_files_skipped = models.IntegerField("Older Files Skipped", default=0, help_text="Number of files skipped because they were created before the last scan")
-    error_count = models.IntegerField("Errors Encountered", default=0, help_text="Number of errors encountered")
-    status = models.CharField("Status", max_length=20, choices=[
-        ('in_progress', 'In Progress'),
-        ('completed', 'Completed'),
-        ('failed', 'Failed')
-    ], default='in_progress')
-    log_summary = models.TextField("Log Summary", blank=True, help_text="Summary of the scan log")
+    directory = models.CharField(max_length=512, help_text="Directory scanned", default="")
+    recursive = models.BooleanField(default=False, help_text="Whether subdirectories were scanned recursively")
+    prefix = models.CharField(max_length=10, blank=True, null=True, help_text="Prefix used for pattern matching")
+    year = models.CharField(max_length=10, blank=True, null=True, help_text="Year used for pattern matching")
     
-    # User who initiated the scan
-    created_by = models.CharField(max_length=100, blank=True)
+    # For backward compatibility with existing records
+    scan_directory = models.CharField(max_length=255, blank=True, null=True)
+    scan_pattern = models.CharField(max_length=50, blank=True, null=True)
+    total_files_found = models.IntegerField(default=0)
+    new_images_imported = models.IntegerField(default=0)
+    duplicate_images_skipped = models.IntegerField(default=0)
+    existing_images_skipped = models.IntegerField(default=0)
+    older_files_skipped = models.IntegerField(default=0)
+    error_count = models.IntegerField(default=0)
+    created_by = models.CharField(max_length=100, blank=True, null=True)
+    
+    STATUS_CHOICES = [
+        ('started', 'Started'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('in_progress', 'In Progress'),  # For backward compatibility
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='started')
+    
+    images_found = models.IntegerField(default=0, help_text="Total image files found")
+    images_created = models.IntegerField(default=0, help_text="Images successfully created")
+    
+    log_summary = models.TextField(blank=True, null=True, help_text="Summary of scan results")
+    
+    scan_start_time = models.DateTimeField(auto_now_add=True, help_text="When the scan was started")
+    scan_end_time = models.DateTimeField(blank=True, null=True, help_text="When the scan completed")
     
     class Meta:
         ordering = ['-scan_start_time']
@@ -249,7 +262,7 @@ class DirectoryScan(models.Model):
         verbose_name_plural = 'Directory Scans'
     
     def __str__(self):
-        return f"Scan of {self.scan_directory} on {self.scan_start_time.strftime('%Y-%m-%d %H:%M')}"
+        return f"Scan of {self.directory} on {self.scan_start_time.strftime('%Y-%m-%d %H:%M')}"
     
     def duration(self):
         """Returns the duration of the scan in seconds, or None if not completed"""
@@ -258,7 +271,50 @@ class DirectoryScan(models.Model):
         return None
     
     def mark_completed(self, status='completed'):
-        """Mark this scan as completed with the given status"""
+        """Mark the scan as completed with timestamp"""
         self.status = status
         self.scan_end_time = timezone.now()
         self.save()
+
+class SpImageProcessingRecord(models.Model):
+    """
+    Tracks the processing history of image files for import_specimens and scan_for_new_images.
+    This helps avoid reprocessing files and provides an audit trail.
+    """
+    original_path = models.CharField(max_length=512, help_text="Original file path when processed")
+    filename = models.CharField(max_length=255, help_text="Original filename")
+    md5hash = models.CharField(max_length=32, blank=True, null=True, help_text="MD5 hash of the file")
+    
+    STATUS_CHOICES = [
+        ('success', 'Successfully Processed'),
+        ('duplicate', 'Skipped as Duplicate'),
+        ('no_match', 'No Pattern Match'),
+        ('error', 'Error During Processing'),
+        ('skipped', 'Skipped for Other Reason')
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, help_text="Processing outcome")
+    status_message = models.TextField(blank=True, null=True, help_text="Details about processing outcome")
+    
+    image = models.ForeignKey(SpFossilImage, blank=True, null=True, on_delete=models.SET_NULL, 
+                              help_text="Link to created image if successful")
+    slab = models.ForeignKey(SpSlab, blank=True, null=True, on_delete=models.SET_NULL, 
+                             help_text="Associated slab")
+    specimen = models.ForeignKey(SpFossilSpecimen, blank=True, null=True, on_delete=models.SET_NULL, 
+                                 help_text="Associated specimen")
+    
+    process_datetime = models.DateTimeField(auto_now_add=True, help_text="When the file was processed")
+    command_used = models.CharField(max_length=50, help_text="Command used for processing (import_specimens/scan_for_new_images)")
+    
+    class Meta:
+        verbose_name = "Image Processing Record"
+        verbose_name_plural = "Image Processing Records"
+        indexes = [
+            models.Index(fields=['original_path']),
+            models.Index(fields=['filename']),
+            models.Index(fields=['md5hash']),
+            models.Index(fields=['status']),
+            models.Index(fields=['process_datetime']),
+        ]
+
+    def __str__(self):
+        return f"{self.filename} ({self.status}) - {self.process_datetime.strftime('%Y-%m-%d %H:%M')}"

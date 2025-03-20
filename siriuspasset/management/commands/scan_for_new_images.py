@@ -1,238 +1,329 @@
 from django.core.management.base import BaseCommand
-from siriuspasset.models import SpSlab, SpFossilSpecimen, SpFossilImage, DirectoryScan
 import os
 import re
-import hashlib
-from django.conf import settings
+from siriuspasset.models import SpSlab as Slab, SpFossilSpecimen as Specimen, SpFossilImage as FossilImage, DirectoryScan, SpImageProcessingRecord
 from django.core.files import File
-from django.utils import timezone
+from django.conf import settings
+import hashlib
 import time
 import logging
+from pathlib import Path
+import shutil
+from datetime import datetime
 
 class Command(BaseCommand):
     help = 'Scan a designated directory for new images and import them'
 
     def add_arguments(self, parser):
-        parser.add_argument('directory', type=str, help='Path to the base directory to scan')
-        parser.add_argument('--pattern', type=str, default='SP-', help='Pattern to match in filenames (e.g., SP-2016)')
-        parser.add_argument('--skip-existing', action='store_true', help='Skip existing images instead of updating them')
+        parser.add_argument('directory', type=str, help='Directory to scan for image files')
+        parser.add_argument('--recursive', action='store_true', help='Scan subdirectories recursively')
+        parser.add_argument('--prefix', type=str, help='Prefix to match (e.g., "SP")')
+        parser.add_argument('--year', type=str, help='Year to match (e.g., "2016")')
         parser.add_argument('--debug', action='store_true', help='Enable debug output')
         parser.add_argument('--slab-images-only', action='store_true', help='Process images as slab images only')
+        parser.add_argument('--skip-existing', action='store_true', help='Skip existing images instead of updating them')
+        parser.add_argument('--pattern', type=str, default='SP-', help='Pattern to match in filenames (e.g., SP-2016)')
 
     def handle(self, *args, **options):
-        directory = options['directory']
-        pattern = options['pattern']
-        skip_existing = options.get('skip_existing', False)
-        debug = options.get('debug', False)
-        slab_images_only = options.get('slab_images_only', False)
+        start_time = time.time()
         
-        # Configure logging
+        # Get options
+        directory = options['directory']
+        recursive = options['recursive']
+        prefix = options['prefix']
+        year = options['year']
+        debug = options['debug']
+        
+        # Configure logging level
         log_level = logging.DEBUG if debug else logging.INFO
         logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
         
-        # Create a new scan record
+        self.stdout.write(f'Scanning directory: {directory}')
+        if recursive:
+            self.stdout.write('Scanning recursively')
+        if prefix and year:
+            self.stdout.write(f'Looking for files matching prefix {prefix} and year {year}')
+        
+        # Create DirectoryScan record
         scan = DirectoryScan(
-            scan_directory=directory,
-            scan_pattern=pattern,
-            status='in_progress'
+            directory=directory,
+            recursive=recursive,
+            prefix=prefix,
+            year=year,
+            status='started'
         )
         scan.save()
         
         try:
-            start_time = time.time()
-            self.stdout.write(self.style.SUCCESS(f'Starting scan of {directory} with pattern {pattern}'))
-            
             # Get all slabs and specimens for quick lookup
-            slabs = {slab.slab_no: slab for slab in SpSlab.objects.all()}
-            specimens = {specimen.specimen_no: specimen for specimen in SpFossilSpecimen.objects.all()}
+            slabs = {slab.slab_no: slab for slab in Slab.objects.all()}
+            specimens = {specimen.specimen_no: specimen for specimen in Specimen.objects.all()}
             
             # Get last successful scan time to skip older files
-            last_successful_scan = DirectoryScan.objects.filter(
-                scan_directory=directory, 
-                status='completed'
-            ).order_by('-scan_end_time').first()
+            last_scan = DirectoryScan.objects.filter(directory=directory, status='completed').order_by('-scan_end_time').first()
+            last_scan_time = last_scan.scan_end_time if last_scan else None
             
-            last_scan_time = None
-            if last_successful_scan:
-                last_scan_time = last_successful_scan.scan_end_time
-                self.stdout.write(f"Last successful scan completed at: {last_scan_time}")
+            if last_scan_time and debug:
+                self.stdout.write(f'Last successful scan was at {last_scan_time}')
             
-            # Track statistics
-            total_files = 0
-            new_images = 0
+            # Counters for summary
+            found_files = 0
+            processed_files = 0
             skipped_existing = 0
             skipped_duplicate = 0
-            skipped_older = 0
-            errors = 0
-            log_entries = []
+            skipped_no_match = 0
+            skipped_old = 0
             
-            # Walk through the directory tree
+            # Loop through all files in the directory
             for root, dirs, files in os.walk(directory):
+                # Skip if not recursive and we're in a subdirectory
+                if not recursive and root != directory:
+                    continue
+                
                 for file in files:
+                    # Only process image files
                     if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')):
-                        total_files += 1
+                        found_files += 1
+                        image_path = os.path.join(root, file)
                         
-                        try:
-                            # Full path to the image file
-                            image_path = os.path.join(root, file)
-                            
-                            # Check if the file is older than the last scan
-                            if last_scan_time:
-                                file_creation_time = os.path.getctime(image_path)
-                                file_modification_time = os.path.getmtime(image_path)
-                                # Use the newer of creation or modification time
-                                file_time = max(file_creation_time, file_modification_time)
-                                file_time = timezone.datetime.fromtimestamp(file_time, tz=timezone.get_current_timezone())
-                                
-                                if file_time < last_scan_time:
-                                    skipped_older += 1
-                                    if debug:
-                                        log_entries.append(f"Skipping older file: {file} (created before last scan)")
-                                    continue
-                            
-                            # Check if the filename matches the pattern
-                            if pattern not in file:
-                                log_entries.append(f"Skipping {file}: Does not match pattern {pattern}")
-                                continue
-                            
-                            # Calculate MD5 hash of the image file
-                            with open(image_path, 'rb') as f:
-                                file_hash = hashlib.md5(f.read()).hexdigest()
-                            
-                            # Check if an image with this hash already exists
-                            if SpFossilImage.objects.filter(md5hash=file_hash).exists():
-                                skipped_duplicate += 1
+                        # Skip files that haven't been modified since last scan
+                        if last_scan_time:
+                            mod_time = os.path.getmtime(image_path)
+                            mod_datetime = datetime.fromtimestamp(mod_time)
+                            if mod_datetime < last_scan_time:
+                                skipped_old += 1
                                 if debug:
-                                    log_entries.append(f"Skipping duplicate: {file} (hash: {file_hash})")
+                                    self.stdout.write(f'Skipping older file (not modified since last scan): {image_path}')
                                 continue
-                            
-                            # Check if an image with the same original path already exists
-                            if SpFossilImage.objects.filter(original_path=image_path).exists():
-                                skipped_existing += 1
-                                if debug:
-                                    log_entries.append(f"Skipping existing: {file} (path: {image_path})")
-                                continue
-                            
-                            # Extract specimen or slab number from filename
-                            slab_match = None
-                            if pattern.startswith('SP-'):
-                                # Try various patterns for SP files
-                                # Updated pattern to handle SP-YYYY-N[Letter]-PhotoNumber format
-                                year_pattern = r'(SP-\d{4})-(\d+[A-Za-z]?)(?:-(\d+))?\.'  # e.g., SP-2016-1A-157.JPG
-                                
-                                # Check for slab pattern with parentheses
-                                slab_parentheses_match = re.search(rf'(SP-\d{{4}}-\d+)\((\w+)\)', file, re.IGNORECASE)
-                                if slab_parentheses_match:
-                                    slab_no = slab_parentheses_match.group(1)
-                                    view_type = slab_parentheses_match.group(2)  # dorsal, ventral, etc.
-                                    slab = slabs.get(slab_no)
-                                    specimen = None
-                                    self.stdout.write(f"Found slab image: {file} -> {slab_no} ({view_type} view)")
-                                else:
-                                    # Standard pattern matching
-                                    match = re.search(year_pattern, file, re.IGNORECASE)
-                                    if match:
-                                        prefix_year = match.group(1)  # e.g., SP-2016
-                                        id_part = match.group(2)      # e.g., 1A or 1
-                                        photo_num = match.group(3) if match.group(3) else ""  # e.g., 157
-                                        
-                                        # Check if the id_part has a letter (indicating a specimen)
-                                        if re.search(r'[A-Za-z]', id_part):
-                                            # This is a specimen (e.g., SP-2016-1A-157.JPG)
-                                            # Split the number and letter parts
-                                            slab_part = re.match(r'(\d+)', id_part).group(1)
-                                            specimen_letter = id_part[len(slab_part):]  # Extract the letter part
-                                            
-                                            # Construct the slab number from the prefix and the digit part with zero padding
-                                            slab_no = f"{prefix_year}-{int(slab_part):04d}"
-                                            # Construct the specimen number
-                                            specimen_no = f"{slab_no}-{specimen_letter}"
-                                            
-                                            # Find the specimen
-                                            specimen = specimens.get(specimen_no)
-                                            slab = slabs.get(slab_no)
-                                            if specimen:
-                                                self.stdout.write(f"Found specimen image: {file} -> {specimen_no} (photo #{photo_num})")
-                                            else:
-                                                self.stdout.write(self.style.WARNING(f"Specimen not found: {specimen_no} for {file}"))
-                                                errors += 1
-                                                continue
-                                        else:
-                                            # This is a slab (e.g., SP-2016-1-157.JPG)
-                                            # Zero-pad the slab number to 4 digits
-                                            slab_no = f"{prefix_year}-{int(id_part):04d}"
-                                            slab = slabs.get(slab_no)
-                                            specimen = None
-                                            if slab:
-                                                self.stdout.write(f"Found slab image: {file} -> {slab_no} (photo #{photo_num})")
-                                            else:
-                                                self.stdout.write(self.style.WARNING(f"Slab not found: {slab_no} for {file}"))
-                                                errors += 1
-                                                continue
-                                    else:
-                                        self.stdout.write(self.style.WARNING(f"Could not parse filename: {file}"))
-                                        errors += 1
-                                        continue
-                            else:
-                                # Handle other patterns if needed
-                                self.stdout.write(self.style.WARNING(f"Unsupported pattern: {pattern}"))
-                                errors += 1
-                                continue
-                            
-                            # If slab_images_only is set, only process slab images
-                            if slab_images_only and specimen is not None:
-                                self.stdout.write(f"Skipping specimen image in slab-only mode: {file}")
-                                continue
-                            
-                            # Create a new image record
-                            image = SpFossilImage(
-                                slab=slab,
-                                specimen=specimen,
-                                description='',
-                                original_path=image_path,
-                                md5hash=file_hash
-                            )
-                            
-                            # Save the image to the database
-                            with open(image_path, 'rb') as f:
-                                image.save()
-                                image.image_file.save(file, File(f), save=True)
-                            
-                            # Generate thumbnail
-                            image.generate_thumbnail()
-                            
-                            new_images += 1
-                            log_entries.append(f"Imported: {file}")
-                            
-                        except Exception as e:
-                            self.stdout.write(self.style.ERROR(f"Error processing {file}: {str(e)}"))
-                            errors += 1
-                            log_entries.append(f"Error with {file}: {str(e)}")
+                        
+                        # Process the file
+                        if self.process_file(image_path, slabs, specimens, prefix, year, debug):
+                            processed_files += 1
             
-            # Update the scan record
-            scan.total_files_found = total_files
-            scan.new_images_imported = new_images
-            scan.duplicate_images_skipped = skipped_duplicate
-            scan.existing_images_skipped = skipped_existing
-            scan.older_files_skipped = skipped_older
-            scan.error_count = errors
-            scan.log_summary = "\n".join(log_entries[-100:])  # Keep the last 100 log entries
-            
-            end_time = time.time()
-            duration = end_time - start_time
-            
-            # Print summary
-            self.stdout.write(self.style.SUCCESS(f"Scan completed in {duration:.2f} seconds"))
-            self.stdout.write(f"Total files found: {total_files}")
-            self.stdout.write(f"New images imported: {new_images}")
-            self.stdout.write(f"Duplicate images skipped: {skipped_duplicate}")
-            self.stdout.write(f"Existing images skipped: {skipped_existing}")
-            self.stdout.write(f"Older files skipped: {skipped_older}")
-            self.stdout.write(f"Errors: {errors}")
-            
+            # Update scan record with successful completion
+            scan.images_found = found_files
+            scan.images_created = processed_files
+            scan.log_summary = f"Found {found_files} files, processed {processed_files}, skipped {found_files - processed_files}"
             scan.mark_completed('completed')
             
+            elapsed_time = time.time() - start_time
+            
+            # Print summary statistics
+            self.stdout.write(self.style.SUCCESS(f'Scan completed in {elapsed_time:.2f} seconds'))
+            self.stdout.write(f'Found {found_files} image files')
+            self.stdout.write(f'Successfully processed {processed_files} images')
+            if last_scan_time:
+                self.stdout.write(f'Skipped {skipped_old} older files (not modified since last scan)')
+            
+            # Print summary of processing records
+            record_count = SpImageProcessingRecord.objects.filter(command_used='scan_for_new_images').count()
+            self.stdout.write(f'Created {record_count} processing records for tracking')
+            
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Scan failed: {str(e)}"))
+            self.stdout.write(self.style.ERROR(f'Error during scan: {str(e)}'))
             scan.log_summary = f"Scan failed with error: {str(e)}"
-            scan.mark_completed('failed') 
+            scan.mark_completed('failed')
+
+    def process_file(self, image_path, slabs, specimens, prefix=None, year=None, debug=False):
+        """Process a single image file."""
+        filename = os.path.basename(image_path)
+        specimen = None
+        slab = None
+        file_hash = None
+        
+        # Calculate MD5 hash of the image file
+        try:
+            with open(image_path, 'rb') as f:
+                file_hash = hashlib.md5(f.read()).hexdigest()
+        except Exception as e:
+            error_msg = f'Error reading image file: {str(e)}'
+            self.stdout.write(self.style.ERROR(f'{error_msg}: {image_path}'))
+            
+            # Track the error
+            SpImageProcessingRecord.objects.create(
+                original_path=image_path,
+                filename=filename,
+                status='error',
+                status_message=error_msg,
+                command_used='scan_for_new_images'
+            )
+            return False
+        
+        # Check if an image with this hash already exists
+        if FossilImage.objects.filter(md5hash=file_hash).exists():
+            duplicate_image = FossilImage.objects.filter(md5hash=file_hash).first()
+            if debug:
+                self.stdout.write(f'Image with hash {file_hash} already exists, skipping: {image_path}')
+            
+            # Track the duplicate
+            SpImageProcessingRecord.objects.create(
+                original_path=image_path,
+                filename=filename,
+                md5hash=file_hash,
+                status='duplicate',
+                status_message=f"Duplicate of existing image: {duplicate_image.image_file.name}",
+                image=duplicate_image,
+                slab=duplicate_image.slab,
+                specimen=duplicate_image.specimen,
+                command_used='scan_for_new_images'
+            )
+            return False
+        
+        # Check if an image with the same original path already exists
+        if FossilImage.objects.filter(original_path=image_path).exists():
+            existing_image = FossilImage.objects.filter(original_path=image_path).first()
+            if debug:
+                self.stdout.write(f'Image with this path already exists, skipping: {image_path}')
+            
+            # Track the existing path
+            SpImageProcessingRecord.objects.create(
+                original_path=image_path,
+                filename=filename,
+                md5hash=file_hash,
+                status='skipped',
+                status_message="Image with this path already exists in database",
+                image=existing_image,
+                slab=existing_image.slab,
+                specimen=existing_image.specimen,
+                command_used='scan_for_new_images'
+            )
+            return False
+        
+        # Create a clean version of the filename with whitespace removed for pattern matching
+        clean_filename = filename.replace(" ", "")
+        
+        # Extract specimen or slab number from filename
+        if prefix and year:
+            # Pattern for specimens like SP-2016-0001A.jpg
+            specimen_match = re.search(rf'{prefix}-{year}-(\d+)([A-Za-z])', clean_filename, re.IGNORECASE)
+            
+            # Pattern for slabs like SP-2016-0001.jpg
+            slab_match = re.search(rf'{prefix}-{year}-(\d+)', clean_filename, re.IGNORECASE)
+            
+            if specimen_match:
+                slab_number = specimen_match.group(1).zfill(4)
+                specimen_letter = specimen_match.group(2).upper()
+                slab_no = f"{prefix}-{year}-{slab_number}"
+                specimen_no = f"{slab_no}-{specimen_letter}"
+                
+                # Find the slab
+                if slab_no in slabs:
+                    slab = slabs[slab_no]
+                else:
+                    slab = Slab.objects.filter(slab_no=slab_no).first()
+                    if not slab:
+                        self.stdout.write(self.style.WARNING(f'No slab found for number {slab_no}, creating new slab.'))
+                        slab = Slab(slab_no=slab_no)
+                        slab.save()
+                        slabs[slab_no] = slab
+                
+                # Find the specimen
+                if specimen_no in specimens:
+                    specimen = specimens[specimen_no]
+                else:
+                    specimen = Specimen.objects.filter(specimen_no=specimen_no).first()
+                    if not specimen:
+                        self.stdout.write(self.style.WARNING(f'No specimen found for {specimen_no}, creating new specimen.'))
+                        specimen = Specimen(specimen_no=specimen_no, slab=slab)
+                        specimen.save()
+                        specimens[specimen_no] = specimen
+                
+            elif slab_match:
+                slab_number = slab_match.group(1).zfill(4)
+                slab_no = f"{prefix}-{year}-{slab_number}"
+                
+                # Find the slab
+                if slab_no in slabs:
+                    slab = slabs[slab_no]
+                else:
+                    slab = Slab.objects.filter(slab_no=slab_no).first()
+                    if not slab:
+                        self.stdout.write(self.style.WARNING(f'No slab found for number {slab_no}, creating new slab.'))
+                        slab = Slab(slab_no=slab_no)
+                        slab.save()
+                        slabs[slab_no] = slab
+            else:
+                self.stdout.write(self.style.WARNING(f"Could not parse filename: {filename} (clean version: {clean_filename})"))
+                
+                # Track the no-match file
+                SpImageProcessingRecord.objects.create(
+                    original_path=image_path,
+                    filename=filename,
+                    md5hash=file_hash,
+                    status='no_match',
+                    status_message=f"Could not parse filename pattern (clean version: {clean_filename})",
+                    command_used='scan_for_new_images'
+                )
+                return False
+        
+        try:
+            # Create a temporary copy of the image file
+            temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
+            os.makedirs(temp_dir, exist_ok=True)
+            temp_path = os.path.join(temp_dir, filename)
+            shutil.copy2(image_path, temp_path)
+            
+            # Create a new image record
+            with open(temp_path, 'rb') as f:
+                image = FossilImage(
+                    slab=slab,
+                    specimen=specimen,
+                    description='',
+                    original_path=image_path,
+                    md5hash=file_hash
+                )
+                
+                # Save the image to create a record
+                image.save()
+                
+                # Save the file
+                image.image_file.save(filename, File(f), save=True)
+                
+                # Generate thumbnail
+                thumbnail_created = False
+                if image.generate_thumbnail():
+                    thumbnail_created = True
+                
+                # Track the successful processing
+                success_message = ""
+                if specimen:
+                    success_message = f"Created image for specimen {specimen.specimen_no}"
+                    self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename}'))
+                else:
+                    success_message = f"Created image for slab {slab.slab_no}"
+                    self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename}'))
+                    
+                SpImageProcessingRecord.objects.create(
+                    original_path=image_path,
+                    filename=filename,
+                    md5hash=file_hash,
+                    status='success',
+                    status_message=f"{success_message}. Thumbnail: {'Created' if thumbnail_created else 'Failed'}",
+                    image=image,
+                    slab=slab,
+                    specimen=specimen,
+                    command_used='scan_for_new_images'
+                )
+            
+            # Clean up temporary file
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                
+            return True
+                
+        except Exception as e:
+            error_msg = f'Error processing image file: {str(e)}'
+            self.stdout.write(self.style.ERROR(f'{error_msg}: {image_path}'))
+            
+            # Track the error
+            SpImageProcessingRecord.objects.create(
+                original_path=image_path,
+                filename=filename,
+                md5hash=file_hash,
+                status='error',
+                status_message=error_msg,
+                slab=slab,
+                specimen=specimen,
+                command_used='scan_for_new_images'
+            )
+            return False 

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from siriuspasset.models import SpSlab, SpFossilSpecimen, SpFossilImage
+from siriuspasset.models import SpSlab, SpFossilSpecimen, SpFossilImage, SpImageProcessingRecord
 import pandas as pd
 from django.db import transaction, models
 from collections import defaultdict
@@ -583,6 +583,14 @@ class Command(BaseCommand):
                         image_files.append(os.path.join(root, file))
                     else:
                         skipped_no_prefix_count += 1
+                        # Track skipped file without prefix pattern
+                        SpImageProcessingRecord.objects.create(
+                            original_path=os.path.join(root, file),
+                            filename=file,
+                            status='skipped',
+                            status_message=f"Filename does not match pattern {prefix_year_pattern}",
+                            command_used='import_specimens'
+                        )
         
         # Print summary about found files
         self.stdout.write(f'Found {len(all_image_files)} total image files')
@@ -600,36 +608,66 @@ class Command(BaseCommand):
         # Process each image file
         for image_path in image_files:
             # Calculate MD5 hash of the image file
+            filename = os.path.basename(image_path)
+            file_hash = None
+            specimen = None
+            slab = None
+            
             try:
                 with open(image_path, 'rb') as f:
                     file_hash = hashlib.md5(f.read()).hexdigest()
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f'Error reading image file: {image_path}. Error: {str(e)}'))
+                error_msg = f'Error reading image file: {str(e)}'
+                self.stdout.write(self.style.ERROR(f'{error_msg}: {image_path}'))
+                
+                # Track the error
+                SpImageProcessingRecord.objects.create(
+                    original_path=image_path,
+                    filename=filename,
+                    status='error',
+                    status_message=error_msg,
+                    command_used='import_specimens'
+                )
                 continue
             
             # Check if an image with this hash already exists
             if SpFossilImage.objects.filter(md5hash=file_hash).exists():
+                duplicate_image = SpFossilImage.objects.filter(md5hash=file_hash).first()
                 if debug:
                     self.stdout.write(f'Image with hash {file_hash} already exists, skipping: {image_path}')
                 skipped_duplicate_count += 1
+                
+                # Track the duplicate
+                SpImageProcessingRecord.objects.create(
+                    original_path=image_path,
+                    filename=filename,
+                    md5hash=file_hash,
+                    status='duplicate',
+                    status_message=f"Duplicate of existing image: {duplicate_image.image_file.name}",
+                    image=duplicate_image,
+                    slab=duplicate_image.slab,
+                    specimen=duplicate_image.specimen,
+                    command_used='import_specimens'
+                )
                 continue
             
             # Extract specimen or slab number from filename
-            filename = os.path.basename(image_path)
             self.stdout.write(f'Processing image: {filename}')
             
+            # Create a clean version of the filename with whitespace removed for pattern matching
+            clean_filename = filename.replace(" ", "")
+            
             # Check for slab images with parentheses patterns first: SP-2016-0001(dorsal).jpg or SP-2016-0001(ventral).jpg
-            slab_parentheses_match = re.search(rf'{prefix}-{year}-(\d+)\((\w+)\)', filename, re.IGNORECASE)
+            slab_parentheses_match = re.search(rf'{prefix}-{year}-(\d+)\((\w+)\)', clean_filename, re.IGNORECASE)
             
             # Check for specimens with letter identifiers: SP-2016-0001A or SP-2016-0001A-2.jpg
-            specimen_with_letter_match = re.search(rf'{prefix}-{year}-(\d+)([A-Za-z])(?:-\d+)?', filename, re.IGNORECASE)
+            specimen_with_letter_match = re.search(rf'{prefix}-{year}-(\d+)([A-Za-z])(?:-\d+)?', clean_filename, re.IGNORECASE)
             
             # All other patterns (including SP-2017-1003-2.JPG) should be treated as slab images
             # This will match patterns like SP-2016-0001.jpg and SP-2016-0001-2.jpg
-            slab_match = re.search(rf'{prefix}-{year}-(\d+)(?:-\d+)?', filename, re.IGNORECASE)
+            slab_match = re.search(rf'{prefix}-{year}-(\d+)(?:-\d+)?', clean_filename, re.IGNORECASE)
             
             # Determine if this is a specimen or slab image
-            specimen = None
             slab = None
 
             if slab_parentheses_match:
@@ -710,9 +748,18 @@ class Command(BaseCommand):
                         slabs[slab_no] = slab
                         self.stdout.write(self.style.SUCCESS(f'Created new slab {slab_no} from image file'))
             else:
-                if debug:
-                    self.stdout.write(f'Could not extract specimen or slab number from filename: {filename}')
+                self.stdout.write(self.style.WARNING(f"Could not parse filename: {filename} (clean version: {clean_filename})"))
                 skipped_no_match_count += 1
+                
+                # Track the no-match file
+                SpImageProcessingRecord.objects.create(
+                    original_path=image_path,
+                    filename=filename,
+                    md5hash=file_hash,
+                    status='no_match',
+                    status_message=f"Could not parse filename pattern (clean version: {clean_filename})",
+                    command_used='import_specimens'
+                )
                 continue
             
             # Check if this image already exists in the expected directory
@@ -742,9 +789,23 @@ class Command(BaseCommand):
                     if existing_image:
                         self.stdout.write(f'Image already exists in database and filesystem, skipping: {filename}')
                         skipped_existing_count += 1
+                        
+                        # Track the skipped existing file
+                        SpImageProcessingRecord.objects.create(
+                            original_path=image_path,
+                            filename=filename,
+                            md5hash=file_hash,
+                            status='skipped',
+                            status_message="Image already exists in database and filesystem",
+                            image=existing_image,
+                            slab=slab,
+                            specimen=specimen,
+                            command_used='import_specimens'
+                        )
                         continue
             
             # Create a temporary copy of the image file
+            created_image = None
             try:
                 temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
                 os.makedirs(temp_dir, exist_ok=True)
@@ -766,20 +827,53 @@ class Command(BaseCommand):
                         image.save()
                         # Then assign and save the file
                         image.image_file.save(filename, File(f), save=True)
+                        created_image = image
                         
                         # Create thumbnail after saving the image
+                        thumbnail_created = False
                         if image.generate_thumbnail():
                             thumbnail_count += 1
+                            thumbnail_created = True
                             if debug:
                                 self.stdout.write(f"Created thumbnail for {os.path.basename(image.image_file.name)}")
                         
                         created_count += 1
+                        success_message = ""
                         if specimen:
-                            self.stdout.write(self.style.SUCCESS(f'Created image for specimen {specimen.specimen_no}: {filename}'))
+                            success_message = f"Created image for specimen {specimen.specimen_no}"
+                            self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename}'))
                         else:
-                            self.stdout.write(self.style.SUCCESS(f'Created image for slab {slab.slab_no}: {filename}'))
+                            success_message = f"Created image for slab {slab.slab_no}"
+                            self.stdout.write(self.style.SUCCESS(f'{success_message}: {filename}'))
+                        
+                        # Track the successful processing
+                        SpImageProcessingRecord.objects.create(
+                            original_path=image_path,
+                            filename=filename,
+                            md5hash=file_hash,
+                            status='success',
+                            status_message=f"{success_message}. Thumbnail: {'Created' if thumbnail_created else 'Failed'}",
+                            image=image,
+                            slab=slab,
+                            specimen=specimen,
+                            command_used='import_specimens'
+                        )
                     except Exception as e:
-                        self.stdout.write(self.style.ERROR(f'Error saving image to database: {str(e)}'))
+                        error_msg = f'Error saving image to database: {str(e)}'
+                        self.stdout.write(self.style.ERROR(error_msg))
+                        
+                        # Track the error
+                        SpImageProcessingRecord.objects.create(
+                            original_path=image_path,
+                            filename=filename,
+                            md5hash=file_hash,
+                            status='error',
+                            status_message=error_msg,
+                            slab=slab,
+                            specimen=specimen,
+                            command_used='import_specimens'
+                        )
+                        
                         # If the image record was created but file save failed, clean up
                         if image.pk:
                             image.delete()
@@ -789,7 +883,20 @@ class Command(BaseCommand):
                     os.remove(temp_path)
                     
             except Exception as e:
-                self.stdout.write(self.style.ERROR(f'Error processing image file: {str(e)}'))
+                error_msg = f'Error processing image file: {str(e)}'
+                self.stdout.write(self.style.ERROR(error_msg))
+                
+                # Track the error
+                SpImageProcessingRecord.objects.create(
+                    original_path=image_path,
+                    filename=filename,
+                    md5hash=file_hash,
+                    status='error',
+                    status_message=error_msg,
+                    slab=slab,
+                    specimen=specimen,
+                    command_used='import_specimens'
+                )
         
         # Print summary statistics
         self.stdout.write(self.style.SUCCESS(f'Processed {len(image_files)} image files:'))
@@ -799,5 +906,9 @@ class Command(BaseCommand):
         self.stdout.write(f'- Skipped {skipped_no_match_count} images with no matching slab/specimen')
         if skip_existing:
             self.stdout.write(f'- Skipped {skipped_existing_count} existing images')
+        
+        # Print summary of processing records
+        record_count = SpImageProcessingRecord.objects.filter(command_used='import_specimens').count()
+        self.stdout.write(f'Created {record_count} processing records for tracking')
         
         return created_count, skipped_duplicate_count + skipped_existing_count + skipped_no_match_count 
