@@ -10,6 +10,7 @@ import logging
 from pathlib import Path
 import shutil
 from datetime import datetime
+from django.utils import timezone
 
 class Command(BaseCommand):
     help = 'Scan a designated directory for new images and import them'
@@ -95,7 +96,11 @@ class Command(BaseCommand):
                         # Skip files that haven't been modified since last scan
                         if last_scan_time:
                             mod_time = os.path.getmtime(image_path)
-                            mod_datetime = datetime.fromtimestamp(mod_time)
+                            # Convert the timestamp to a timezone-aware datetime for proper comparison
+                            mod_datetime = timezone.make_aware(
+                                datetime.fromtimestamp(mod_time),
+                                timezone=timezone.get_current_timezone()
+                            )
                             if mod_datetime < last_scan_time:
                                 skipped_old += 1
                                 if debug:
