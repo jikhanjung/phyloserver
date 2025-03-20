@@ -228,9 +228,11 @@ class Command(BaseCommand):
                     slab = Slab.objects.filter(slab_no=slab_no).first()
                     if not slab:
                         self.stdout.write(self.style.WARNING(f'No slab found for number {slab_no}, creating new slab.'))
+                        # Only use the slab_no field since prefix, year, and number fields don't exist
                         slab = Slab(slab_no=slab_no)
                         slab.save()
                         slabs[slab_no] = slab
+                        self.stdout.write(self.style.SUCCESS(f'Created new slab: {slab_no}'))
                 
                 # Find the specimen
                 if specimen_no in specimens:
@@ -239,9 +241,16 @@ class Command(BaseCommand):
                     specimen = Specimen.objects.filter(specimen_no=specimen_no).first()
                     if not specimen:
                         self.stdout.write(self.style.WARNING(f'No specimen found for {specimen_no}, creating new specimen.'))
-                        specimen = Specimen(specimen_no=specimen_no, slab=slab)
+                        # Create the specimen with the fields that exist
+                        specimen = Specimen(
+                            specimen_no=specimen_no, 
+                            slab=slab
+                            # Note: Only include the letter field if it exists in your Specimen model
+                            # letter=specimen_letter  
+                        )
                         specimen.save()
                         specimens[specimen_no] = specimen
+                        self.stdout.write(self.style.SUCCESS(f'Created new specimen: {specimen_no}'))
                 
             elif slab_match:
                 slab_number = slab_match.group(1).zfill(4)
@@ -251,12 +260,12 @@ class Command(BaseCommand):
                 if slab_no in slabs:
                     slab = slabs[slab_no]
                 else:
-                    slab = Slab.objects.filter(slab_no=slab_no).first()
-                    if not slab:
-                        self.stdout.write(self.style.WARNING(f'No slab found for number {slab_no}, creating new slab.'))
-                        slab = Slab(slab_no=slab_no)
-                        slab.save()
-                        slabs[slab_no] = slab
+                    self.stdout.write(self.style.WARNING(f'No slab found for number {slab_no}, creating new slab.'))
+                    # Only use the slab_no field since prefix, year, and number fields don't exist
+                    slab = Slab(slab_no=slab_no)
+                    slab.save()
+                    slabs[slab_no] = slab
+                    self.stdout.write(self.style.SUCCESS(f'Created new slab: {slab_no}'))
             else:
                 self.stdout.write(self.style.WARNING(f"Could not parse filename: {filename} (clean version: {clean_filename}) in directory: {directory}"))
                 
