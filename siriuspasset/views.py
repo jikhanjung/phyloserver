@@ -841,14 +841,11 @@ def recent_photos(request):
     # Apply date filtering at the database level if needed
     if start_date:
         # Convert to datetime to catch all records from that day
-        from datetime import time as dt_time
-        start_datetime = datetime.combine(start_date, dt_time.min)
+        from datetime import time
+        start_datetime = datetime.combine(start_date, time.min)  # e.g., 2023-01-01 00:00:00
         
-        # Use raw SQL filtering to handle date part consistently across databases
-        recent_images_query = recent_images_query.extra(
-            where=["DATE(created_on) >= %s"],
-            params=[start_date]
-        )
+        # Use standard Django ORM filtering
+        recent_images_query = recent_images_query.filter(created_on__gte=start_datetime)
     
     # Apply sorting and limiting at the database level
     recent_images = recent_images_query.order_by('-created_on')[:limit]
