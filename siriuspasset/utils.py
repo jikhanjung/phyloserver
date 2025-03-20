@@ -13,10 +13,14 @@ def parse_image_filename(filename: str) -> Tuple[str, str, int, Optional[str]]:
     """
     # Get filename without extension and paths
     base_filename = filename.split('/')[-1].split('\\')[-1]
+
+    #remove white space from base_filename
+    #base_filename = base_filename.replace(" ", "")
+    #print("base_filename: ", base_filename)
     
     # First, extract remarks in parentheses if any
     remarks_match = re.search(r'(\d+)\((.+?)\)', base_filename)
-    remarks = None
+    remarks = ''
     if remarks_match:
         photo_number_str = remarks_match.group(1)
         remarks = remarks_match.group(2)
@@ -52,4 +56,7 @@ def sort_images_by_filename(images: List[Any]) -> List[Any]:
     3. Photo number
     4. Remarks (if present)
     """
+    # print image filenames
+    for img in images:
+        print(img.original_path)
     return sorted(images, key=lambda img: parse_image_filename(img.original_path or '')) 
