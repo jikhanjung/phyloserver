@@ -1,0 +1,126 @@
+{% extends "dikesync/dsbase.html" %}
+
+{% block content %}
+<h4 class="bd-title p-2 bg-secondary text-light">Sync Event Details</h4>
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <a href="{% url 'sync-event-list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Event Information Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Event Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 150px;">Event ID</th>
+                            <td>{{ sync_event.event_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status</th>
+                            <td>
+                                <span class="badge {% if sync_event.status == 'completed' %}bg-success
+                                                 {% elif sync_event.status == 'failed' %}bg-danger
+                                                 {% elif sync_event.status == 'in_progress' %}bg-warning
+                                                 {% else %}bg-secondary{% endif %}">
+                                    {{ sync_event.status }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th style="width: 150px;">Timestamp</th>
+                            <td>{{ sync_event.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            {% if sync_event.error_message %}
+            <div class="alert alert-danger mt-3">
+                <h5 class="alert-heading">Error Message</h5>
+                <p class="mb-0">{{ sync_event.error_message }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Dike Records Card -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Dike Records</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Stratum</th>
+                            <th>Rock Type</th>
+                            <th>Sync Result</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in sync_records %}
+                        <tr>
+                            <td>{{ record.dike_record.symbol }}</td>
+                            <td>{{ record.dike_record.stratum }}</td>
+                            <td>{{ record.dike_record.rock_type }}</td>
+                            <td>
+                                <span class="badge {% if record.sync_result == 'success' %}bg-success
+                                                 {% else %}bg-danger{% endif %}">
+                                    {{ record.sync_result }}
+                                </span>
+                            </td>
+                            <td>{{ record.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <div class="alert alert-info mb-0">
+                                    <h4>No Dike Records</h4>
+                                    <p>There are no dike records associated with this sync event.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .table th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    .badge {
+        font-size: 0.875rem;
+        padding: 0.5em 0.75em;
+    }
+    .table-bordered th {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %} 
