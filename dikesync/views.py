@@ -80,12 +80,12 @@ class DikeRecordViewSet(viewsets.ModelViewSet):
 
 @api_view(['POST'])
 def submit_dike_record(request):
-    """Submit a dike record with sync event"""
-    sync_event = None
+    """Submit a single dike record with sync event ID"""
     try:
         logger.info("Received dike record submission request")
-        logger.debug(f"Request data: {request.data}")
+        logger.info(f"Request data: {request.data}")
         
+        # Get sync event ID from request
         event_id = request.data.get('event_id')
         if not event_id:
             logger.error("No event_id provided in request")
@@ -94,55 +94,72 @@ def submit_dike_record(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        logger.info(f"Looking up sync event with ID: {event_id}")
-        sync_event = get_object_or_404(SyncEvent, event_id=event_id)
+        # Get sync event
+        try:
+            sync_event = get_object_or_404(SyncEvent, event_id=event_id)
+        except (SyncEvent.DoesNotExist, ValueError) as e:
+            logger.error(f"Invalid sync event ID: {event_id}")
+            return Response(
+                {'error': 'Invalid sync event ID'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
+        # Check if event is already completed
         if sync_event.status == 'completed':
             logger.warning(f"Sync event {event_id} is already completed")
             return Response(
                 {'error': 'Sync event is already completed'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        # Update sync event status
-        logger.info(f"Updating sync event {event_id} status to in_progress")
+        
+        # Update event status to in_progress
         sync_event.status = 'in_progress'
         sync_event.save()
-
-        # Create dike record and sync event record
-        dike_record_data = request.data.get('dike_record')
-        if not dike_record_data:
-            logger.error("No dike_record data provided in request")
+        
+        # Validate specimen form
+        specimen_data = request.data.get('dike_record', {})
+        if not specimen_data:
+            logger.error("No dike record data provided")
             return Response(
                 {'error': 'dike_record data is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        logger.info("Creating dike record and sync event record")
-        serializer = SyncEventRecordSerializer(data={
-            'sync_event': sync_event.id,
-            'dike_record': dike_record_data,
-            'sync_result': 'success'
-        })
-
-        if serializer.is_valid():
-            logger.info("Serializer validation successful")
-            logger.debug(f"Validated data: {serializer.validated_data}")
-            serializer.save()
-            logger.info("Successfully saved dike record and sync event record")
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
         
-        logger.error(f"Serializer validation failed: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        # Check for unique_id and existing record
+        unique_id = specimen_data.get('unique_id')
+        if unique_id:
+            try:
+                existing_record = DikeRecord.objects.get(unique_id=unique_id)
+                logger.info(f"Found existing record with unique_id: {unique_id}")
+                # Update existing record
+                for key, value in specimen_data.items():
+                    setattr(existing_record, key, value)
+                existing_record.save()
+                dike_record = existing_record
+            except DikeRecord.DoesNotExist:
+                logger.info(f"No existing record found with unique_id: {unique_id}")
+                dike_record = DikeRecord.objects.create(**specimen_data)
+        else:
+            logger.info("No unique_id provided, creating new record")
+            dike_record = DikeRecord.objects.create(**specimen_data)
+        
+        # Create sync event record
+        sync_record = SyncEventRecord.objects.create(
+            sync_event=sync_event,
+            dike_record=dike_record,
+            sync_result='success'
+        )
+        
+        logger.info(f"Successfully processed dike record with ID: {dike_record.id}")
+        return Response({
+            'message': 'Dike record processed successfully',
+            'dike_record_id': dike_record.id,
+            'unique_id': dike_record.unique_id
+        }, status=status.HTTP_201_CREATED)
+        
     except Exception as e:
-        logger.error(f"Error in submit_dike_record: {str(e)}")
+        logger.error(f"Error processing dike record: {str(e)}")
         logger.error(traceback.format_exc())
-        if sync_event:
-            logger.info(f"Updating sync event {sync_event.event_id} status to failed")
-            sync_event.status = 'failed'
-            sync_event.error_message = str(e)
-            sync_event.save()
         return Response(
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -167,12 +184,12 @@ def check_sync_status(request, event_id):
 
 @api_view(['POST'])
 def submit_dike_records(request):
-    """Submit multiple dike records with sync event"""
-    sync_event = None
+    """Submit multiple dike records with sync event ID"""
     try:
         logger.info("Received multiple dike records submission request")
-        logger.debug(f"Request data: {request.data}")
+        logger.info(f"Request data: {request.data}")
         
+        # Get sync event ID from request
         event_id = request.data.get('event_id')
         if not event_id:
             logger.error("No event_id provided in request")
@@ -181,91 +198,108 @@ def submit_dike_records(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        logger.info(f"Looking up sync event with ID: {event_id}")
-        sync_event = get_object_or_404(SyncEvent, event_id=event_id)
+        # Get sync event
+        try:
+            sync_event = get_object_or_404(SyncEvent, event_id=event_id)
+        except (SyncEvent.DoesNotExist, ValueError) as e:
+            logger.error(f"Invalid sync event ID: {event_id}")
+            return Response(
+                {'error': 'Invalid sync event ID'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         
+        # Check if event is already completed
         if sync_event.status == 'completed':
             logger.warning(f"Sync event {event_id} is already completed")
             return Response(
                 {'error': 'Sync event is already completed'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        # Update sync event status
-        logger.info(f"Updating sync event {event_id} status to in_progress")
+        
+        # Update event status to in_progress
         sync_event.status = 'in_progress'
         sync_event.save()
-
+        
         # Get list of dike records
         dike_records = request.data.get('dike_records', [])
         if not dike_records:
-            logger.error("No dike_records provided in request")
+            logger.error("No dike records provided")
             return Response(
                 {'error': 'dike_records list is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        logger.info(f"Processing {len(dike_records)} dike records")
+        
+        success_count = 0
+        error_count = 0
         results = []
         errors = []
-
+        
+        # Process each record in a transaction
         with transaction.atomic():
-            for index, dike_record_data in enumerate(dike_records):
+            for index, record_data in enumerate(dike_records):
                 try:
-                    logger.debug(f"Processing dike record {index + 1}/{len(dike_records)}")
-                    serializer = SyncEventRecordSerializer(data={
-                        'sync_event': sync_event.id,
-                        'dike_record': dike_record_data,
-                        'sync_result': 'success'
-                    })
-
-                    if serializer.is_valid():
-                        serializer.save()
-                        results.append({
-                            'index': index,
-                            'status': 'success',
-                            'data': serializer.data
-                        })
+                    # Check for unique_id and existing record
+                    unique_id = record_data.get('unique_id')
+                    if unique_id:
+                        try:
+                            existing_record = DikeRecord.objects.get(unique_id=unique_id)
+                            logger.info(f"Found existing record with unique_id: {unique_id}")
+                            # Update existing record
+                            for key, value in record_data.items():
+                                setattr(existing_record, key, value)
+                            existing_record.save()
+                            dike_record = existing_record
+                        except DikeRecord.DoesNotExist:
+                            logger.info(f"No existing record found with unique_id: {unique_id}")
+                            dike_record = DikeRecord.objects.create(**record_data)
                     else:
-                        errors.append({
-                            'index': index,
-                            'status': 'error',
-                            'errors': serializer.errors
-                        })
-                        logger.error(f"Validation error for record {index}: {serializer.errors}")
+                        logger.info("No unique_id provided, creating new record")
+                        dike_record = DikeRecord.objects.create(**record_data)
+                    
+                    # Create sync event record
+                    sync_record = SyncEventRecord.objects.create(
+                        sync_event=sync_event,
+                        dike_record=dike_record,
+                        sync_result='success'
+                    )
+                    
+                    success_count += 1
+                    results.append({
+                        'index': index,
+                        'status': 'success',
+                        'data': {
+                            'dike_record_id': dike_record.id,
+                            'unique_id': dike_record.unique_id
+                        }
+                    })
+                    
                 except Exception as e:
+                    error_count += 1
+                    logger.error(f"Error processing record at index {index}: {str(e)}")
                     errors.append({
                         'index': index,
                         'status': 'error',
-                        'error': str(e)
+                        'errors': str(e)
                     })
-                    logger.error(f"Error processing record {index}: {str(e)}")
-                    logger.error(traceback.format_exc())
-
+        
         # Update sync event status based on results
-        if errors:
-            sync_event.status = 'failed'
-            sync_event.error_message = f"Failed to process {len(errors)} records"
-            sync_event.save()
-        else:
+        if error_count == 0:
             sync_event.status = 'completed'
-            sync_event.save()
-
+        else:
+            sync_event.status = 'failed'
+            sync_event.error_message = f"Failed to process {error_count} records"
+        sync_event.save()
+        
         return Response({
-            'success_count': len(results),
-            'error_count': len(errors),
+            'success_count': success_count,
+            'error_count': error_count,
             'results': results,
             'errors': errors
-        }, status=status.HTTP_200_OK)
-
+        })
+        
     except Exception as e:
-        logger.error(f"Error in submit_dike_records: {str(e)}")
+        logger.error(f"Error processing dike records: {str(e)}")
         logger.error(traceback.format_exc())
-        if sync_event:
-            logger.info(f"Updating sync event {sync_event.event_id} status to failed")
-            sync_event.status = 'failed'
-            sync_event.error_message = str(e)
-            sync_event.save()
         return Response(
             {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

@@ -7,8 +7,10 @@ logger = logging.getLogger(__name__)
 class DikeRecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = DikeRecord
-        fields = '__all__'
-        read_only_fields = ('created_date', 'modified_date')
+        fields = ['id', 'unique_id', 'symbol', 'stratum', 'rock_type', 'era', 'map_sheet', 
+                 'address', 'distance', 'angle', 'x_coord_1', 'y_coord_1', 'lat_1', 'lng_1',
+                 'x_coord_2', 'y_coord_2', 'lat_2', 'lng_2', 'memo', 'created_date', 'modified_date']
+        read_only_fields = ['unique_id', 'created_date', 'modified_date']
 
 class SyncEventSerializer(serializers.ModelSerializer):
     class Meta:
