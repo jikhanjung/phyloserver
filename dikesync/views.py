@@ -1,14 +1,17 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from .models import DikeRecord, SyncEvent, SyncEventRecord
-from .serializers import DikeRecordSerializer, SyncEventSerializer, SyncEventRecordSerializer
+from .models import DikeRecord, SyncEvent
+from .serializers import DikeRecordSerializer, SyncEventSerializer
 import logging
 import traceback
 from django.db import transaction
+from django.utils import timezone
+from datetime import datetime
+from django.contrib import messages
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -60,6 +63,7 @@ class SyncEventViewSet(viewsets.ModelViewSet):
                 )
             
             sync_event.status = 'completed'
+            sync_event.end_timestamp = timezone.now()
             sync_event.save()
             
             logger.info(f"Successfully ended sync event {event_id}")
@@ -77,6 +81,151 @@ class SyncEventViewSet(viewsets.ModelViewSet):
 class DikeRecordViewSet(viewsets.ModelViewSet):
     queryset = DikeRecord.objects.all()
     serializer_class = DikeRecordSerializer
+
+def dike_record_detail(request, record_id):
+    """Display details of an individual dike record"""
+    dike_record = get_object_or_404(DikeRecord, id=record_id)
+    # Get the most recent sync event for this record
+    sync_event = SyncEvent.objects.filter(
+        timestamp__lte=dike_record.last_sync_date
+    ).order_by('-timestamp').first()
+    
+    return render(request, 'dikesync/dike_record_detail.html', {
+        'dike_record': dike_record,
+        'sync_event': sync_event
+    })
+
+def dike_record_edit(request, record_id):
+    """Edit an individual dike record"""
+    dike_record = get_object_or_404(DikeRecord, id=record_id)
+    
+    if request.method == 'POST':
+        try:
+            logger.info(f"Received POST request to edit dike record {record_id}")
+            logger.info(f"Current record data: unique_id={dike_record.unique_id}, symbol={dike_record.symbol}")
+            logger.info(f"Form data received: {request.POST}")
+            
+            # Update the record with form data
+            new_unique_id = request.POST.get('unique_id')
+            new_symbol = request.POST.get('symbol')
+            new_stratum = request.POST.get('stratum')
+            new_memo = request.POST.get('memo')
+            
+            logger.info(f"New values to be set: unique_id={new_unique_id}, symbol={new_symbol}")
+            
+            # Check if values are different before updating
+            if dike_record.unique_id != new_unique_id:
+                logger.info(f"Updating unique_id from {dike_record.unique_id} to {new_unique_id}")
+            if dike_record.symbol != new_symbol:
+                logger.info(f"Updating symbol from {dike_record.symbol} to {new_symbol}")
+            if dike_record.stratum != new_stratum:
+                logger.info(f"Updating stratum from {dike_record.stratum} to {new_stratum}")
+            if dike_record.memo != new_memo:
+                logger.info(f"Updating memo from {dike_record.memo} to {new_memo}")
+            
+            # Update the record
+            dike_record.unique_id = new_unique_id
+            dike_record.symbol = new_symbol
+            dike_record.stratum = new_stratum
+            dike_record.memo = new_memo
+            
+            # Save the record
+            logger.info("Attempting to save the record...")
+            dike_record.save()
+            logger.info("Record saved successfully")
+            
+            # Verify the save
+            saved_record = DikeRecord.objects.get(id=record_id)
+            logger.info(f"Verified saved record data: unique_id={saved_record.unique_id}, symbol={saved_record.symbol}")
+            
+            messages.success(request, 'Dike record updated successfully.')
+            return redirect('dike-record-detail', record_id=dike_record.id)
+        except Exception as e:
+            logger.error(f"Error updating dike record: {str(e)}")
+            logger.error(traceback.format_exc())
+            messages.error(request, f'Error updating dike record: {str(e)}')
+    
+    return render(request, 'dikesync/dike_record_edit.html', {
+        'dike_record': dike_record
+    })
+
+@api_view(['GET'])
+def get_changed_records(request):
+    """Get records that changed after a specific sync event or datetime"""
+    try:
+        logger.info("Received request for changed records")
+        logger.info(f"Request data: {request.data}")
+        
+        # Get either event_id or datetime from request
+        event_id = request.data.get('event_id')
+        datetime_str = request.data.get('datetime')
+        
+        if not event_id and not datetime_str:
+            logger.error("Neither event_id nor datetime provided")
+            return Response(
+                {'error': 'Either event_id or datetime is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if event_id and datetime_str:
+            logger.error("Both event_id and datetime provided")
+            return Response(
+                {'error': 'Provide either event_id or datetime, not both'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Base queryset
+        queryset = DikeRecord.objects.all()
+        
+        if event_id:
+            # Get records changed after the sync event
+            try:
+                sync_event = get_object_or_404(SyncEvent, event_id=event_id)
+                if sync_event.status != 'completed':
+                    logger.warning(f"Sync event {event_id} is not completed")
+                    return Response(
+                        {'error': 'Sync event must be completed'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                queryset = queryset.filter(last_sync_date__gt=sync_event.end_timestamp)
+                logger.info(f"Filtering records changed after sync event {event_id}")
+            except (SyncEvent.DoesNotExist, ValueError) as e:
+                logger.error(f"Invalid sync event ID: {event_id}")
+                return Response(
+                    {'error': 'Invalid sync event ID'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            # Get records changed after the specified datetime
+            try:
+                datetime_obj = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
+                queryset = queryset.filter(last_sync_date__gt=datetime_obj)
+                logger.info(f"Filtering records changed after datetime {datetime_str}")
+            except ValueError as e:
+                logger.error(f"Invalid datetime format: {datetime_str}")
+                return Response(
+                    {'error': 'Invalid datetime format. Use ISO format (e.g., 2024-03-20T10:00:00Z)'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Get the records
+        records = queryset.order_by('-last_sync_date')
+        
+        # Serialize the records
+        serializer = DikeRecordSerializer(records, many=True)
+        
+        return Response({
+            'count': len(records),
+            'records': serializer.data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting changed records: {str(e)}")
+        logger.error(traceback.format_exc())
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(['POST'])
 def submit_dike_record(request):
@@ -134,21 +283,17 @@ def submit_dike_record(request):
                 # Update existing record
                 for key, value in specimen_data.items():
                     setattr(existing_record, key, value)
+                existing_record.last_sync_date = timezone.now()
                 existing_record.save()
                 dike_record = existing_record
             except DikeRecord.DoesNotExist:
                 logger.info(f"No existing record found with unique_id: {unique_id}")
+                specimen_data['last_sync_date'] = timezone.now()
                 dike_record = DikeRecord.objects.create(**specimen_data)
         else:
             logger.info("No unique_id provided, creating new record")
+            specimen_data['last_sync_date'] = timezone.now()
             dike_record = DikeRecord.objects.create(**specimen_data)
-        
-        # Create sync event record
-        sync_record = SyncEventRecord.objects.create(
-            sync_event=sync_event,
-            dike_record=dike_record,
-            sync_result='success'
-        )
         
         logger.info(f"Successfully processed dike record with ID: {dike_record.id}")
         return Response({
@@ -247,21 +392,17 @@ def submit_dike_records(request):
                             # Update existing record
                             for key, value in record_data.items():
                                 setattr(existing_record, key, value)
+                            existing_record.last_sync_date = timezone.now()
                             existing_record.save()
                             dike_record = existing_record
                         except DikeRecord.DoesNotExist:
                             logger.info(f"No existing record found with unique_id: {unique_id}")
+                            record_data['last_sync_date'] = timezone.now()
                             dike_record = DikeRecord.objects.create(**record_data)
                     else:
                         logger.info("No unique_id provided, creating new record")
+                        record_data['last_sync_date'] = timezone.now()
                         dike_record = DikeRecord.objects.create(**record_data)
-                    
-                    # Create sync event record
-                    sync_record = SyncEventRecord.objects.create(
-                        sync_event=sync_event,
-                        dike_record=dike_record,
-                        sync_result='success'
-                    )
                     
                     success_count += 1
                     results.append({
@@ -285,9 +426,11 @@ def submit_dike_records(request):
         # Update sync event status based on results
         if error_count == 0:
             sync_event.status = 'completed'
+            sync_event.end_timestamp = timezone.now()
         else:
             sync_event.status = 'failed'
             sync_event.error_message = f"Failed to process {error_count} records"
+            sync_event.end_timestamp = timezone.now()
         sync_event.save()
         
         return Response({
@@ -315,8 +458,8 @@ def sync_event_list(request):
 def sync_event_detail(request, event_id):
     """Display details of a sync event and its dike records"""
     sync_event = get_object_or_404(SyncEvent, event_id=event_id)
-    sync_records = SyncEventRecord.objects.filter(sync_event=sync_event).order_by('-timestamp')
+    dike_records = DikeRecord.objects.filter(last_sync_date__gte=sync_event.timestamp).order_by('-last_sync_date')
     return render(request, 'dikesync/sync_event_detail.html', {
         'sync_event': sync_event,
-        'sync_records': sync_records
+        'dike_records': dike_records
     })

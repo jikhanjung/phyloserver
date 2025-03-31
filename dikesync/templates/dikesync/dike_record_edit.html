@@ -1,0 +1,49 @@
+{% extends "dikesync/dsbase.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Edit Dike Record</h1>
+                <a href="{% url 'dike-record-detail' dike_record.id %}" class="btn btn-secondary">Back to Details</a>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="card-title">Basic Information</h5>
+                                <div class="mb-3">
+                                    <label for="unique_id" class="form-label">Unique ID</label>
+                                    <input type="text" class="form-control" id="unique_id" name="unique_id" value="{{ dike_record.unique_id }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="symbol" class="form-label">Symbol</label>
+                                    <input type="text" class="form-control" id="symbol" name="symbol" value="{{ dike_record.symbol }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="card-title">Additional Information</h5>
+                                <div class="mb-3">
+                                    <label for="stratum" class="form-label">Stratum</label>
+                                    <input type="text" class="form-control" id="stratum" name="stratum" value="{{ dike_record.stratum }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="memo" class="form-label">Memo</label>
+                                    <textarea class="form-control" id="memo" name="memo" rows="3">{{ dike_record.memo }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

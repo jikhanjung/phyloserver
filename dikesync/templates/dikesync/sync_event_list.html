@@ -24,7 +24,8 @@
                         <tr>
                             <th>Event ID</th>
                             <th>Status</th>
-                            <th>Timestamp</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
                             <th>Error Message</th>
                         </tr>
                     </thead>
@@ -41,11 +42,12 @@
                                 </span>
                             </td>
                             <td>{{ event.timestamp|date:"Y-m-d H:i:s" }}</td>
+                            <td>{{ event.end_timestamp|date:"Y-m-d H:i:s"|default:"-" }}</td>
                             <td>{{ event.error_message|default:"-" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="4" class="text-center py-4">
+                            <td colspan="5" class="text-center py-4">
                                 <div class="alert alert-info mb-0">
                                     <h4>No Sync Events</h4>
                                     <p>There are no sync events to display.</p>

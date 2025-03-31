@@ -41,6 +41,8 @@ class DikeRecord(models.Model):
     memo = models.TextField(null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     modified_date = models.DateTimeField(auto_now=True)
+    is_deleted = models.BooleanField(default=False)
+    last_sync_date = models.DateTimeField(null=True)
 
     def __str__(self):
         return f"DikeRecord {self.unique_id} - {self.symbol or 'No Symbol'}"
@@ -60,6 +62,7 @@ class SyncEvent(models.Model):
 
     event_id = models.CharField(max_length=200, unique=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    end_timestamp = models.DateTimeField(null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     error_message = models.TextField(null=True)
 
@@ -71,21 +74,3 @@ class SyncEvent(models.Model):
         event_id = str(uuid.uuid4())
         return cls.objects.create(event_id=event_id)
 
-class SyncEventRecord(models.Model):
-    SYNC_RESULT_CHOICES = [
-        ('success', 'Success'),
-        ('failed', 'Failed'),
-        ('skipped', 'Skipped'),
-    ]
-
-    sync_event = models.ForeignKey(SyncEvent, on_delete=models.CASCADE, related_name='records')
-    dike_record = models.ForeignKey(DikeRecord, on_delete=models.CASCADE, related_name='sync_records')
-    sync_result = models.CharField(max_length=20, choices=SYNC_RESULT_CHOICES)
-    result_message = models.TextField(null=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('sync_event', 'dike_record')
-
-    def __str__(self):
-        return f"SyncEventRecord {self.id} - {self.sync_result}"

@@ -41,8 +41,12 @@
                 <div class="col-md-6">
                     <table class="table table-bordered">
                         <tr>
-                            <th style="width: 150px;">Timestamp</th>
+                            <th style="width: 150px;">Start Time</th>
                             <td>{{ sync_event.timestamp|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                        <tr>
+                            <th>End Time</th>
+                            <td>{{ sync_event.end_timestamp|date:"Y-m-d H:i:s"|default:"-" }}</td>
                         </tr>
                     </table>
                 </div>
@@ -70,24 +74,21 @@
                             <th>Symbol</th>
                             <th>Stratum</th>
                             <th>Rock Type</th>
-                            <th>Sync Result</th>
-                            <th>Timestamp</th>
+                            <th>Last Sync</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for record in sync_records %}
+                        {% for record in dike_records %}
                         <tr>
-                            <td>{{ record.dike_record.unique_id }}</td>
-                            <td>{{ record.dike_record.symbol }}</td>
-                            <td>{{ record.dike_record.stratum }}</td>
-                            <td>{{ record.dike_record.rock_type }}</td>
+                            <td>{{ record.unique_id }}</td>
+                            <td>{{ record.symbol }}</td>
+                            <td>{{ record.stratum }}</td>
+                            <td>{{ record.rock_type }}</td>
+                            <td>{{ record.last_sync_date|date:"Y-m-d H:i:s" }}</td>
                             <td>
-                                <span class="badge {% if record.sync_result == 'success' %}bg-success
-                                                 {% else %}bg-danger{% endif %}">
-                                    {{ record.sync_result }}
-                                </span>
+                                <a href="{% url 'dike-record-detail' record.id %}" class="btn btn-sm btn-primary">View</a>
                             </td>
-                            <td>{{ record.timestamp|date:"Y-m-d H:i:s" }}</td>
                         </tr>
                         {% empty %}
                         <tr>

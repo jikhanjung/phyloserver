@@ -1,0 +1,62 @@
+{% extends "dikesync/dsbase.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Dike Record Details</h1>
+                <div>
+                    <a href="{% url 'dike-record-edit' dike_record.id %}" class="btn btn-primary">Edit Record</a>
+                    <a href="{% url 'sync-event-detail' sync_event.event_id %}" class="btn btn-secondary">Back to Sync Event</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="card-title">Basic Information</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Unique ID:</th>
+                                    <td>{{ dike_record.unique_id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Symbol:</th>
+                                    <td>{{ dike_record.symbol }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Created:</th>
+                                    <td>{{ dike_record.created_date|date:"Y-m-d H:i:s" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Modified:</th>
+                                    <td>{{ dike_record.modified_date|date:"Y-m-d H:i:s" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Last Sync:</th>
+                                    <td>{{ dike_record.last_sync_date|date:"Y-m-d H:i:s" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="card-title">Additional Information</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Stratum:</th>
+                                    <td>{{ dike_record.stratum|default:"-" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Memo:</th>
+                                    <td>{{ dike_record.memo|default:"-" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
