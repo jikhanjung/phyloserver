@@ -3,3 +3,4 @@ db.sqlite3
 phylorun_datafile/*
 .env
 uploads/*
+dikesync.log
