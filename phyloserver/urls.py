@@ -35,7 +35,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("phylomanager/", include("django.contrib.auth.urls")), 
     path("siriuspasset/", include(('siriuspasset.urls','siriuspasset'), namespace='siriuspasset')),
-    path('dikesync/', include('dikesync.urls')),
+    path('dikesync/', include(('dikesync.urls','dikesync'), namespace='dikesync')),
     #path('', include('snippets.urls')),
     #path('dolfinrest/', include('dolfinrest.urls')),
     #re_path(r'^', include(router.urls)),

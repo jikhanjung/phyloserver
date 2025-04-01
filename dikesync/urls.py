@@ -15,6 +15,7 @@ urlpatterns = [
     # Web views
     path('web/sync-events/', views.sync_event_list, name='sync-event-list'),
     path('web/sync-events/<str:event_id>/', views.sync_event_detail, name='sync-event-detail'),
+    path('web/dike-records/', views.dike_record_list, name='dike-record-list'),
     path('web/dike-records/<int:record_id>/', views.dike_record_detail, name='dike-record-detail'),
     path('web/dike-records/<int:record_id>/edit/', views.dike_record_edit, name='dike-record-edit'),
 ] 

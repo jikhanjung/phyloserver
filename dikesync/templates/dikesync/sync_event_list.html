@@ -31,7 +31,7 @@
                     </thead>
                     <tbody>
                         {% for event in sync_events %}
-                        <tr style="cursor: pointer;" onclick="window.location='{% url 'sync-event-detail' event.event_id %}'">
+                        <tr style="cursor: pointer;" onclick="window.location='{% url 'dikesync:sync-event-detail' event.event_id %}'">
                             <td>{{ event.event_id }}</td>
                             <td>
                                 <span class="badge {% if event.status == 'completed' %}bg-success

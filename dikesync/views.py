@@ -12,6 +12,8 @@ from django.db import transaction
 from django.utils import timezone
 from datetime import datetime
 from django.contrib import messages
+from django.db.models import Q
+from django.core.paginator import Paginator
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -463,3 +465,62 @@ def sync_event_detail(request, event_id):
         'sync_event': sync_event,
         'dike_records': dike_records
     })
+
+def dike_record_list(request):
+    """List all dike records with filtering options."""
+    # Get filter parameters
+    filter1 = request.GET.get('filter1', '')  # Text search
+    filter2 = request.GET.get('filter2', '')  # Stratum filter
+    filter3 = request.GET.get('filter3', '')  # Map sheet filter
+    filter4 = request.GET.get('filter4', '')  # Distance filter
+
+    # Start with all records
+    records = DikeRecord.objects.all()
+
+    # Apply text search filter
+    if filter1:
+        records = records.filter(
+            Q(unique_id__icontains=filter1) |
+            Q(symbol__icontains=filter1) |
+            Q(map_sheet__icontains=filter1) |
+            Q(stratum__icontains=filter1) |
+            Q(rock_type__icontains=filter1) |
+            Q(era__icontains=filter1) |
+            Q(address__icontains=filter1) |
+            Q(memo__icontains=filter1)
+        )
+
+    # Apply stratum filter
+    if filter2:
+        records = records.filter(stratum=filter2)
+
+    # Apply map sheet filter
+    if filter3:
+        records = records.filter(map_sheet=filter3)
+
+    # Apply distance filter
+    if filter4:
+        if filter4 == 'short':
+            records = records.filter(distance__lte=200)
+        elif filter4 == 'long':
+            records = records.filter(distance__gt=200)
+
+    # Get unique values for dropdowns
+    strata = DikeRecord.objects.values_list('stratum', flat=True).distinct().order_by('stratum')
+    map_sheets = DikeRecord.objects.values_list('map_sheet', flat=True).distinct().order_by('map_sheet')
+
+    # Pagination
+    paginator = Paginator(records, 25)  # Show 25 records per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'dike_records': page_obj,
+        'filter1': filter1,
+        'filter2': filter2,
+        'filter3': filter3,
+        'filter4': filter4,
+        'strata': strata,
+        'map_sheets': map_sheets,
+    }
+    return render(request, 'dikesync/dike_record_list.html', context)
