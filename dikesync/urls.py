@@ -18,4 +18,5 @@ urlpatterns = [
     path('web/dike-records/', views.dike_record_list, name='dike-record-list'),
     path('web/dike-records/<int:record_id>/', views.dike_record_detail, name='dike-record-detail'),
     path('web/dike-records/<int:record_id>/edit/', views.dike_record_edit, name='dike-record-edit'),
+    path('rose_image/', views.rose_image, name='rose_image'),
 ] 
