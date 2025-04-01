@@ -473,6 +473,7 @@ def dike_record_list(request):
     filter2 = request.GET.get('filter2', '')  # Stratum filter
     filter3 = request.GET.get('filter3', '')  # Map sheet filter
     filter4 = request.GET.get('filter4', '')  # Distance filter
+    sort_by = request.GET.get('sort_by', '-modified_date')  # Default sort by modified date descending
 
     # Start with all records
     records = DikeRecord.objects.all()
@@ -505,6 +506,16 @@ def dike_record_list(request):
         elif filter4 == 'long':
             records = records.filter(distance__gt=200)
 
+    # Apply sorting
+    if sort_by == 'map_sheet':
+        records = records.order_by('map_sheet', '-modified_date')
+    elif sort_by == '-map_sheet':
+        records = records.order_by('-map_sheet', '-modified_date')
+    elif sort_by == 'modified_date':
+        records = records.order_by('modified_date')
+    else:  # Default sort by modified date descending
+        records = records.order_by('-modified_date')
+
     # Get unique values for dropdowns
     strata = DikeRecord.objects.values_list('stratum', flat=True).distinct().order_by('stratum')
     map_sheets = DikeRecord.objects.values_list('map_sheet', flat=True).distinct().order_by('map_sheet')
@@ -520,6 +531,7 @@ def dike_record_list(request):
         'filter2': filter2,
         'filter3': filter3,
         'filter4': filter4,
+        'sort_by': sort_by,
         'strata': strata,
         'map_sheets': map_sheets,
     }
