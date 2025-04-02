@@ -21,16 +21,6 @@ class Command(BaseCommand):
             dike_record_count = DikeRecord.objects.count()
             sync_event_count = SyncEvent.objects.count()
 
-            if not options['force']:
-                # Ask for confirmation
-                confirm = input(
-                    f'This will delete {dike_record_count} DikeRecords and {sync_event_count} SyncEvents. '
-                    'Are you sure you want to continue? [y/N]: '
-                )
-                if confirm.lower() != 'y':
-                    self.stdout.write(self.style.WARNING('Operation cancelled.'))
-                    return
-
             # Delete all records in a transaction
             with transaction.atomic():
                 # Delete all DikeRecords

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>OpenLayers + KIGAM 지질도</title>
+  <link rel="stylesheet" href="ol.css">
+  <style>
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- OpenLayers 라이브러리 로드 -->
+  <script src="ol.js"></script>
+
+  <script>
+    // 기본 지도 (OpenStreetMap)
+    const baseLayer = new ol.layer.Tile({
+      source: new ol.source.OSM()
+    });
+
+    // KIGAM WMS 지질도 타일
+    const geologyLayer = new ol.layer.Tile({
+      source: new ol.source.TileWMS({
+        url: '/dikesync/tile/',
+        params: {
+          'LAYERS': 'Geology_map:L_50K_Geology_Map_Latest_2015',
+          'TILED': true,
+          'FORMAT': 'image/png',
+          'TRANSPARENT': true
+        },
+        serverType: 'geoserver',
+        transition: 0
+      }),
+      opacity: 0.6  // 반투명 처리
+    });
+
+    // 지도 객체 생성
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        baseLayer,
+        geologyLayer
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([127.5, 36.5]),  // 대한민국 중심쯤
+        zoom: 8
+      })
+    });
+  </script>
+</body>
+</html>

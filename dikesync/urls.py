@@ -19,4 +19,7 @@ urlpatterns = [
     path('web/dike-records/<int:record_id>/', views.dike_record_detail, name='dike-record-detail'),
     path('web/dike-records/<int:record_id>/edit/', views.dike_record_edit, name='dike-record-edit'),
     path('rose_image/', views.rose_image, name='rose_image'),
+    path('management_command/', views.management_command, name='management_command'),
+    # Tile proxy
+    path('tile/', views.geology_tile_proxy, name='geology-tile-proxy'),
 ] 

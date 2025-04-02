@@ -14,10 +14,16 @@ from datetime import datetime
 from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
-from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
+#from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
+from django.http import FileResponse, HttpResponse, HttpResponseServerError
 import plotly.graph_objects as go
 import numpy as np
 import io
+from django.core.management import call_command
+import requests
+from pyproj import Transformer
+from pathlib import Path
+import hashlib
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -615,4 +621,123 @@ def rose_image(request):
     # Create an HTTP image response
     response = HttpResponse(img_bytes, content_type='image/png') 
     return response
+
+
+
+def management_command(request): 
+    #user_obj = get_user_obj( request )
+    message = ''
+    if request.method == 'POST':
+        command = request.POST.get('command')
+        print(command)
+        message = call_command(command)
+        print("message:", message)
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        pass
+
+    return render(request, 'dikesync/management_command.html', { 'message': message,})
     #return render(request, 'rose/rose_image.html', {'user_obj':user_obj}
+
+def tile_proxy_view(request, z, x, y):
+    """
+    Django view that takes z/x/y tile coordinates (based on Kakao tile system),
+    converts to EPSG:3857 BBOX, queries KIGAM WMS, and caches locally.
+    """
+
+    # ---- 상수 설정 ----
+    TILE_SIZE = 256
+    INITIAL_RESOLUTION = 2000.0
+    ORIGIN_X = -200000.0
+    ORIGIN_Y = -280000.0
+
+    CACHE_DIR = Path("./uploads/wms_tile_cache")  # 상대 경로로 저장됨
+    WMS_URL = "https://data.kigam.re.kr/mgeo/geoserver/gwc/service/wms"
+    LAYER = "Geology_map:L_50K_Geology_Map_Latest_2015"
+
+
+    # ---- 해상도 및 BBOX 계산 ----
+    try:
+        resolution = INITIAL_RESOLUTION / (2 ** z)
+        minx = ORIGIN_X + x * TILE_SIZE * resolution
+        maxx = minx + TILE_SIZE * resolution
+        miny = ORIGIN_Y + y * TILE_SIZE * resolution
+        maxy = miny + TILE_SIZE * resolution
+    except Exception as e:
+        return HttpResponseServerError(f"BBOX 계산 실패: {e}")
+
+    # ---- 좌표계 변환 (EPSG:5181 → EPSG:3857) ----
+    try:
+        transformer = Transformer.from_crs("EPSG:5181", "EPSG:3857", always_xy=True)
+        minx_3857, miny_3857 = transformer.transform(minx, miny)
+        maxx_3857, maxy_3857 = transformer.transform(maxx, maxy)
+    except Exception as e:
+        return HttpResponseServerError(f"좌표 변환 실패: {e}")
+
+    # ---- 파일 경로 구성 ----
+    cache_path = CACHE_DIR / str(z) / str(x)
+    cache_path.mkdir(parents=True, exist_ok=True)
+    file_path = cache_path / f"{y}.png"
+
+    # ---- 캐시 hit 시 반환 ----
+    if file_path.exists():
+        return FileResponse(open(file_path, "rb"), content_type="image/png")
+
+    # ---- WMS 요청 ----
+    # Format the URL with GET parameters
+    bbox_str = f"{minx_3857},{miny_3857},{maxx_3857},{maxy_3857}"
+    wms_url = f"{WMS_URL}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&FORMAT=image%2Fpng&TRANSPARENT=true&LAYERS={LAYER}&SRS=EPSG%3A3857&TILED=true&WIDTH={TILE_SIZE}&HEIGHT={TILE_SIZE}&STYLES=&BBOX={bbox_str}"
+
+    print(wms_url)
+
+    try:
+        response = requests.get(wms_url, timeout=10)
+        if response.status_code == 200:
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+            return FileResponse(open(file_path, "rb"), content_type="image/png")
+        else:
+            return HttpResponse(f"WMS 요청 실패: {response.status_code}", status=502)
+    except Exception as e:
+        return HttpResponseServerError(f"WMS 요청 중 예외 발생: {e}")
+
+def geology_tile_proxy(request):
+    """
+    Django view that proxies WMS requests for geology tiles from KIGAM.
+    This handles direct WMS requests with all parameters in the URL.
+    """
+    # ---- 상수 설정 ----
+    CACHE_DIR = Path("./uploads/geology_tile_cache")
+    WMS_URL = "https://data.kigam.re.kr/mgeo/geoserver/wms"
+    LAYER = "Geology_map:L_50K_Geology_Map_Latest_2015"
+
+    # ---- 캐시 키 생성 ----
+    # Create a unique cache key based on the request parameters
+    cache_key = request.path + request.GET.urlencode()
+    # Use MD5 hash for the cache key
+    cache_key_hash = hashlib.md5(cache_key.encode()).hexdigest()
+    cache_path = CACHE_DIR / cache_key_hash[:2]  # Use first 2 chars as subdirectory
+    cache_path.mkdir(parents=True, exist_ok=True)
+    file_path = cache_path / f"{cache_key_hash}.png"
+
+    # ---- 캐시 hit 시 반환 ----
+    if file_path.exists():
+        return FileResponse(open(file_path, "rb"), content_type="image/png")
+
+    # ---- WMS 요청 ----
+    # Forward the request to KIGAM WMS
+    wms_url = f"{WMS_URL}?{request.GET.urlencode()}"
+    print(f"Proxying WMS request: {wms_url}")
+
+    try:
+        response = requests.get(wms_url, timeout=10)
+        if response.status_code == 200:
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+            return FileResponse(open(file_path, "rb"), content_type="image/png")
+        else:
+            return HttpResponse(f"WMS 요청 실패: {response.status_code}", status=502)
+    except Exception as e:
+        return HttpResponseServerError(f"WMS 요청 중 예외 발생: {e}")
+
