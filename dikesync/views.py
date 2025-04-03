@@ -24,7 +24,7 @@ import requests
 from pyproj import Transformer
 from pathlib import Path
 import hashlib
-
+from phyloserver.settings import MEDIA_ROOT
 # Set up logging
 logger = logging.getLogger(__name__)
 
@@ -708,7 +708,7 @@ def geology_tile_proxy(request):
     This handles direct WMS requests with all parameters in the URL.
     """
     # ---- 상수 설정 ----
-    CACHE_DIR = Path("./uploads/geology_tile_cache")
+    CACHE_DIR = Path(MEDIA_ROOT + "geology_tile_cache")
     WMS_URL = "https://data.kigam.re.kr/mgeo/geoserver/wms"
     LAYER = "Geology_map:L_50K_Geology_Map_Latest_2015"
 
@@ -718,6 +718,7 @@ def geology_tile_proxy(request):
     # Use MD5 hash for the cache key
     cache_key_hash = hashlib.md5(cache_key.encode()).hexdigest()
     cache_path = CACHE_DIR / cache_key_hash[:2]  # Use first 2 chars as subdirectory
+    print("cache path:", cache_path)
     cache_path.mkdir(parents=True, exist_ok=True)
     file_path = cache_path / f"{cache_key_hash}.png"
 
@@ -731,7 +732,7 @@ def geology_tile_proxy(request):
     print(f"Proxying WMS request: {wms_url}")
 
     try:
-        response = requests.get(wms_url, timeout=10)
+        response = requests.get(wms_url, timeout=10, verify=False)
         if response.status_code == 200:
             with open(file_path, "wb") as f:
                 f.write(response.content)
