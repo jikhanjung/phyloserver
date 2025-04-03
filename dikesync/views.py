@@ -718,7 +718,7 @@ def geology_tile_proxy(request):
     # Use MD5 hash for the cache key
     cache_key_hash = hashlib.md5(cache_key.encode()).hexdigest()
     cache_path = CACHE_DIR / cache_key_hash[:2]  # Use first 2 chars as subdirectory
-    print("cache path:", cache_path)
+    #print("cache path:", cache_path)
     cache_path.mkdir(parents=True, exist_ok=True)
     file_path = cache_path / f"{cache_key_hash}.png"
 
