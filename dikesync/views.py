@@ -567,6 +567,8 @@ def rose_image(request):
 
     # Assume occ_data is a list of dictionaries 
     count = 0
+    #print("histo_values:", histo_values)
+    #print("theta_values:", theta_values)
     for item in occ_list:
         angle = float(item.angle)#get('strike', -999))  # Handle missing values
         if angle == -999: 
@@ -578,7 +580,8 @@ def rose_image(request):
         if angle > 180:
             angle %= 180
 
-        idx = int(angle // unit_angle)
+        idx = int(angle // unit_angle) % 6
+        #print("idx:", idx, "angle:", angle, "unit_angle:", unit_angle)
         histo_values[idx] += 1  
 
     # Duplicate values for circular chart
