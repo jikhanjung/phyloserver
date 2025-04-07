@@ -15,7 +15,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.core.paginator import Paginator
 #from django.http import HttpResponse, HttpResponseRedirect, FileResponse, JsonResponse
-from django.http import FileResponse, HttpResponse, HttpResponseServerError
+from django.http import FileResponse, HttpResponse, HttpResponseServerError, JsonResponse
 import plotly.graph_objects as go
 import numpy as np
 import io
@@ -741,4 +741,59 @@ def geology_tile_proxy(request):
             return HttpResponse(f"WMS 요청 실패: {response.status_code}", status=502)
     except Exception as e:
         return HttpResponseServerError(f"WMS 요청 중 예외 발생: {e}")
+
+def get_map_markers(request):
+    """
+    Returns dike records as JSON for display on the map.
+    Each record includes coordinates, name, and description.
+    Only includes records with valid latitude and longitude values.
+    """
+    try:
+        # Get all dike records
+        records = DikeRecord.objects.all()
+        
+        # Format records for map markers
+        markers = []
+        for record in records:
+            # Skip records without valid coordinates
+            if not record.lat_1 or not record.lng_1:
+                continue
+                
+            try:
+                # Convert to float to ensure valid numbers
+                lat = float(record.lat_1)
+                lon = float(record.lng_1)
+                
+                # Skip if coordinates are 0 or invalid
+                if lat == 0 or lon == 0:
+                    continue
+                    
+                markers.append({
+                    'longitude': lon,
+                    'latitude': lat,
+                    'name': record.unique_id or 'Unnamed Record',
+                    'description': f"""
+                        Symbol: {record.symbol or 'N/A'}
+                        Map Sheet: {record.map_sheet or 'N/A'}
+                        Stratum: {record.stratum or 'N/A'}
+                        Rock Type: {record.rock_type or 'N/A'}
+                        Era: {record.era or 'N/A'}
+                        Distance: {record.distance or 'N/A'} m
+                        Angle: {record.angle or 'N/A'}°
+                        Address: {record.address or 'N/A'}
+                        Memo: {record.memo or 'N/A'}
+                    """.strip()
+                })
+            except (ValueError, TypeError):
+                # Skip records with invalid coordinate values
+                continue
+        
+        return JsonResponse(markers, safe=False)  # Return array directly
+        
+    except Exception as e:
+        logger.error(f"Error getting map markers: {str(e)}")
+        logger.error(traceback.format_exc())
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
 

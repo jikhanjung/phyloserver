@@ -9,6 +9,17 @@
       width: 100%;
       height: 100vh;
     }
+    .marker {
+      width: 20px;
+      height: 20px;
+      background-color: red;
+      border-radius: 50%;
+      border: 2px solid white;
+      cursor: pointer;
+    }
+    .marker:hover {
+      transform: scale(1.2);
+    }
   </style>
 </head>
 <body>
@@ -39,18 +50,94 @@
       opacity: 0.6  // 반투명 처리
     });
 
+    // 마커를 위한 벡터 레이어
+    const vectorLayer = new ol.layer.Vector({
+      source: new ol.source.Vector()
+    });
+
     // 지도 객체 생성
     const map = new ol.Map({
       target: 'map',
       layers: [
         baseLayer,
-        geologyLayer
+        geologyLayer,
+        vectorLayer
       ],
       view: new ol.View({
         center: ol.proj.fromLonLat([127.5, 36.5]),  // 대한민국 중심쯤
         zoom: 8
       })
     });
+
+    // 서버에서 마커 데이터 가져오기
+    function fetchMarkers() {
+      fetch('/dikesync/api/markers/')  // API 엔드포인트 URL
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(markers => {
+          if (!Array.isArray(markers)) {
+            console.error('Expected array of markers, got:', markers);
+            return;
+          }
+          
+          // 기존 마커 제거
+          vectorLayer.getSource().clear();
+          
+          // 새로운 마커 추가
+          markers.forEach(marker => {
+            const feature = new ol.Feature({
+              geometry: new ol.geom.Point(
+                ol.proj.fromLonLat([marker.longitude, marker.latitude])
+              ),
+              name: marker.name,
+              description: marker.description
+            });
+
+            // 마커 스타일 설정
+            feature.setStyle(new ol.style.Style({
+              image: new ol.style.Circle({
+                radius: 10,
+                fill: new ol.style.Fill({
+                  color: 'red'
+                }),
+                stroke: new ol.style.Stroke({
+                  color: 'white',
+                  width: 2
+                })
+              })
+            }));
+
+            vectorLayer.getSource().addFeature(feature);
+          });
+        })
+        .catch(error => console.error('Error fetching markers:', error));
+    }
+
+    // 마커 클릭 이벤트 처리
+    map.on('click', function(evt) {
+      const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+        return feature;
+      });
+
+      if (feature) {
+        const coordinates = feature.getGeometry().getCoordinates();
+        const name = feature.get('name');
+        const description = feature.get('description');
+        
+        // 팝업 또는 정보 표시
+        alert(`${name}\n${description}`);
+      }
+    });
+
+    // 초기 마커 로드
+    fetchMarkers();
+
+    // 주기적으로 마커 업데이트 (선택사항)
+    setInterval(fetchMarkers, 30000);  // 30초마다 업데이트
   </script>
 </body>
 </html>

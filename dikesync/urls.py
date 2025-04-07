@@ -22,4 +22,6 @@ urlpatterns = [
     path('management_command/', views.management_command, name='management_command'),
     # Tile proxy
     path('tile/', views.geology_tile_proxy, name='geology-tile-proxy'),
+    # Map markers
+    path('api/markers/', views.get_map_markers, name='map-markers'),
 ] 
