@@ -16,6 +16,17 @@ class Command(BaseCommand):
             help='Show what would be deleted without actually deleting',
         )
 
+    def format_record_info(self, record):
+        """Helper function to format record information consistently"""
+        return (
+            f'  - ID: {record.id}, '
+            f'Location: ({record.lat_1}, {record.lng_1}), '
+            f'Angle: {record.angle}, '
+            f'Distance: {record.distance}, '
+            f'Modified: {record.modified_date}, '
+            f'Unique ID: {record.unique_id}'
+        )
+
     def handle(self, *args, **options):
         dry_run = options['dry_run']
         
@@ -46,28 +57,31 @@ class Command(BaseCommand):
                 ).order_by('modified_date')  # Keep the most recently modified record
 
                 # Get the IDs of records to keep and delete
-                keep_id = records.first().id
-                delete_ids = list(records.exclude(id=keep_id).values_list('id', flat=True))
+                keep_record = records.first()
+                delete_ids = list(records.exclude(id=keep_record.id).values_list('id', flat=True))
                 
                 if delete_ids:
-                    records_to_delete.extend(records.filter(id__in=delete_ids))
+                    delete_records = records.filter(id__in=delete_ids)
+                    records_to_delete.extend(delete_records)
                     total_duplicates += len(delete_ids)
 
-                    if not dry_run:
+                    if dry_run:
+                        self.stdout.write(self.style.WARNING(
+                            f'\nDuplicate group found at location ({dup["lat_1"]}, {dup["lng_1"]}):'
+                        ))
+                        self.stdout.write(self.style.SUCCESS('Record to keep:'))
+                        self.stdout.write(self.format_record_info(keep_record))
+                        self.stdout.write(self.style.ERROR('Records to delete:'))
+                        for record in delete_records:
+                            self.stdout.write(self.format_record_info(record))
+                    else:
                         # Delete records using their IDs
                         DikeRecord.objects.filter(id__in=delete_ids).delete()
 
         if dry_run:
             self.stdout.write(self.style.WARNING(
-                f'Would delete {total_duplicates} duplicate records:'
+                f'\nSummary: Would delete {total_duplicates} duplicate records.'
             ))
-            for record in records_to_delete:
-                self.stdout.write(
-                    f'  - ID: {record.id}, '
-                    f'Location: ({record.lat_1}, {record.lng_1}), '
-                    f'Angle: {record.angle}, '
-                    f'Distance: {record.distance}'
-                )
         else:
             self.stdout.write(self.style.SUCCESS(
                 f'Successfully deleted {total_duplicates} duplicate records.'
