@@ -773,17 +773,17 @@ def get_map_markers(request):
                     'latitude': lat,
                     'name': record.unique_id or 'Unnamed Record',
                     'description': f"""
-                        Location: {round(lon, 6) or 'N/A'}, {round(lat, 6) or 'N/A'}
-                        Symbol: {record.symbol or 'N/A'}
-                        Map Sheet: {record.map_sheet or 'N/A'}
-                        Stratum: {record.stratum or 'N/A'}
-                        Rock Type: {record.rock_type or 'N/A'}
-                        Era: {record.era or 'N/A'}
-                        Distance: {record.distance or 'N/A'} m
-                        Angle: {record.angle or 'N/A'}°
-                        Address: {record.address or 'N/A'}
-                        Memo: {record.memo or 'N/A'}
-                    """.strip()
+Location: {round(lon, 6) or 'N/A'}, {round(lat, 6) or 'N/A'}
+Symbol: {record.symbol or 'N/A'}
+Map Sheet: {record.map_sheet or 'N/A'}
+Stratum: {record.stratum or 'N/A'}
+Rock Type: {record.rock_type or 'N/A'}
+Era: {record.era or 'N/A'}
+Distance: {record.distance or 'N/A'} m
+Angle: {record.angle or 'N/A'}°
+Address: {record.address or 'N/A'}
+Memo: {record.memo or 'N/A'}
+""".strip()
                 })
             except (ValueError, TypeError):
                 # Skip records with invalid coordinate values
