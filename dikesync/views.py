@@ -773,7 +773,7 @@ def get_map_markers(request):
                     'latitude': lat,
                     'name': record.unique_id or 'Unnamed Record',
                     'description': f"""
-                        Location: {lon or 'N/A'}, {lat or 'N/A'}
+                        Location: {round(lon, 6) or 'N/A'}, {round(lat, 6) or 'N/A'}
                         Symbol: {record.symbol or 'N/A'}
                         Map Sheet: {record.map_sheet or 'N/A'}
                         Stratum: {record.stratum or 'N/A'}
