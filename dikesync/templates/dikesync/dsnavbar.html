@@ -14,7 +14,7 @@
                         <li><a class="dropdown-item" href="{% url 'dikesync:dike-record-list' %}">Dike Records</a></li>
                         <li><a class="dropdown-item" href="{% url 'dikesync:sync-event-list' %}">Sync Events</a></li>
                         <li><a class="dropdown-item" href="/media/geolmap/geolmap2.html">Rose diagram</a></li>
-                        <li><a class="dropdown-item" href="/media/olmap3.html">Dikes on a map</a></li>
+                        <li><a class="dropdown-item" href="/media/olmap3.html">Dikes on map</a></li>
                         <li><a class="dropdown-item" href="{% url 'dikesync:management_command' %}">Management Command</a></li>
                     </ul>
                 </li>
@@ -24,8 +24,10 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'siriuspasset:specimen_list' %}">Sirius Passet</a></li>
+                        <li><a class="dropdown-item" href="{% url 'nkfcluster:occ_list' %}">NKFossils</a></li>
                         <li><a class="dropdown-item" href="{% url 'phylomanager:run_list' %}">Phylomanager</a></li>
                         <li><a class="dropdown-item" href="{% url 'freshwaterfish:occ_list' %}">Freshwater fish</a></li>
+                        <li><a class="dropdown-item" href="{% url 'dikesync:dike-record-list' %}">Dikesync</a></li>
                     </ul>
                 </li>
             </ul>
