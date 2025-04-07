@@ -48,16 +48,17 @@ class Command(BaseCommand):
 
         with transaction.atomic():
             for dup in duplicates:
-                # Get all records with these values
+                # Get all records with these values, ordered by modified_date descending
+                # to keep the most recent record
                 records = DikeRecord.objects.filter(
                     lat_1=dup['lat_1'],
                     lng_1=dup['lng_1'],
                     angle=dup['angle'],
                     distance=dup['distance']
-                ).order_by('modified_date')  # Keep the most recently modified record
+                ).order_by('-modified_date')  # Note the minus sign to sort in descending order
 
                 # Get the IDs of records to keep and delete
-                keep_record = records.first()
+                keep_record = records.first()  # This will now be the most recent record
                 delete_ids = list(records.exclude(id=keep_record.id).values_list('id', flat=True))
                 
                 if delete_ids:
@@ -69,9 +70,9 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.WARNING(
                             f'\nDuplicate group found at location ({dup["lat_1"]}, {dup["lng_1"]}):'
                         ))
-                        self.stdout.write(self.style.SUCCESS('Record to keep:'))
+                        self.stdout.write(self.style.SUCCESS('Record to keep (most recent):'))
                         self.stdout.write(self.format_record_info(keep_record))
-                        self.stdout.write(self.style.ERROR('Records to delete:'))
+                        self.stdout.write(self.style.ERROR('Records to delete (older):'))
                         for record in delete_records:
                             self.stdout.write(self.format_record_info(record))
                     else:
