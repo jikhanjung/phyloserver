@@ -774,6 +774,8 @@ def get_map_markers(request):
                 markers.append({
                     'longitude': lon,
                     'latitude': lat,
+                    'distance': record.distance,
+                    'angle': record.angle,
                     'name': record.unique_id or 'Unnamed Record',
                     'description': f"""
 Location: {round(lon, 6) or 'N/A'}, {round(lat, 6) or 'N/A'}

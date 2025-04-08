@@ -27,8 +27,14 @@
 
   <!-- OpenLayers 라이브러리 로드 -->
   <script src="ol.js"></script>
+  <!-- proj4js for coordinate transformations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
 
   <script>
+    // proj4js 설정
+    proj4.defs('EPSG:4326', '+proj=longlat +datum=WGS84 +no_defs');
+    proj4.defs('EPSG:3857', '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs');
+
     // 기본 지도 (OpenStreetMap)
     const baseLayer = new ol.layer.Tile({
       source: new ol.source.OSM()
@@ -69,6 +75,61 @@
       })
     });
 
+    // WGS84에서 주어진 각도와 거리로 끝점 계산
+    function calculateEndPoint(lon1, lat1, angle, distance) {
+      // 각도를 라디안으로 변환
+      const angleRad = angle * Math.PI / 180;
+      
+      // WGS84 타원체의 반경
+      const a = 6378137.0;  // 장반경
+      const b = 6356752.3142;  // 단반경
+      const f = 1/298.257223563;  // 편평률
+      
+      // 시작점의 위도를 라디안으로 변환
+      const lat1Rad = lat1 * Math.PI / 180;
+      const lon1Rad = lon1 * Math.PI / 180;
+      
+      // 보조 변수 계산
+      const tanU1 = (1 - f) * Math.tan(lat1Rad);
+      const U1 = Math.atan(tanU1);
+      const sinU1 = Math.sin(U1);
+      const cosU1 = Math.cos(U1);
+      const sigma1 = Math.atan2(tanU1, Math.cos(angleRad));
+      const sinAlpha = Math.cos(U1) * Math.sin(angleRad);
+      const cosSqAlpha = 1 - sinAlpha * sinAlpha;
+      const uSq = cosSqAlpha * (a * a - b * b) / (b * b);
+      const A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
+      const B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
+      
+      // 시그마 계산
+      let sigma = distance / (b * A);
+      let sigmaP = 2 * Math.PI;
+      let sinSigma, cosSigma, cos2SigmaM, deltaSigma;
+      
+      while (Math.abs(sigma - sigmaP) > 1e-12) {
+        sinSigma = Math.sin(sigma);
+        cosSigma = Math.cos(sigma);
+        cos2SigmaM = Math.cos(2 * sigma1 + sigma);
+        deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
+        sigmaP = sigma;
+        sigma = distance / (b * A) + deltaSigma;
+      }
+      
+      // 끝점 좌표 계산
+      const tmp = sinU1 * sinSigma - cosU1 * cosSigma * Math.cos(angleRad);
+      const lat2Rad = Math.atan2(sinU1 * cosSigma + cosU1 * sinSigma * Math.cos(angleRad), (1 - f) * Math.sqrt(sinAlpha * sinAlpha + tmp * tmp));
+      const lambda = Math.atan2(sinSigma * Math.sin(angleRad), cosU1 * cosSigma - sinU1 * sinSigma * Math.cos(angleRad));
+      const C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
+      const L = lambda - (1 - C) * f * sinAlpha * (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
+      const lon2Rad = lon1Rad + L;
+      
+      // 라디안을 도로 변환
+      const lat2 = lat2Rad * 180 / Math.PI;
+      const lon2 = lon2Rad * 180 / Math.PI;
+      
+      return [lon2, lat2];
+    }
+
     // 서버에서 마커 데이터 가져오기
     function fetchMarkers() {
       fetch('/dikesync/api/markers/')  // API 엔드포인트 URL
@@ -89,18 +150,41 @@
           
           // 새로운 마커 추가
           markers.forEach(marker => {
-            const feature = new ol.Feature({
-              geometry: new ol.geom.Point(
-                ol.proj.fromLonLat([marker.longitude, marker.latitude])
-              ),
+            // 시작점과 끝점 계산
+            const startPoint = [marker.longitude, marker.latitude];
+            const endPoint = calculateEndPoint(
+              marker.longitude,
+              marker.latitude,
+              marker.angle,
+              marker.distance
+            );
+
+            // 선 생성
+            const line = new ol.Feature({
+              geometry: new ol.geom.LineString([
+                ol.proj.fromLonLat(startPoint),
+                ol.proj.fromLonLat(endPoint)
+              ])
+            });
+
+            // 시작점 마커 생성
+            const point = new ol.Feature({
+              geometry: new ol.geom.Point(ol.proj.fromLonLat(startPoint)),
               name: marker.name,
               description: marker.description
             });
 
-            // 마커 스타일 설정
-            feature.setStyle(new ol.style.Style({
+            // 스타일 설정
+            line.setStyle(new ol.style.Style({
+              stroke: new ol.style.Stroke({
+                color: 'red',
+                width: 2
+              })
+            }));
+
+            point.setStyle(new ol.style.Style({
               image: new ol.style.Circle({
-                radius: 10,
+                radius: 6,
                 fill: new ol.style.Fill({
                   color: 'red'
                 }),
@@ -111,7 +195,9 @@
               })
             }));
 
-            vectorLayer.getSource().addFeature(feature);
+            // 레이어에 추가
+            vectorLayer.getSource().addFeature(line);
+            vectorLayer.getSource().addFeature(point);
           });
         })
         .catch(error => console.error('Error fetching markers:', error));

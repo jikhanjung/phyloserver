@@ -1,3 +1,4 @@
+{% load static %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-info my-3 p-3">
     <div class="container-fluid">
         <a class="navbar-brand text-white" href="{% url 'dikesync:dike-record-list' %}">Dike Sync</a>
@@ -13,8 +14,8 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{% url 'dikesync:dike-record-list' %}">Dike Records</a></li>
                         <li><a class="dropdown-item" href="{% url 'dikesync:sync-event-list' %}">Sync Events</a></li>
-                        <li><a class="dropdown-item" href="/media/geolmap/geolmap2.html">Rose diagram</a></li>
-                        <li><a class="dropdown-item" href="/media/olmap3.html">Dikes on map</a></li>
+                        <li><a class="dropdown-item" href="{% static 'geolmap2.html' %}">Rose diagram</a></li>
+                        <li><a class="dropdown-item" href="{% static 'olmap3.html' %}">Dikes on map</a></li>
                         <li><a class="dropdown-item" href="{% url 'dikesync:management_command' %}">Management Command</a></li>
                     </ul>
                 </li>
